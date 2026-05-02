@@ -17,6 +17,7 @@
     "prisma:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
     "prisma:studio": "dotenv -e ../../.env -- prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed-quests": "tsx prisma/seed-quests.ts",
     "db:make-admin": "tsx prisma/make-admin.ts",
     "smoke:tournament": "tsx scripts/smoke-tournament.ts"
   },

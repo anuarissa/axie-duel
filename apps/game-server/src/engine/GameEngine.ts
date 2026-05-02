@@ -23,6 +23,8 @@ import { PhaseManager } from './PhaseManager.js';
 import { DeckManager } from './DeckManager.js';
 import { SeededRng } from './rng.js';
 import { EventBus } from './EventBus.js';
+import { TriggerRegistry } from './TriggerRegistry.js';
+import { registerTriggersForCard } from '../cards/triggered/registry.js';
 import { CardDatabase } from '../cards/CardDatabase.js';
 import type { Logger } from 'pino';
 
@@ -45,6 +47,7 @@ export class GameEngine {
   public readonly effects: EffectResolver;
   public readonly phases: PhaseManager;
   public readonly events: EventBus;
+  public readonly triggers: TriggerRegistry;
 
   constructor(
     private state: DuelStateSchema,
@@ -55,6 +58,7 @@ export class GameEngine {
     this.rng = new SeededRng(seed ?? `${Date.now()}-${Math.random()}`);
     this.state.rngSeed = seed ?? '';
     this.events = new EventBus();
+    this.triggers = new TriggerRegistry(this.events);
     this.deckManager = new DeckManager(this.rng);
     this.validator = new ActionValidator(this.state, this.cards);
     this.summon = new SummonSystem(this.state, this.cards);
@@ -170,5 +174,46 @@ export class GameEngine {
   handleEndPhase(playerId: string): void {
     this.validator.validateEndPhase(playerId);
     this.phases.advance();
+  }
+
+  /**
+   * SET de una carta de Spell o Trap a una zona spell/trap face-down.
+   * Si la carta tiene un effect kind soportado por triggered handlers,
+   * se registra automáticamente al EventBus.
+   */
+  handleSetCard(playerId: string, cardInstanceId: string): void {
+    if (this.state.activePlayerId !== playerId) {
+      throw new InvalidActionError('NOT_YOUR_TURN', 'Solo el jugador activo puede SET.');
+    }
+    const player = this.state.players.get(playerId);
+    if (!player) throw new InvalidActionError('TARGET_INVALID', 'unknown player');
+
+    const handIdx = player.hand.findIndex((c) => c.instanceId === cardInstanceId);
+    if (handIdx === -1) throw new InvalidActionError('CARD_NOT_IN_HAND', 'card not in hand');
+    const card = player.hand[handIdx]!;
+
+    const def = this.cards.getById(card.cardId);
+    if (!def || (def.type !== 'Spell' && def.type !== 'Trap')) {
+      throw new InvalidActionError('TARGET_INVALID', 'Solo Spell/Trap se pueden SET.');
+    }
+
+    const freeIdx = player.spellTrapZones.findIndex((z) => !z.instanceId);
+    if (freeIdx === -1) throw new InvalidActionError('TARGET_INVALID', 'No hay zona spell/trap libre.');
+
+    player.hand.splice(handIdx, 1);
+    player.handSize = player.hand.length;
+    card.faceDown = true;
+    card.position = ''; // n/a para spell/trap
+    player.spellTrapZones[freeIdx] = card;
+
+    // Si el effect tiene un trigger handler conocido, registrarlo en el bus.
+    registerTriggersForCard(def, {
+      state: this.state,
+      source: card,
+      ownerId: playerId,
+      registry: this.triggers,
+      log: this.log,
+    });
+    this.log.info({ player: playerId, card: card.cardId, instanceId: card.instanceId }, 'card set');
   }
 }

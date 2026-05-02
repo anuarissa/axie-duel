@@ -51,6 +51,7 @@ model User {
   ownedCards    OwnedCard[]
   axsTxs        AxsTransaction[]
   tournamentRegs TournamentParticipant[]
+  questProgress UserQuestProgress[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -235,4 +236,43 @@ model Match {
 
   @@index([player1Id])
   @@index([mode, finishedAt])
+}
+
+/// Quest disponible por una ventana de tiempo. El sistema crea quests cada día
+/// (cron en Fase 3 — manual con `pnpm db:seed-quests` por ahora).
+/// Cada User tiene su propio progreso vía UserQuestProgress.
+model DailyQuest {
+  id          String              @id @default(cuid())
+  /// Tipo de meta. Determina qué evento incrementa el progreso:
+  ///   'WIN_PVE' | 'WIN_PVP' | 'PLAY_GAMES' | 'COMPLETE_TOURNAMENT'
+  kind        String
+  /// Goal numérico (ej: ganar 3 PvE → target=3).
+  target      Int
+  /// AXS otorgados al claim.
+  rewardAxs   Decimal             @db.Decimal(36, 18)
+  description String
+  validFrom   DateTime
+  validUntil  DateTime
+  progress    UserQuestProgress[]
+  createdAt   DateTime            @default(now())
+
+  @@index([kind, validUntil])
+}
+
+model UserQuestProgress {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questId     String
+  quest       DailyQuest @relation(fields: [questId], references: [id], onDelete: Cascade)
+  current     Int        @default(0)
+  completed   Boolean    @default(false)
+  /// true cuando el usuario ya reclamó el AXS premio. Idempotente.
+  claimed     Boolean    @default(false)
+  completedAt DateTime?
+  claimedAt   DateTime?
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([userId, questId])
+  @@index([userId])
 }

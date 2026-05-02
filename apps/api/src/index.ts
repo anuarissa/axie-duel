@@ -21,6 +21,7 @@ import axsRoutes from './routes/axs.routes.js';
 import tournamentRoutes from './routes/tournament.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import internalRoutes from './routes/internal.routes.js';
+import questRoutes from './routes/quest.routes.js';
 
 const app = express();
 
@@ -53,6 +54,7 @@ app.use('/axs', axsRoutes);
 app.use('/tournaments', tournamentRoutes);
 app.use('/admin', adminRoutes);
 app.use('/internal', internalRoutes);
+app.use('/quests', questRoutes);
 
 app.use(errorHandler);
 

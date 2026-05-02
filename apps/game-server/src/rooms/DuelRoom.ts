@@ -41,6 +41,11 @@ export class DuelRoom extends Room {
     this.onMessage('NORMAL_SUMMON', (client, raw) => this.safeAction(client, () => this.engine.handleNormalSummon(client.sessionId, raw)));
     this.onMessage('DECLARE_ATTACK', (client, raw) => this.safeAction(client, () => this.engine.handleDeclareAttack(client.sessionId, raw)));
     this.onMessage('ACTIVATE_EFFECT', (client, raw) => this.safeAction(client, () => this.engine.handleActivateEffect(client.sessionId, raw)));
+    this.onMessage('SET_CARD', (client, raw: unknown) => this.safeAction(client, () => {
+      const id = (raw as { cardInstanceId?: string })?.cardInstanceId;
+      if (!id) throw new InvalidActionError('CARD_NOT_IN_HAND', 'cardInstanceId required');
+      this.engine.handleSetCard(client.sessionId, id);
+    }));
     this.onMessage('END_PHASE', (client) => this.safeAction(client, () => this.engine.handleEndPhase(client.sessionId)));
     this.onMessage('SURRENDER', (client) => {
       const winner = [...this.state.players.keys()].find((id) => id !== client.sessionId);

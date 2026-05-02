@@ -15,6 +15,7 @@ import { prisma } from '../lib/prisma.js';
 import { config } from '../config.js';
 import { AuthError, ValidationError } from '../lib/errors.js';
 import { logger } from '../lib/logger.js';
+import { questService, type QuestKind } from '../services/QuestService.js';
 
 const router = Router();
 
@@ -80,6 +81,24 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
       { matchId: match.id, mode: body.mode, winner: body.winnerId, duration: body.duration },
       'match persisted',
     );
+
+    // Hook quests: incrementa progreso para AMBOS jugadores en PLAY_GAMES, y para
+    // el winner en WIN_PVE / WIN_PVP. Errores son no-fatales — el match ya quedó persistido.
+    const realPlayerIds = [body.player1Id, body.player2Id].filter(
+      (id): id is string => !!id && id !== 'BOT',
+    );
+    for (const pid of realPlayerIds) {
+      questService.progressQuest(pid, 'PLAY_GAMES', 1).catch((err) =>
+        logger.warn({ err, userId: pid }, 'progressQuest PLAY_GAMES failed'),
+      );
+    }
+    if (body.winnerId && body.winnerId !== 'BOT') {
+      const winKind: QuestKind = body.mode === 'PvE' ? 'WIN_PVE' : 'WIN_PVP';
+      questService.progressQuest(body.winnerId, winKind, 1).catch((err) =>
+        logger.warn({ err, userId: body.winnerId }, `progressQuest ${winKind} failed`),
+      );
+    }
+
     res.status(201).json({ matchId: match.id });
   } catch (err) {
     next(err);

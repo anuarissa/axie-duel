@@ -25,6 +25,7 @@ import { SeededRng } from './rng.js';
 import { EventBus } from './EventBus.js';
 import { TriggerRegistry } from './TriggerRegistry.js';
 import { ReplayLogger } from './ReplayLogger.js';
+import { AuraRegistry } from './AuraRegistry.js';
 import { registerTriggersForCard } from '../cards/triggered/registry.js';
 import { CardDatabase } from '../cards/CardDatabase.js';
 import type { Logger } from 'pino';
@@ -50,6 +51,7 @@ export class GameEngine {
   public readonly events: EventBus;
   public readonly triggers: TriggerRegistry;
   public readonly replay: ReplayLogger;
+  public readonly auras: AuraRegistry;
 
   constructor(
     private state: DuelStateSchema,
@@ -62,10 +64,11 @@ export class GameEngine {
     this.events = new EventBus();
     this.triggers = new TriggerRegistry(this.events);
     this.replay = new ReplayLogger();
+    this.auras = new AuraRegistry();
     this.deckManager = new DeckManager(this.rng);
     this.validator = new ActionValidator(this.state, this.cards);
     this.summon = new SummonSystem(this.state, this.cards);
-    this.combat = new CombatSystem(this.state, this.cards, this.log);
+    this.combat = new CombatSystem(this.state, this.cards, this.log, this.auras);
     this.effects = new EffectResolver(this.state, this.cards, this.log);
     this.phases = new PhaseManager(this.state, this.deckManager, this.log);
   }
@@ -271,12 +274,13 @@ export class GameEngine {
     card.position = ''; // n/a para spell/trap
     player.spellTrapZones[freeIdx] = card;
 
-    // Si el effect tiene un trigger handler conocido, registrarlo en el bus.
+    // Si el effect tiene un trigger handler (event-based) o aura (state-based), registrarlo.
     registerTriggersForCard(def, {
       state: this.state,
       source: card,
       ownerId: playerId,
       registry: this.triggers,
+      auras: this.auras,
       log: this.log,
     });
     this.replay.log('SET_CARD', playerId, { cardInstanceId });

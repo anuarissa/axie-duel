@@ -16,6 +16,7 @@ import type { Card } from '@axie-duel/shared-types';
 import type { CardSchema } from '../../rooms/schema/CardSchema.js';
 import type { DuelStateSchema } from '../../rooms/schema/DuelStateSchema.js';
 import type { TriggerRegistry } from '../../engine/TriggerRegistry.js';
+import type { AuraRegistry, AuraScope } from '../../engine/AuraRegistry.js';
 import type { Logger } from 'pino';
 
 export interface TriggerContext {
@@ -23,6 +24,8 @@ export interface TriggerContext {
   source: CardSchema;
   ownerId: string;
   registry: TriggerRegistry;
+  /** Optional — solo para auras pasivas (continuousAura, auraDef). */
+  auras?: AuraRegistry;
   log: Logger;
 }
 
@@ -97,11 +100,80 @@ const fieldTriggerFactory: TriggerFactory = (def, { source, registry, log }) => 
   });
 };
 
+/**
+ * continuousAura (Tide Surge — Continuous Spell): mientras esté en zona,
+ * +400 ATK / +200 DEF a Aquatic propios. Auras se desactivan en `unregisterAll`.
+ */
+const continuousAuraFactory: TriggerFactory = (def, { source, ownerId, auras, log }) => {
+  if (!auras) {
+    log.warn({ source: source.instanceId }, 'continuousAura: AuraRegistry not provided');
+    return;
+  }
+  const params = (def.effect?.params ?? {}) as Record<string, unknown>;
+  const filter = (params.filter as string) ?? 'ownAquatic';
+  const atkBonus = typeof params.atkBonus === 'number' ? params.atkBonus : 0;
+  const defBonus = typeof params.defBonus === 'number' ? params.defBonus : 0;
+  const scope = filterToScope(filter);
+  auras.register({
+    sourceInstanceId: source.instanceId,
+    ownerId,
+    scope,
+    atkBonus,
+    defBonus,
+  });
+  log.info({ source: source.instanceId, scope, atkBonus, defBonus }, 'continuousAura registered');
+};
+
+/**
+ * auraDef (Verdant Sentinel): mientras esté en DEF, +200 DEF a OTROS Plants propios.
+ * Aura state-based con requireSourcePosition='DEF' + excludeSelf.
+ */
+const auraDefFactory: TriggerFactory = (def, { source, ownerId, auras, log }) => {
+  if (!auras) {
+    log.warn({ source: source.instanceId }, 'auraDef: AuraRegistry not provided');
+    return;
+  }
+  const params = (def.effect?.params ?? {}) as Record<string, unknown>;
+  const scope = (params.scope as string) ?? 'ownPlantsExceptSelf';
+  const requirePosition = (params.requirePosition as string) ?? 'DEF';
+  const defBonus = typeof params.defBonus === 'number' ? params.defBonus : 200;
+  const auraScope: AuraScope = scope.includes('Plant') ? 'ownPlant' : 'ownAll';
+  auras.register({
+    sourceInstanceId: source.instanceId,
+    ownerId,
+    scope: auraScope,
+    atkBonus: 0,
+    defBonus,
+    excludeSelf: true,
+    requireSourcePosition: requirePosition as 'ATK' | 'DEF' | 'DEF_FACEDOWN',
+  });
+  log.info({ source: source.instanceId, scope: auraScope, defBonus }, 'auraDef registered');
+};
+
+function filterToScope(filter: string): AuraScope {
+  switch (filter) {
+    case 'ownAquatic':
+      return 'ownAquatic';
+    case 'ownPlant':
+      return 'ownPlant';
+    case 'ownBeast':
+      return 'ownBeast';
+    case 'ownBird':
+      return 'ownBird';
+    case 'ownReptile':
+      return 'ownReptile';
+    default:
+      return 'ownAll';
+  }
+}
+
 const TRIGGER_FACTORIES: Record<string, TriggerFactory> = {
   negateAttack: negateAttackFactory,
   atkDebuff: atkDebuffFactory,
   negateAndDestroy: negateAndDestroyFactory,
   fieldTrigger: fieldTriggerFactory,
+  continuousAura: continuousAuraFactory,
+  auraDef: auraDefFactory,
 };
 
 /** Inspecciona la carta y registra triggers si los soporta. */

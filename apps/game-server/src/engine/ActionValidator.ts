@@ -118,6 +118,37 @@ export class ActionValidator {
     if (attacker.position !== 'ATK') {
       throw new InvalidActionError('TARGET_INVALID', 'Solo monstruos en ATK pueden atacar.');
     }
+
+    // Si el atacante apunta a DIRECT, validar que el oponente no tenga monsters
+    // (regla normal Yu-Gi-Oh!). EXCEPCIÓN: piercingDirect (Venomscale Stalker)
+    // permite ataque directo si el oponente NO tiene monsters con ATK >= threshold.
+    if (input.targetInstanceId === 'DIRECT') {
+      const opponentId = [...this.state.players.keys()].find((id) => id !== playerId);
+      const opponent = opponentId ? this.state.players.get(opponentId) : undefined;
+      const oppMonsters = opponent?.monsterZones.filter((m) => m.instanceId) ?? [];
+      if (oppMonsters.length > 0) {
+        const attackerDef = this.cards.getById(attacker.cardId);
+        const piercing = attackerDef?.effect?.kind === 'piercingDirect';
+        if (!piercing) {
+          throw new InvalidActionError(
+            'TARGET_INVALID',
+            'No podés atacar directo si el oponente tiene monstruos.',
+          );
+        }
+        const threshold = (attackerDef?.effect?.params?.threshold as number) ?? 2000;
+        const blockingMonster = oppMonsters.some((m) => {
+          const mDef = this.cards.getById(m.cardId);
+          if (!mDef || mDef.type !== 'Monster') return false;
+          return mDef.atk + m.atkMod >= threshold;
+        });
+        if (blockingMonster) {
+          throw new InvalidActionError(
+            'TARGET_INVALID',
+            `piercingDirect bloqueado: oponente tiene monster con ATK >= ${threshold}.`,
+          );
+        }
+      }
+    }
     return input;
   }
 

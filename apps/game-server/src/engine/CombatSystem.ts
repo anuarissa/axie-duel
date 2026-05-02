@@ -6,7 +6,9 @@
 import { resolveCombat, effectiveStats } from '@axie-duel/game-rules';
 import type { MonsterCard } from '@axie-duel/shared-types';
 import type { DuelStateSchema } from '../rooms/schema/DuelStateSchema.js';
+import type { CardSchema } from '../rooms/schema/CardSchema.js';
 import type { CardDatabase } from '../cards/CardDatabase.js';
+import { aurasApplicableTo, type AuraRegistry } from './AuraRegistry.js';
 import type { Logger } from 'pino';
 
 export interface CombatOutcome {
@@ -22,7 +24,26 @@ export class CombatSystem {
     private state: DuelStateSchema,
     private cards: CardDatabase,
     private log: Logger,
+    private auras?: AuraRegistry,
   ) {}
+
+  /**
+   * Stats efectivos sumando: stats base de la card + atkMod/defMod del instance + auras aplicables.
+   * Expuesto público para que el motor lo use en lugar del `effectiveStats` puro.
+   */
+  effectiveStatsWithAuras(
+    cardDef: MonsterCard,
+    instance: CardSchema,
+    ownerId: string,
+  ): { atk: number; def: number } {
+    const base = effectiveStats(cardDef, { atkMod: instance.atkMod, defMod: instance.defMod } as never);
+    if (!this.auras) return base;
+    const auraBonus = aurasApplicableTo(this.auras, this.state, instance, ownerId, cardDef.attribute);
+    return {
+      atk: Math.max(0, base.atk + auraBonus.atkBonus),
+      def: Math.max(0, base.def + auraBonus.defBonus),
+    };
+  }
 
   declareAttack(attackerOwnerId: string, attackerInstanceId: string, targetInstanceId: string | 'DIRECT'): CombatOutcome {
     const attackerOwner = this.state.players.get(attackerOwnerId);
@@ -49,14 +70,9 @@ export class CombatSystem {
       defenderDef = def;
     }
 
-    const aStats = effectiveStats(attackerDef, {
-      atkMod: attacker.atkMod,
-      defMod: attacker.defMod,
-    } as never);
+    const aStats = this.effectiveStatsWithAuras(attackerDef, attacker, attackerOwnerId);
     const dStats =
-      defender && defenderDef
-        ? effectiveStats(defenderDef, { atkMod: defender.atkMod, defMod: defender.defMod } as never)
-        : null;
+      defender && defenderDef ? this.effectiveStatsWithAuras(defenderDef, defender, defenderOwnerId) : null;
 
     const result = resolveCombat(
       { instanceId: attacker.instanceId, position: attacker.position } as never,

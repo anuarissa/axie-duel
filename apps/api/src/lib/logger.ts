@@ -2,7 +2,7 @@ import pino from 'pino';
 import { config } from '../config.js';
 
 export const logger = pino({
-  level: config.NODE_ENV === 'production' ? 'info' : 'debug',
+  level: config.LOG_LEVEL ?? (config.NODE_ENV === 'production' ? 'info' : 'debug'),
   base: { service: 'axie-duel-api' },
   redact: {
     paths: ['req.headers.authorization', '*.password', '*.privateKey', 'JWT_SECRET'],

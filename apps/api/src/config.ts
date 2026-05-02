@@ -29,6 +29,8 @@ loadDotenv();
 
 const ConfigSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  /// Pino log level. trace < debug < info < warn < error < fatal. Default: dev=debug, prod=info.
+  LOG_LEVEL: z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'silent']).optional(),
   API_PORT: z.coerce.number().int().positive().default(3001),
   DATABASE_URL: z.string().url(),
   REDIS_URL: z.string().url(),

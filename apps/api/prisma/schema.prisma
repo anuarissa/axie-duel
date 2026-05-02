@@ -6,8 +6,12 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Supabase + cualquier setup con connection pooler (PgBouncer) requiere
+  // un canal "directo" para migraciones (Prisma no puede correr DDL via pooler
+  // en Transaction mode). Si DIRECT_URL no se setea, Prisma cae a `url`.
+  directUrl = env("DIRECT_URL")
 }
 
 model User {

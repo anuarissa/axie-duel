@@ -4,6 +4,7 @@
   "globalEnv": [
     "NODE_ENV",
     "DATABASE_URL",
+    "DIRECT_URL",
     "REDIS_URL",
     "JWT_SECRET",
     "WAYPOINT_CLIENT_ID",

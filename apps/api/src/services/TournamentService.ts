@@ -17,6 +17,7 @@ import { prisma } from '../lib/prisma.js';
 import { logger } from '../lib/logger.js';
 import { ValidationError, RuleViolationError, NotFoundError } from '../lib/errors.js';
 import { axsService } from './AxsService.js';
+import { notificationService } from './NotificationService.js';
 import {
   generateSingleElimBracket,
   generateNextRound,
@@ -280,7 +281,7 @@ export class TournamentService {
       }
     }
 
-    // Repartir premios según prizeDistribution.
+    // Repartir premios según prizeDistribution + notificar.
     const distribution = t.prizeDistribution as unknown as PrizeShare[];
     for (const slot of distribution) {
       const winner = t.participants.find((p) => ranks.get(p.userId) === slot.rank);
@@ -293,6 +294,19 @@ export class TournamentService {
         'EARN_TOURNAMENT',
         `tournament:${tournamentId}:rank${slot.rank}`,
       );
+      notificationService
+        .create(
+          winner.userId,
+          'TOURNAMENT_WON',
+          `Terminaste #${slot.rank} en "${t.name}" — ganaste ${reward.toString()} AXS`,
+          {
+            tournamentId,
+            tournamentName: t.name,
+            rank: slot.rank,
+            rewardAxs: reward.toString(),
+          },
+        )
+        .catch(() => undefined);
     }
 
     await this.db.tournament.update({

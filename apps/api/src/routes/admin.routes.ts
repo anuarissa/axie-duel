@@ -16,7 +16,9 @@ import { authRequired } from '../middleware/auth.middleware.js';
 import { adminRequired } from '../middleware/admin.middleware.js';
 import { tournamentService, type PrizeShare } from '../services/TournamentService.js';
 import { axsService } from '../services/AxsService.js';
+import { notificationService } from '../services/NotificationService.js';
 import { prisma } from '../lib/prisma.js';
+import { logger } from '../lib/logger.js';
 import { NotFoundError } from '../lib/errors.js';
 
 const router = Router();
@@ -110,6 +112,54 @@ router.post('/users/:id/demote', async (req: Request<{ id: string }>, res: Respo
     res.json({ id: u.id, username: u.username, isAdmin: u.isAdmin });
   } catch {
     throw new NotFoundError('User');
+  }
+});
+
+const BroadcastBody = z.object({
+  message: z.string().min(1).max(500),
+  /// Limita a usuarios con eloRanked >= esta cifra. Útil para "hey top players, hay torneo".
+  minElo: z.number().int().min(0).optional(),
+  /// Si true, solo a users con wallet linkeada (anuncios cripto-related).
+  onlyWithWallet: z.boolean().optional(),
+  /// Metadata extra que el frontend puede usar para deep-linking.
+  metadata: z.record(z.unknown()).optional(),
+});
+
+/**
+ * Broadcast: crea una notificación 'SYSTEM' para todos los users que matcheen filtros.
+ * Útil para anuncios de mantenimiento, nuevos torneos, eventos especiales.
+ *
+ * Implementación: query users + createMany de notifications (eficiente para batches grandes).
+ * Cap defensivo: 100k users por broadcast (más es probablemente un error).
+ */
+router.post('/notifications/broadcast', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const body = BroadcastBody.parse(req.body);
+    const where = {
+      ...(body.minElo !== undefined ? { eloRanked: { gte: body.minElo } } : {}),
+      ...(body.onlyWithWallet ? { walletAddress: { not: null } } : {}),
+    };
+    const targetUsers = await prisma.user.findMany({ where, select: { id: true }, take: 100_000 });
+    if (targetUsers.length === 0) {
+      res.json({ created: 0, message: 'no users matched filter' });
+      return;
+    }
+    await prisma.notification.createMany({
+      data: targetUsers.map((u) => ({
+        userId: u.id,
+        kind: 'SYSTEM',
+        message: body.message,
+        ...(body.metadata ? { metadata: body.metadata as object } : {}),
+      })),
+    });
+    logger.info(
+      { adminId: req.user!.userId, count: targetUsers.length, minElo: body.minElo, onlyWithWallet: body.onlyWithWallet },
+      'admin broadcast sent',
+    );
+    void notificationService;
+    res.status(201).json({ created: targetUsers.length });
+  } catch (err) {
+    next(err);
   }
 });
 

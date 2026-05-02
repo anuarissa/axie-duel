@@ -18,6 +18,7 @@ import { config } from '../config.js';
 import { axsService } from './AxsService.js';
 import { starterAxieService } from './StarterAxieService.js';
 import { roninService } from './RoninService.js';
+import { notificationService } from './NotificationService.js';
 import { RANKED_NFT_MIN_NFT_AXIES } from '@axie-duel/game-rules';
 import type { SocialClaims, SocialProvider } from './SocialAuthService.js';
 import type { WaypointTokenClaims } from './WaypointService.js';
@@ -100,7 +101,11 @@ export class AccountService {
       const balance = await roninService.getAxieBalance(walletAddress as Address);
       hasNFTAxies = balance >= RANKED_NFT_MIN_NFT_AXIES;
     }
-    return this.db.user.update({
+    const previouslyLinked = await this.db.user.findUnique({
+      where: { id: userId },
+      select: { walletAddress: true },
+    });
+    const updated = await this.db.user.update({
       where: { id: userId },
       data: {
         waypointSub: claims.sub,
@@ -108,21 +113,45 @@ export class AccountService {
         hasNFTAxies,
       },
     });
+    // Notification solo si es la PRIMERA vez que linkea wallet (no en re-login).
+    if (!previouslyLinked?.walletAddress && walletAddress) {
+      notificationService
+        .create(userId, 'WALLET_LINKED', 'Wallet de Ronin vinculada vía Waypoint', {
+          walletAddress,
+          hasNFTAxies,
+          via: 'waypoint',
+        })
+        .catch(() => undefined);
+    }
+    return updated;
   }
 
   /**
    * Linkear una wallet directa (sin Waypoint) — el usuario firmó un challenge
-   * server-issued con su wallet para probar ownership. La verificación SIWE/EIP-4361
-   * vive en `walletService` (Fase 1 implementación completa). Aquí solo aplicamos
-   * el efecto en DB asumiendo que el caller ya verificó la firma.
+   * server-issued con su wallet para probar ownership.
+   * El caller (auth.routes /link/wallet) verifica SIWE EIP-4361 vía WalletAuthService.
    */
   async linkWallet(userId: string, walletAddress: Address): Promise<User> {
+    const previouslyLinked = await this.db.user.findUnique({
+      where: { id: userId },
+      select: { walletAddress: true },
+    });
     const balance = await roninService.getAxieBalance(walletAddress);
     const hasNFTAxies = balance >= RANKED_NFT_MIN_NFT_AXIES;
-    return this.db.user.update({
+    const updated = await this.db.user.update({
       where: { id: userId },
       data: { walletAddress: walletAddress.toLowerCase(), hasNFTAxies },
     });
+    if (!previouslyLinked?.walletAddress) {
+      notificationService
+        .create(userId, 'WALLET_LINKED', 'Wallet de Ronin vinculada (firma EIP-4361)', {
+          walletAddress: walletAddress.toLowerCase(),
+          hasNFTAxies,
+          via: 'siwe',
+        })
+        .catch(() => undefined);
+    }
+    return updated;
   }
 
   /**

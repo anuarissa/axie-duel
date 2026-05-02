@@ -41,6 +41,11 @@ const negateAttackFactory: TriggerFactory = (_def, { state, source, ownerId, reg
   registry.register(source.instanceId, 'onAttackDeclare', (event) => {
     if (event.type !== 'onAttackDeclare') return;
     if (event.attackerOwnerId === ownerId) return; // solo dispara contra ataques del oponente
+    // Skip si el atacante tiene trapImmune (ej: Skydancer Aery summon turn).
+    if (event.attacker.counters.get('trapImmune')) {
+      log.info({ trap: source.instanceId, attacker: event.attacker.instanceId }, 'negateAttack skipped (trapImmune)');
+      return;
+    }
     event.cancelled = true;
     log.info({ trap: source.instanceId, attacker: event.attacker.instanceId }, 'negateAttack triggered');
     moveToGraveyard(state, source, ownerId);
@@ -57,6 +62,10 @@ const atkDebuffFactory: TriggerFactory = (def, { state, source, ownerId, registr
   registry.register(source.instanceId, 'onAttackDeclare', (event) => {
     if (event.type !== 'onAttackDeclare') return;
     if (event.attackerOwnerId === ownerId) return;
+    if (event.attacker.counters.get('trapImmune')) {
+      log.info({ trap: source.instanceId, attacker: event.attacker.instanceId }, 'atkDebuff skipped (trapImmune)');
+      return;
+    }
     event.attackerAtkPenalty += penalty;
     log.info({ trap: source.instanceId, penalty }, 'atkDebuff triggered');
     moveToGraveyard(state, source, ownerId);
@@ -167,6 +176,48 @@ function filterToScope(filter: string): AuraScope {
   }
 }
 
+/**
+ * trapImmune (Skydancer Aery): mientras dure el "summon turn", el monster
+ * no puede ser targeteado por trap effects. Implementado como counter en CardSchema.
+ * Reset al cambio de turno (TODO Fase 2 — necesita onTurnStart hook para limpiar).
+ *
+ * Triggered handlers de traps (negateAttack, atkDebuff) chequean
+ * `target.counters.get('trapImmune')` antes de aplicar.
+ */
+const trapImmuneFactory: TriggerFactory = (def, { source, log }) => {
+  const duration = (def.effect?.params?.duration as string) ?? 'summonTurn';
+  source.counters.set('trapImmune', 1);
+  log.info({ source: source.instanceId, duration }, 'trapImmune flag set');
+};
+
+/**
+ * lockPosition (Webbed Roots — Continuous Trap): mientras esté activa,
+ * los monsters del oponente no pueden cambiar DEF→ATK.
+ * Implementado como flag en CardSchema.counters del source — el ActionValidator
+ * chequea con un loop sobre spell/trap zones del oponente al validar
+ * change-position (TODO Fase 2 — handleChangePosition).
+ */
+const lockPositionFactory: TriggerFactory = (_def, { source, ownerId, log }) => {
+  source.counters.set('lockOpponentDefToAtk', 1);
+  log.info({ source: source.instanceId, ownerId }, 'lockPosition active (constraint flag set)');
+};
+
+/**
+ * duelLock (Single Combat — Quick-Play Spell): hasta fin de turno,
+ * solo el monster targeteado y tu Beast pueden atacar/ser atacados.
+ *
+ * Activable solo si controlás Beast. Setea flag en counters del source con
+ * el targetInstanceId. ActionValidator.validateDeclareAttack chequea
+ * el flag (TODO Fase 2 — necesita expand de validateDeclareAttack).
+ *
+ * Cleanup: hasta End Phase del turno actual (TODO Fase 2 — necesita
+ * onPhaseChange handler para limpiar al llegar a END).
+ */
+const duelLockFactory: TriggerFactory = (_def, { source, ownerId, log }) => {
+  source.counters.set('duelLockActive', 1);
+  log.info({ source: source.instanceId, ownerId }, 'duelLock activated (constraint flag set)');
+};
+
 const TRIGGER_FACTORIES: Record<string, TriggerFactory> = {
   negateAttack: negateAttackFactory,
   atkDebuff: atkDebuffFactory,
@@ -174,6 +225,9 @@ const TRIGGER_FACTORIES: Record<string, TriggerFactory> = {
   fieldTrigger: fieldTriggerFactory,
   continuousAura: continuousAuraFactory,
   auraDef: auraDefFactory,
+  trapImmune: trapImmuneFactory,
+  lockPosition: lockPositionFactory,
+  duelLock: duelLockFactory,
 };
 
 /** Inspecciona la carta y registra triggers si los soporta. */

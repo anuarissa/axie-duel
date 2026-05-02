@@ -17,6 +17,7 @@ import { AuthError, ValidationError } from '../lib/errors.js';
 import { logger } from '../lib/logger.js';
 import { questService, type QuestKind } from '../services/QuestService.js';
 import { notificationService } from '../services/NotificationService.js';
+import { cardDropService } from '../services/CardDropService.js';
 import { calculateElo, type EloOutcome } from '@axie-duel/game-rules';
 
 const router = Router();
@@ -136,6 +137,22 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
           duration: body.duration,
         })
         .catch((err) => logger.warn({ err, userId: pid }, 'notification create failed'));
+    }
+
+    // Hook card drops: SOLO al winner si no es BOT (PvE bot no obtiene cartas).
+    // Determinístico via matchId — el mismo match siempre da el mismo drop.
+    if (body.winnerId && body.winnerId !== 'BOT') {
+      cardDropService
+        .maybeDropFor(body.winnerId, match.id, body.mode)
+        .then((result) => {
+          if (result.dropped) {
+            logger.info(
+              { matchId: match.id, userId: body.winnerId, cardId: result.cardId, rarity: result.rarity },
+              'card drop awarded',
+            );
+          }
+        })
+        .catch((err) => logger.warn({ err, userId: body.winnerId }, 'card drop failed'));
     }
 
     // Hook ELO: solo para PvP_Ranked y PvP_RankedNFT. Aplicamos al field

@@ -78,6 +78,39 @@ const ListCardsQuery = z.object({
     .optional(),
 });
 
+/**
+ * Perfil PÚBLICO de un usuario por username. NO requiere auth.
+ * Expone solo info no-sensible (sin email, walletAddress, axsBalance, isAdmin).
+ */
+router.get('/:username', async (req: Request<{ username: string }>, res: Response, next: NextFunction) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username: req.params.username },
+      select: {
+        id: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        hasNFTAxies: true,
+        eloRanked: true,
+        eloRankedNFT: true,
+        level: true,
+        xp: true,
+        totalWins: true,
+        totalLosses: true,
+        totalDraws: true,
+        createdAt: true,
+      },
+    });
+    if (!user) throw new NotFoundError('User');
+    const totalGames = user.totalWins + user.totalLosses + user.totalDraws;
+    const winRate = totalGames > 0 ? user.totalWins / totalGames : 0;
+    res.json({ ...user, totalGames, winRate: Number(winRate.toFixed(3)) });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /** Lista las cartas que el usuario posee (incluye Starter no-NFT y eventualmente NFT mintadas). */
 router.get('/me/cards', authRequired, async (req: Request, res: Response, next: NextFunction) => {
   try {

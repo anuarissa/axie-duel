@@ -100,6 +100,28 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
       );
     }
 
+    // Hook W/L/D counters denormalizados (no-fatal). Más rápido que COUNT(*) en /users/:username.
+    const wldOps: Promise<unknown>[] = [];
+    if (body.winnerId && body.winnerId !== 'BOT') {
+      wldOps.push(
+        prisma.user.update({ where: { id: body.winnerId }, data: { totalWins: { increment: 1 } } }),
+      );
+      const loserId = realPlayerIds.find((id) => id !== body.winnerId);
+      if (loserId) {
+        wldOps.push(
+          prisma.user.update({ where: { id: loserId }, data: { totalLosses: { increment: 1 } } }),
+        );
+      }
+    } else if (!body.winnerId && realPlayerIds.length >= 2) {
+      // Sin winner = empate: ambos suman draw.
+      for (const pid of realPlayerIds) {
+        wldOps.push(prisma.user.update({ where: { id: pid }, data: { totalDraws: { increment: 1 } } }));
+      }
+    }
+    Promise.all(wldOps).catch((err) =>
+      logger.warn({ err, matchId: match.id }, 'W/L/D counter update failed'),
+    );
+
     // Hook ELO: solo para PvP_Ranked y PvP_RankedNFT. Aplicamos al field
     // correspondiente (eloRanked o eloRankedNFT). PvE / PvP_Casual no afectan.
     let eloDeltas: { player1: number; player2: number } | null = null;

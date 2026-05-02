@@ -42,6 +42,11 @@ model User {
   eloRankedNFT  Int           @default(1000)
   level         Int           @default(1)
   xp            Int           @default(0)
+  /// Counters denormalizados para perfil público (más rápido que COUNT(*) sobre Match).
+  /// Se incrementan en /internal/matches al persistir cada match terminado.
+  totalWins     Int           @default(0)
+  totalLosses   Int           @default(0)
+  totalDraws    Int           @default(0)
   /// Balance off-chain de AXS (ficticio mientras no haya partnership con Sky Mavis).
   /// Cuando se active modo on-chain, este campo se usa solo como cache; la verdad vive en Ronin.
   axsBalance    Decimal       @default(0) @db.Decimal(36, 18)

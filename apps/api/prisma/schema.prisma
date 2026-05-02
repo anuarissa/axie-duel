@@ -57,6 +57,7 @@ model User {
   axsTxs        AxsTransaction[]
   tournamentRegs TournamentParticipant[]
   questProgress UserQuestProgress[]
+  notifications Notification[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -272,6 +273,27 @@ model DailyQuest {
   createdAt   DateTime            @default(now())
 
   @@index([kind, validUntil])
+}
+
+/// Notificación in-app para el feed del user.
+/// Cada earn AXS, claim de quest, win de match, drop de carta, etc. crea una.
+/// El frontend hace polling de /notifications para mostrar un badge + feed.
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 'AXS_EARNED' | 'AXS_BURNED' | 'QUEST_COMPLETED' | 'TOURNAMENT_WON' |
+  /// 'MATCH_RESULT' | 'CARD_DROP' | 'WALLET_LINKED' | 'NFT_MINTED'
+  kind      String
+  message   String
+  /// Metadata específica del kind: { matchId, questId, amount, tournamentId, rank, etc. }.
+  metadata  Json?
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, read, createdAt])
+  @@index([userId, createdAt])
 }
 
 model UserQuestProgress {

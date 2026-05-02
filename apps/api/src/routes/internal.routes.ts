@@ -16,6 +16,7 @@ import { config } from '../config.js';
 import { AuthError, ValidationError } from '../lib/errors.js';
 import { logger } from '../lib/logger.js';
 import { questService, type QuestKind } from '../services/QuestService.js';
+import { notificationService } from '../services/NotificationService.js';
 import { calculateElo, type EloOutcome } from '@axie-duel/game-rules';
 
 const router = Router();
@@ -121,6 +122,21 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
     Promise.all(wldOps).catch((err) =>
       logger.warn({ err, matchId: match.id }, 'W/L/D counter update failed'),
     );
+
+    // Hook notifications: 'MATCH_RESULT' a cada player real con outcome.
+    for (const pid of realPlayerIds) {
+      const outcome = !body.winnerId ? 'DRAW' : body.winnerId === pid ? 'WIN' : 'LOSS';
+      const message =
+        outcome === 'WIN' ? '¡Ganaste tu partida!' : outcome === 'LOSS' ? 'Perdiste tu partida.' : 'Empate.';
+      notificationService
+        .create(pid, 'MATCH_RESULT', message, {
+          matchId: match.id,
+          mode: body.mode,
+          outcome,
+          duration: body.duration,
+        })
+        .catch((err) => logger.warn({ err, userId: pid }, 'notification create failed'));
+    }
 
     // Hook ELO: solo para PvP_Ranked y PvP_RankedNFT. Aplicamos al field
     // correspondiente (eloRanked o eloRankedNFT). PvE / PvP_Casual no afectan.

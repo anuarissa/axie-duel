@@ -18,6 +18,7 @@ import { Prisma } from '@prisma/client';
 import type { PrismaClient } from '@prisma/client';
 import { prisma } from '../lib/prisma.js';
 import { axsService } from './AxsService.js';
+import { notificationService } from './NotificationService.js';
 import { logger } from '../lib/logger.js';
 import { ValidationError, RuleViolationError, NotFoundError } from '../lib/errors.js';
 
@@ -144,6 +145,15 @@ export class QuestService {
       'EARN_DAILY',
       `quest:${questId}`,
     );
+    // Notification (no-fatal — la quest ya está claimed).
+    notificationService
+      .create(
+        userId,
+        'QUEST_COMPLETED',
+        `Reclamaste ${progress.quest.rewardAxs} AXS de "${progress.quest.description}"`,
+        { questId, rewardAxs: progress.quest.rewardAxs.toString() },
+      )
+      .catch(() => undefined);
     return { rewardAxs: progress.quest.rewardAxs.toString(), newBalance: reward.newBalance };
   }
 

@@ -22,6 +22,7 @@ import tournamentRoutes from './routes/tournament.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import internalRoutes from './routes/internal.routes.js';
 import questRoutes from './routes/quest.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import { openApiSpec } from './openapi-spec.js';
 
@@ -69,6 +70,7 @@ app.use('/tournaments', tournamentRoutes);
 app.use('/admin', adminRoutes);
 app.use('/internal', internalRoutes);
 app.use('/quests', questRoutes);
+app.use('/notifications', notificationRoutes);
 
 app.use(errorHandler);
 

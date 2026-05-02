@@ -6,10 +6,18 @@
 import type { EffectHandler } from './types.js';
 import { damageEffect } from './DamageEffect.js';
 import { drawEffect } from './DrawEffect.js';
+import { buffEffect } from './BuffEffect.js';
+import { equipEffect } from './EquipEffect.js';
+import { tributeDrawEffect } from './TributeDrawEffect.js';
+import { burnEffect } from './BurnEffect.js';
 
 export const effectHandlers: Record<string, EffectHandler> = {
   damage: damageEffect,
   draw: drawEffect,
+  buff: buffEffect,
+  equip: equipEffect,
+  tributeDraw: tributeDrawEffect,
+  burn: burnEffect,
 };
 
 export type { EffectHandler, EffectContext, EffectResultData } from './types.js';

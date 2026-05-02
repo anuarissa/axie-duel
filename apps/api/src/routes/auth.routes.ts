@@ -18,6 +18,7 @@ import type { Address } from 'viem';
 import { socialAuthService } from '../services/SocialAuthService.js';
 import { waypointService } from '../services/WaypointService.js';
 import { accountService } from '../services/AccountService.js';
+import { walletAuthService } from '../services/WalletAuthService.js';
 import { prisma } from '../lib/prisma.js';
 import { authRateLimit } from '../middleware/rateLimit.middleware.js';
 import { authRequired } from '../middleware/auth.middleware.js';
@@ -135,22 +136,49 @@ router.post('/link/waypoint', authRequired, async (req: Request, res: Response, 
   }
 });
 
+const NonceBody = z.object({
+  walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+});
+
+/**
+ * Paso 1 del flujo SIWE: cliente pide un nonce para construir el mensaje a firmar.
+ * No requiere auth — un usuario sin sesión también puede iniciar el flujo
+ * (puede usarse como /auth/wallet/login en el futuro, no solo /link).
+ */
+router.post('/wallet/nonce', authRateLimit, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { walletAddress } = NonceBody.parse(req.body);
+    const nonce = await walletAuthService.issueNonce(walletAddress);
+    // Mensaje SIWE de ejemplo que el cliente puede usar literal — el servidor
+    // valida que el mensaje firmado contenga `Nonce: <nonce>`.
+    const messageTemplate =
+      `axie-duel.com wants you to sign in with your Ethereum account:\n${walletAddress}\n\n` +
+      `Link this wallet to your Axie Duel account.\n\n` +
+      `URI: https://axie-duel.com\n` +
+      `Version: 1\n` +
+      `Chain ID: ${process.env.RONIN_CHAIN_ID ?? '2021'}\n` +
+      `Nonce: ${nonce}\n` +
+      `Issued At: ${new Date().toISOString()}`;
+    res.json({ nonce, messageTemplate });
+  } catch (err) {
+    next(err);
+  }
+});
+
 const LinkWalletBody = z.object({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-  /** Firma EIP-4361 (Sign-In With Ethereum). Validación completa en Fase 1. */
-  signature: z.string().min(20),
-  message: z.string().min(20),
+  /** Firma EIP-4361 (Sign-In With Ethereum) hecha por la wallet del usuario. */
+  signature: z.string().min(132),
+  /** Mensaje SIWE que el usuario firmó (incluye Nonce). */
+  message: z.string().min(40),
 });
 
 router.post('/link/wallet', authRequired, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { walletAddress, signature, message } = LinkWalletBody.parse(req.body);
-    // TODO Fase 1: verificar la firma EIP-4361 con viem.verifyMessage(). Por ahora,
-    // como el endpoint requiere auth previa Web2 y un signature/message válidos en shape,
-    // confiamos del primer cut. NO usar en producción sin verifyMessage.
-    void signature;
-    void message;
-    const user = await accountService.linkWallet(req.user!.userId, walletAddress as Address);
+    // Verifica firma criptográfica + nonce match (anti-replay).
+    const verified = await walletAuthService.verifySignature(message, signature, walletAddress);
+    const user = await accountService.linkWallet(req.user!.userId, verified);
     res.json({ user: userPublicShape(user) });
   } catch (err) {
     next(err);

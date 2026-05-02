@@ -6,6 +6,26 @@
 import { PrismaClient } from '@prisma/client';
 import { allCards } from '@axie-duel/card-database';
 import type { Card } from '@axie-duel/shared-types';
+import dotenv from 'dotenv';
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Auto-load .env raíz para que prisma encuentre DATABASE_URL/DIRECT_URL.
+(function loadDotenv() {
+  const here = dirname(fileURLToPath(import.meta.url));
+  let dir = here;
+  for (let i = 0; i < 6; i++) {
+    const envPath = resolve(dir, '.env');
+    if (existsSync(envPath)) {
+      dotenv.config({ path: envPath });
+      return;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+})();
 
 const prisma = new PrismaClient();
 

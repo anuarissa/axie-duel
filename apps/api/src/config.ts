@@ -3,8 +3,29 @@
  * el proceso muere antes de aceptar tráfico (fail-fast).
  */
 
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import { existsSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
+
+// Auto-load .env subiendo directorios desde este archivo hasta encontrar uno.
+// Permite correr `tsx src/index.ts` desde apps/api o desde root indistintamente.
+function loadDotenv(): void {
+  const here = dirname(fileURLToPath(import.meta.url));
+  let dir = here;
+  for (let i = 0; i < 6; i++) {
+    const envPath = resolve(dir, '.env');
+    if (existsSync(envPath)) {
+      dotenv.config({ path: envPath });
+      return;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+}
+loadDotenv();
 
 const ConfigSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),

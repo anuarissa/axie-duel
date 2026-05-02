@@ -62,13 +62,21 @@ pnpm install
 cp .env.example .env
 # Editar .env: rellenar JWT_SECRET (openssl rand -hex 64), WAYPOINT_CLIENT_ID si tienes app, etc.
 
-# 4. Levantar PostgreSQL + Redis (requiere Docker Desktop corriendo)
+# 4a. PATH A — Postgres + Redis con Docker (recomendado)
+#     Si NO tienes Docker Desktop, corre el helper como admin:
+#       powershell -ExecutionPolicy Bypass -File tools\install-docker.ps1
+#     Después del reinicio (si Windows lo pide):
 pnpm docker:up
+
+# 4b. PATH B — Postgres + Redis cloud (sin Docker)
+#     Crea cuenta en https://supabase.com (Postgres free tier) y https://upstash.com (Redis free tier).
+#     Pega la connection string de Supabase en DATABASE_URL y la de Upstash en REDIS_URL en tu .env.
+#     Salta el paso 4a.
 
 # 5. Generar cliente Prisma + correr migraciones + seed catálogo
 pnpm db:generate
-pnpm db:migrate
-pnpm db:seed
+pnpm db:migrate    # crea migración inicial + aplica al DB
+pnpm db:seed       # carga las 15 cartas del catálogo
 
 # 6. Levantar todo (game-server :2567, api :3001, web :3000)
 pnpm dev

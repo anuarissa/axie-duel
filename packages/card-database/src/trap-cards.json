@@ -1,0 +1,84 @@
+[
+  {
+    "id": "trp_001",
+    "name": "Poison Backlash",
+    "type": "Trap",
+    "subtype": "Normal",
+    "rarity": "Common",
+    "imageUrl": "https://placehold.co/420x420/2a0a2a/ffffff?text=Poison+Backlash",
+    "description": "When an opponent monster declares an attack: the attacking monster loses 800 ATK until end of turn.",
+    "isNFT": false,
+    "effect": {
+      "kind": "atkDebuff",
+      "spellSpeed": 2,
+      "description": "Attacker loses 800 ATK until end of turn.",
+      "params": { "atkPenalty": 800, "trigger": "onOppAttackDeclare" },
+      "targeting": { "count": 1, "zones": ["OPP_MONSTER"] }
+    }
+  },
+  {
+    "id": "trp_002",
+    "name": "Mirror Web",
+    "type": "Trap",
+    "subtype": "Normal",
+    "rarity": "Rare",
+    "imageUrl": "https://placehold.co/420x420/1a1a3a/ffffff?text=Mirror+Web",
+    "description": "Negate the attack of 1 opponent monster.",
+    "isNFT": false,
+    "effect": {
+      "kind": "negateAttack",
+      "spellSpeed": 2,
+      "description": "Negate the attack.",
+      "params": { "trigger": "onOppAttackDeclare" }
+    }
+  },
+  {
+    "id": "trp_003",
+    "name": "Lunacian Counterstrike",
+    "type": "Trap",
+    "subtype": "Counter",
+    "rarity": "Epic",
+    "imageUrl": "https://placehold.co/420x420/3a1a1a/ffffff?text=Counterstrike",
+    "description": "Negate the activation of 1 Spell Card and destroy it.",
+    "isNFT": false,
+    "effect": {
+      "kind": "negateAndDestroy",
+      "spellSpeed": 3,
+      "description": "Negate Spell activation + destroy.",
+      "params": { "filter": "spell" },
+      "targeting": { "count": 1, "zones": ["OPP_MONSTER"] }
+    }
+  },
+  {
+    "id": "trp_004",
+    "name": "Webbed Roots",
+    "type": "Trap",
+    "subtype": "Continuous",
+    "rarity": "Rare",
+    "imageUrl": "https://placehold.co/420x420/0a3a0a/ffffff?text=Webbed+Roots",
+    "description": "While active, opponent's monsters in DEF position cannot change to ATK position.",
+    "isNFT": false,
+    "effect": {
+      "kind": "lockPosition",
+      "spellSpeed": 2,
+      "description": "Opponent monsters cannot change DEF -> ATK.",
+      "params": { "lockedTransition": "DEF_TO_ATK" }
+    }
+  },
+  {
+    "id": "trp_005",
+    "name": "Lethal Strike",
+    "type": "Trap",
+    "subtype": "Normal",
+    "rarity": "Legendary",
+    "imageUrl": "https://placehold.co/420x420/4a0a0a/ffffff?text=Lethal+Strike",
+    "description": "When your monster destroys an opponent's monster by battle: deal 1000 damage to your opponent.",
+    "isNFT": false,
+    "effect": {
+      "kind": "burn",
+      "spellSpeed": 2,
+      "description": "When you destroy a monster by battle, deal 1000 damage to opponent.",
+      "params": { "amount": 1000, "trigger": "onOwnDestroyByBattle" }
+    }
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "name": "@axie-duel/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "echo 'foundry not installed; run: foundryup && forge install OpenZeppelin/openzeppelin-contracts && forge build' && exit 0",
+    "test": "echo 'foundry not installed; skipping test' && exit 0",
+    "typecheck": "echo 'no typescript here' && exit 0",
+    "lint": "echo 'no lint configured for contracts' && exit 0",
+    "clean": "rimraf out cache broadcast"
+  },
+  "devDependencies": {
+    "rimraf": "^6.0.1"
+  }
+}

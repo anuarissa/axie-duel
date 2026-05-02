@@ -1,0 +1,40 @@
+{
+  "name": "@axie-duel/game-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo 'no lint configured for game-server yet' && exit 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rimraf dist .turbo coverage"
+  },
+  "dependencies": {
+    "@axie-duel/card-database": "workspace:*",
+    "@axie-duel/game-rules": "workspace:*",
+    "@axie-duel/shared-types": "workspace:*",
+    "@colyseus/monitor": "^0.17.0",
+    "@colyseus/schema": "^4.0.0",
+    "@colyseus/ws-transport": "^0.17.0",
+    "colyseus": "^0.17.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "ioredis": "^5.4.1",
+    "pino": "^9.4.0",
+    "pino-pretty": "^11.2.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "colyseus.js": "^0.15.27",
+    "rimraf": "^6.0.1",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env", "tsconfig.base.json"],
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "JWT_SECRET",
+    "WAYPOINT_CLIENT_ID",
+    "WAYPOINT_REDIRECT_URI",
+    "WAYPOINT_ISSUER",
+    "RONIN_RPC_URL",
+    "RONIN_CHAIN_ID",
+    "AXIE_CONTRACT_ADDRESS",
+    "AXIE_GRAPHQL_URL",
+    "AXIE_GAME_API_URL",
+    "GAME_SERVER_PORT",
+    "API_PORT",
+    "WEB_PORT"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

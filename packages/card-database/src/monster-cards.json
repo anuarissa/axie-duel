@@ -1,0 +1,142 @@
+[
+  {
+    "id": "mon_beast_001",
+    "name": "Olek, the Frost Fang",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Beast",
+    "monsterType": "Beast",
+    "level": 4,
+    "atk": 1700,
+    "def": 1200,
+    "imageUrl": "https://placehold.co/420x420/0d2b1f/ffffff?text=Olek",
+    "description": "A nimble Beast with thick fur. When summoned, gains +200 ATK if you control no other monsters.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_002", "name": "Lucas", "class": "Beast", "type": "eyes", "stage": 2, "abilities": [] },
+      { "id": "ears_002", "name": "Goldfish", "class": "Beast", "type": "ears", "stage": 2, "abilities": [] },
+      { "id": "mouth_002", "name": "Little Branch", "class": "Beast", "type": "mouth", "stage": 2, "abilities": [] },
+      { "id": "horn_002", "name": "Imp", "class": "Beast", "type": "horn", "stage": 2, "abilities": [] },
+      { "id": "back_002", "name": "Hermit", "class": "Beast", "type": "back", "stage": 2, "abilities": [] },
+      { "id": "tail_002", "name": "Hot Butt", "class": "Beast", "type": "tail", "stage": 2, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "buff",
+      "spellSpeed": 1,
+      "description": "Gain +200 ATK while you control no other monsters.",
+      "params": { "atkBonus": 200, "condition": "loneOnField" }
+    }
+  },
+  {
+    "id": "mon_aqua_001",
+    "name": "Tidecaller Nyra",
+    "type": "Monster",
+    "rarity": "Rare",
+    "attribute": "Aquatic",
+    "monsterType": "Aqua",
+    "level": 5,
+    "atk": 2100,
+    "def": 1800,
+    "imageUrl": "https://placehold.co/420x420/0a3a5a/ffffff?text=Nyra",
+    "description": "Requires 1 tribute. When this Axie is summoned, draw 1 card.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_004", "name": "Sleepless", "class": "Aquatic", "type": "eyes", "stage": 2, "abilities": [] },
+      { "id": "ears_004", "name": "Nimo", "class": "Aquatic", "type": "ears", "stage": 2, "abilities": [] },
+      { "id": "mouth_004", "name": "Risky Fish", "class": "Aquatic", "type": "mouth", "stage": 2, "abilities": [] },
+      { "id": "horn_004", "name": "Anemone", "class": "Aquatic", "type": "horn", "stage": 2, "abilities": [] },
+      { "id": "back_004", "name": "Snail Shell", "class": "Aquatic", "type": "back", "stage": 2, "abilities": [] },
+      { "id": "tail_004", "name": "Shrimp", "class": "Aquatic", "type": "tail", "stage": 2, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "draw",
+      "spellSpeed": 1,
+      "description": "When summoned, draw 1 card.",
+      "params": { "amount": 1, "trigger": "onSummon" }
+    }
+  },
+  {
+    "id": "mon_plant_001",
+    "name": "Verdant Sentinel",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Plant",
+    "monsterType": "Plant",
+    "level": 3,
+    "atk": 800,
+    "def": 1900,
+    "imageUrl": "https://placehold.co/420x420/0a4a1a/ffffff?text=Sentinel",
+    "description": "A wall of brambles. While in DEF position, all your other Plant monsters gain +200 DEF.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_006", "name": "Bookworm", "class": "Plant", "type": "eyes", "stage": 2, "abilities": [] },
+      { "id": "ears_006", "name": "Leaf Bug", "class": "Plant", "type": "ears", "stage": 2, "abilities": [] },
+      { "id": "mouth_006", "name": "Cactus", "class": "Plant", "type": "mouth", "stage": 2, "abilities": [] },
+      { "id": "horn_006", "name": "Beech", "class": "Plant", "type": "horn", "stage": 2, "abilities": [] },
+      { "id": "back_006", "name": "Pumpkin", "class": "Plant", "type": "back", "stage": 2, "abilities": [] },
+      { "id": "tail_006", "name": "Carrot", "class": "Plant", "type": "tail", "stage": 2, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "auraDef",
+      "spellSpeed": 1,
+      "description": "While in DEF, your other Plant monsters gain +200 DEF.",
+      "params": { "defBonus": 200, "scope": "ownPlantsExceptSelf", "requirePosition": "DEF" }
+    }
+  },
+  {
+    "id": "mon_bird_001",
+    "name": "Skydancer Aery",
+    "type": "Monster",
+    "rarity": "Epic",
+    "attribute": "Bird",
+    "monsterType": "Beast",
+    "level": 7,
+    "atk": 2500,
+    "def": 1500,
+    "imageUrl": "https://placehold.co/420x420/3a1a4a/ffffff?text=Aery",
+    "description": "Requires 2 tributes. Cannot be targeted by Trap effects on the turn it's summoned.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_008", "name": "Lucky", "class": "Bird", "type": "eyes", "stage": 3, "abilities": [] },
+      { "id": "ears_008", "name": "Nut Cracker", "class": "Bird", "type": "ears", "stage": 3, "abilities": [] },
+      { "id": "mouth_008", "name": "Doubletalk", "class": "Bird", "type": "mouth", "stage": 3, "abilities": [] },
+      { "id": "horn_008", "name": "Eggshell", "class": "Bird", "type": "horn", "stage": 3, "abilities": [] },
+      { "id": "back_008", "name": "Tri Feather", "class": "Bird", "type": "back", "stage": 3, "abilities": [] },
+      { "id": "tail_008", "name": "Swallow", "class": "Bird", "type": "tail", "stage": 3, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "trapImmune",
+      "spellSpeed": 1,
+      "description": "On summon turn, cannot be targeted by Trap effects.",
+      "params": { "duration": "summonTurn" }
+    }
+  },
+  {
+    "id": "mon_reptile_001",
+    "name": "Venomscale Stalker",
+    "type": "Monster",
+    "rarity": "Legendary",
+    "attribute": "Reptile",
+    "monsterType": "Reptile",
+    "level": 8,
+    "atk": 2800,
+    "def": 2400,
+    "imageUrl": "https://placehold.co/420x420/2a3a0a/ffffff?text=Venomscale",
+    "description": "Requires 2 tributes. Each turn you may declare 1 attack from this monster as a direct attack against a player who controls no monsters with ATK >= 2000.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_010", "name": "Tiny Turtle", "class": "Reptile", "type": "eyes", "stage": 3, "abilities": [] },
+      { "id": "ears_010", "name": "Snake Jar", "class": "Reptile", "type": "ears", "stage": 3, "abilities": [] },
+      { "id": "mouth_010", "name": "Toothless Bite", "class": "Reptile", "type": "mouth", "stage": 3, "abilities": [] },
+      { "id": "horn_010", "name": "Scaly Spear", "class": "Reptile", "type": "horn", "stage": 3, "abilities": [] },
+      { "id": "back_010", "name": "Indian Star", "class": "Reptile", "type": "back", "stage": 3, "abilities": [] },
+      { "id": "tail_010", "name": "Granma's Hair", "class": "Reptile", "type": "tail", "stage": 3, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "piercingDirect",
+      "spellSpeed": 1,
+      "description": "Once per turn, may attack directly if no opp monster has ATK >= 2000.",
+      "params": { "threshold": 2000 }
+    }
+  }
+]

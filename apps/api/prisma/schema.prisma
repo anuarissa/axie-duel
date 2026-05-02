@@ -1,0 +1,217 @@
+// Prisma schema — Axie Duel API
+// Master prompt sección 7. PostgreSQL + Prisma 5.x.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  waypointSub   String        @unique // sub claim del JWT de Waypoint (ID estable de Sky Mavis)
+  email         String?       @unique
+  username      String        @unique
+  walletAddress String?       @unique // address de Ronin del Waypoint
+  hasNFTAxies   Boolean       @default(false)
+  eloRanked     Int           @default(1000)
+  eloRankedNFT  Int           @default(1000)
+  level         Int           @default(1)
+  xp            Int           @default(0)
+  /// Balance off-chain de AXS (ficticio mientras no haya partnership con Sky Mavis).
+  /// Cuando se active modo on-chain, este campo se usa solo como cache; la verdad vive en Ronin.
+  axsBalance    Decimal       @default(0) @db.Decimal(36, 18)
+  starterAxies  StarterAxie[]
+  decks         Deck[]
+  matches       Match[]       @relation("PlayerMatches")
+  ownedCards    OwnedCard[]
+  axsTxs        AxsTransaction[]
+  tournamentRegs TournamentParticipant[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([eloRanked])
+  @@index([eloRankedNFT])
+  @@index([axsBalance])
+}
+
+/// Ledger inmutable de TODA mutación al `axsBalance` de un usuario.
+/// Earn = amount > 0. Burn = amount < 0. Single source of truth de auditoría.
+model AxsTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// 'EARN_TOURNAMENT' | 'EARN_DAILY' | 'EARN_STARTER_BONUS' |
+  /// 'BURN_TOURNAMENT_ENTRY' | 'BURN_NFT_MINT' | 'BURN_COSMETIC' | 'BURN_DECK_SLOT'
+  kind      String
+  amount    Decimal  @db.Decimal(36, 18) // signed: positivo=earn, negativo=burn
+  /// Razón legible: 'tournament:<id>' | 'cosmetic:<sku>' | 'mint:<cardId>' | 'daily:<date>'
+  reason    String
+  /// Hash de tx on-chain. null mientras estemos off-chain.
+  txHash    String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([kind])
+}
+
+model Tournament {
+  id                    String                  @id @default(cuid())
+  name                  String
+  description           String?
+  /// 'SINGLE_ELIM' (Fase 0) | 'SWISS' (Fase 3) | 'ROUND_ROBIN'
+  format                String                  @default("SINGLE_ELIM")
+  /// 'SCHEDULED' | 'REGISTRATION' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+  status                String                  @default("SCHEDULED")
+  entryCostAxs          Decimal                 @default(0) @db.Decimal(36, 18)
+  prizePoolAxs          Decimal                 @default(0) @db.Decimal(36, 18)
+  /// JSON: [{rank: 1, share: 0.5}, {rank: 2, share: 0.3}, {rank: 3, share: 0.2}]
+  /// `share` debe sumar 1. El servicio reparte prizePoolAxs * share al rank correspondiente.
+  prizeDistribution     Json
+  maxParticipants       Int                     @default(64)
+  /// Si true, requiere que al menos 3 Axies NFT estén en el deck del jugador.
+  requiresNFTAxies      Boolean                 @default(false)
+  registrationDeadline  DateTime
+  startsAt              DateTime
+  endsAt                DateTime?
+  participants          TournamentParticipant[]
+  matches               TournamentMatch[]
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  @@index([status, startsAt])
+}
+
+model TournamentParticipant {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  registeredAt DateTime   @default(now())
+  /// Set tras `complete()`. 1 = ganador, 2 = finalista, etc.
+  finalRank    Int?
+  /// Para Swiss (Fase 3) — puntos acumulados.
+  totalPoints  Int        @default(0)
+  wins         Int        @default(0)
+  losses       Int        @default(0)
+  /// Si fue eliminado por bracket (single-elim). En Swiss este campo no aplica.
+  eliminated   Boolean    @default(false)
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId])
+}
+
+model TournamentMatch {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  round        Int
+  bracketSlot  Int        @default(0)
+  player1Id    String
+  /// null = bye automático, gana player1.
+  player2Id    String?
+  winnerId     String?
+  player1Score Int        @default(0)
+  player2Score Int        @default(0)
+  /// FK al Match real cuando se juega. Sin FK (Match es independiente).
+  matchId      String?
+  /// 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'BYE' | 'WALKOVER'
+  status       String     @default("PENDING")
+  scheduledAt  DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@index([tournamentId, round])
+  @@index([player1Id])
+  @@index([player2Id])
+}
+
+model StarterAxie {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  axieClass String
+  parts     Json    // {eyes, ears, mouth, horn, back, tail}
+  stats     Json    // {hp, speed, skill, morale}
+  isStarter Boolean @default(true)
+
+  @@index([userId])
+}
+
+model Card {
+  id          String      @id // ID estable de catálogo (ej: 'mon_beast_001')
+  name        String
+  type        String      // 'Monster' | 'Spell' | 'Trap'
+  subType     String?
+  rarity      String
+  attribute   String?
+  level       Int?
+  atk         Int?
+  def         Int?
+  effectJson  Json
+  imageUrl    String
+  description String
+  ownedBy     OwnedCard[]
+  decks       DeckCard[]
+}
+
+model OwnedCard {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cardId     String
+  card       Card     @relation(fields: [cardId], references: [id])
+  isNFT      Boolean  @default(false)
+  tokenId    String?  // si es NFT (Ronin tokenId)
+  obtainedAt DateTime @default(now())
+
+  @@unique([userId, cardId, tokenId])
+  @@index([userId])
+}
+
+model Deck {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  format    String     // 'Standard' | 'Premium'
+  cards     DeckCard[]
+  isActive  Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([userId])
+}
+
+model DeckCard {
+  id       String @id @default(cuid())
+  deckId   String
+  deck     Deck   @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  cardId   String
+  card     Card   @relation(fields: [cardId], references: [id])
+  zone     String // 'Main' | 'Extra' | 'Side'
+  quantity Int
+
+  @@index([deckId])
+}
+
+model Match {
+  id          String    @id @default(cuid())
+  player1Id   String
+  player2Id   String?   // null si es PvE
+  winnerId    String?
+  mode        String    // 'PvE' | 'PvP_Casual' | 'PvP_Ranked' | 'PvP_RankedNFT'
+  duration    Int       // segundos
+  turnsPlayed Int
+  replayUrl   String?
+  finishedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  players     User[]    @relation("PlayerMatches")
+
+  @@index([player1Id])
+  @@index([mode, finishedAt])
+}

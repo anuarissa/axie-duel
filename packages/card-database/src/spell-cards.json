@@ -1,0 +1,85 @@
+[
+  {
+    "id": "spl_001",
+    "name": "Single Combat",
+    "type": "Spell",
+    "subtype": "Quick-Play",
+    "rarity": "Common",
+    "imageUrl": "https://placehold.co/420x420/2a1a0a/ffffff?text=Single+Combat",
+    "description": "Activate only when you control a Beast monster. Target 1 face-up monster: until end of turn, only that monster and your Beast can attack or be attacked.",
+    "isNFT": false,
+    "effect": {
+      "kind": "duelLock",
+      "spellSpeed": 2,
+      "description": "Until end of turn, only the targeted monster and your Beast can attack or be attacked.",
+      "condition": "controlsBeast",
+      "targeting": { "count": 1, "zones": ["ANY_MONSTER"] }
+    }
+  },
+  {
+    "id": "spl_002",
+    "name": "Verdant Renewal",
+    "type": "Spell",
+    "subtype": "Normal",
+    "rarity": "Rare",
+    "imageUrl": "https://placehold.co/420x420/1a4a1a/ffffff?text=Verdant+Renewal",
+    "description": "Send 1 face-up Plant monster you control to the Graveyard, then draw 2 cards.",
+    "isNFT": false,
+    "effect": {
+      "kind": "tributeDraw",
+      "spellSpeed": 1,
+      "description": "Tribute 1 own Plant monster, draw 2.",
+      "params": { "drawAmount": 2, "tributeFilter": "ownPlant" },
+      "targeting": { "count": 1, "zones": ["OWN_MONSTER"] }
+    }
+  },
+  {
+    "id": "spl_003",
+    "name": "Tide Surge",
+    "type": "Spell",
+    "subtype": "Continuous",
+    "rarity": "Epic",
+    "imageUrl": "https://placehold.co/420x420/0a3a5a/ffffff?text=Tide+Surge",
+    "description": "All Aquatic monsters you control gain +400 ATK and +200 DEF.",
+    "isNFT": false,
+    "effect": {
+      "kind": "continuousAura",
+      "spellSpeed": 1,
+      "description": "All your Aquatic monsters: +400 ATK / +200 DEF.",
+      "params": { "atkBonus": 400, "defBonus": 200, "filter": "ownAquatic" }
+    }
+  },
+  {
+    "id": "spl_004",
+    "name": "Sky Mavis Field",
+    "type": "Spell",
+    "subtype": "Field",
+    "rarity": "Legendary",
+    "imageUrl": "https://placehold.co/420x420/4a3a0a/ffffff?text=Sky+Mavis+Field",
+    "description": "Once per turn, when an Axie monster is summoned, that monster gains +300 ATK until end of turn.",
+    "isNFT": false,
+    "effect": {
+      "kind": "fieldTrigger",
+      "spellSpeed": 1,
+      "description": "On Axie summon, that monster gains +300 ATK until end of turn.",
+      "params": { "atkBonus": 300, "trigger": "anyAxieSummon", "perTurn": 1 }
+    }
+  },
+  {
+    "id": "spl_005",
+    "name": "Lunacian Blessing",
+    "type": "Spell",
+    "subtype": "Equip",
+    "rarity": "Rare",
+    "imageUrl": "https://placehold.co/420x420/3a0a3a/ffffff?text=Lunacian+Blessing",
+    "description": "Equip to 1 face-up monster you control. The equipped monster gains +500 ATK and cannot be destroyed by trap effects.",
+    "isNFT": false,
+    "effect": {
+      "kind": "equip",
+      "spellSpeed": 1,
+      "description": "Equipped: +500 ATK + trap-destruction immunity.",
+      "params": { "atkBonus": 500, "trapDestructionImmunity": true },
+      "targeting": { "count": 1, "zones": ["OWN_MONSTER"] }
+    }
+  }
+]

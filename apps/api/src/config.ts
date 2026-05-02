@@ -1,0 +1,42 @@
+/**
+ * Configuración runtime. Validada con Zod al arranque — si falta algo crítico,
+ * el proceso muere antes de aceptar tráfico (fail-fast).
+ */
+
+import 'dotenv/config';
+import { z } from 'zod';
+
+const ConfigSchema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  API_PORT: z.coerce.number().int().positive().default(3001),
+  DATABASE_URL: z.string().url(),
+  REDIS_URL: z.string().url(),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 chars'),
+  WAYPOINT_CLIENT_ID: z.string().optional(),
+  WAYPOINT_REDIRECT_URI: z.string().url().optional(),
+  WAYPOINT_ISSUER: z.string().url().default('https://athena.skymavis.com'),
+  RONIN_RPC_URL: z.string().url().default('https://saigon-testnet.roninchain.com/rpc'),
+  RONIN_CHAIN_ID: z.coerce.number().int().default(2021),
+  AXIE_CONTRACT_ADDRESS: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/)
+    .default('0x32950db2a7164ae833121501c797d79e7b79d74c'),
+  AXIE_GRAPHQL_URL: z.string().url().default('https://graphql-gateway.axieinfinity.com/graphql'),
+  AXIE_GAME_API_URL: z.string().url().default('https://game-api.axie.technology'),
+  ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
+  AXS_MODE: z.enum(['offchain', 'onchain']).default('offchain'),
+  AXS_TOKEN_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional().or(z.literal('').transform(() => undefined)),
+  AXS_STARTER_BONUS: z.coerce.number().min(0).default(100),
+});
+
+export type Config = z.infer<typeof ConfigSchema>;
+
+const parsed = ConfigSchema.safeParse(process.env);
+if (!parsed.success) {
+  console.error('[config] Invalid environment:', parsed.error.flatten().fieldErrors);
+  process.exit(1);
+}
+
+export const config: Config = parsed.data;
+
+export const allowedOrigins = config.ALLOWED_ORIGINS.split(',').map((s) => s.trim());

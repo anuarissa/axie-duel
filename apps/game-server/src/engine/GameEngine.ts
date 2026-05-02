@@ -1,0 +1,129 @@
+/**
+ * Orquestador principal del duelo. La sala (`DuelRoom`) llama a este motor;
+ * el motor coordina ActionValidator + SummonSystem + CombatSystem + EffectResolver + PhaseManager.
+ *
+ * Este es el corazón del juego. Toda mutación del estado pasa por aquí.
+ */
+
+import { ArraySchema } from '@colyseus/schema';
+import {
+  DEFAULT_DUEL_CONFIG,
+  MONSTER_ZONES,
+  SPELL_TRAP_ZONES,
+} from '@axie-duel/game-rules';
+import { Phase } from '@axie-duel/shared-types';
+import type { DuelStateSchema } from '../rooms/schema/DuelStateSchema.js';
+import { CardSchema } from '../rooms/schema/CardSchema.js';
+import { PlayerSchema } from '../rooms/schema/PlayerSchema.js';
+import { ActionValidator, InvalidActionError } from './ActionValidator.js';
+import { CombatSystem } from './CombatSystem.js';
+import { SummonSystem } from './SummonSystem.js';
+import { EffectResolver } from './EffectResolver.js';
+import { PhaseManager } from './PhaseManager.js';
+import { DeckManager } from './DeckManager.js';
+import { SeededRng } from './rng.js';
+import { CardDatabase } from '../cards/CardDatabase.js';
+import type { Logger } from 'pino';
+
+export interface SetupPlayerInput {
+  id: string;
+  username: string;
+  /** Lista plana de cardIds del Main Deck (puede haber duplicados hasta 3). */
+  mainDeckCardIds: string[];
+  extraDeckCardIds?: string[];
+  isFirstPlayer: boolean;
+}
+
+export class GameEngine {
+  public readonly cards: CardDatabase;
+  public readonly rng: SeededRng;
+  public readonly deckManager: DeckManager;
+  public readonly validator: ActionValidator;
+  public readonly summon: SummonSystem;
+  public readonly combat: CombatSystem;
+  public readonly effects: EffectResolver;
+  public readonly phases: PhaseManager;
+
+  constructor(
+    private state: DuelStateSchema,
+    private log: Logger,
+    seed?: string,
+  ) {
+    this.cards = new CardDatabase();
+    this.rng = new SeededRng(seed ?? `${Date.now()}-${Math.random()}`);
+    this.state.rngSeed = seed ?? '';
+    this.deckManager = new DeckManager(this.rng);
+    this.validator = new ActionValidator(this.state, this.cards);
+    this.summon = new SummonSystem(this.state, this.cards);
+    this.combat = new CombatSystem(this.state, this.cards, this.log);
+    this.effects = new EffectResolver(this.state, this.cards, this.log);
+    this.phases = new PhaseManager(this.state, this.deckManager, this.log);
+  }
+
+  /** Inicializa un jugador en el estado: barajea, construye deck, llena zonas vacías. */
+  setupPlayer(input: SetupPlayerInput): PlayerSchema {
+    const p = new PlayerSchema();
+    p.id = input.id;
+    p.username = input.username;
+    p.lifePoints = DEFAULT_DUEL_CONFIG.initialLifePoints;
+    p.deck = this.deckManager.buildDeckFromCardIds(input.id, input.mainDeckCardIds);
+    p.extraDeck = this.deckManager.buildDeckFromCardIds(input.id, input.extraDeckCardIds ?? []);
+    p.isFirstPlayer = input.isFirstPlayer;
+    // Llenar zonas con CardSchema vacíos (slot libre = instanceId = '').
+    for (let i = 0; i < MONSTER_ZONES; i++) p.monsterZones.push(new CardSchema());
+    for (let i = 0; i < SPELL_TRAP_ZONES; i++) p.spellTrapZones.push(new CardSchema());
+    this.deckManager.shuffleDeck(p);
+    this.deckManager.draw(p, DEFAULT_DUEL_CONFIG.startingHandSize);
+    this.state.players.set(input.id, p);
+    return p;
+  }
+
+  /** Arranca la partida tras tener 2 jugadores. */
+  startMatch(): void {
+    const ids = [...this.state.players.keys()];
+    if (ids.length !== 2) throw new Error('startMatch requires 2 players');
+    const first = [...this.state.players.values()].find((p) => p.isFirstPlayer);
+    if (!first) throw new Error('no first player marked');
+    this.state.activePlayerId = first.id;
+    this.state.turnNumber = 1;
+    this.state.status = 'IN_PROGRESS';
+    this.state.phase = Phase.DRAW;
+    this.state.turnDeadlineMs = Date.now() + DEFAULT_DUEL_CONFIG.turnDurationMs;
+    this.log.info({ first: first.id }, 'match started');
+    // El primer jugador NO roba en su turno 1 (ver shouldDrawInDrawPhase).
+    // PhaseManager respeta esa regla en onEnterPhase(DRAW).
+  }
+
+  // ── Acciones públicas (la sala las invoca tras Zod-parsing) ──────────────────
+
+  handleNormalSummon(playerId: string, raw: unknown): void {
+    const input = this.validator.validateNormalSummon(playerId, raw);
+    this.summon.normalSummon(playerId, input.cardInstanceId, input.tributes ?? [], input.position);
+  }
+
+  handleDeclareAttack(playerId: string, raw: unknown): void {
+    const input = this.validator.validateDeclareAttack(playerId, raw);
+    this.combat.declareAttack(playerId, input.attackerInstanceId, input.targetInstanceId);
+  }
+
+  handleActivateEffect(playerId: string, raw: unknown): void {
+    const input = this.validator.validateActivateEffect(playerId, raw);
+    const player = this.state.players.get(playerId);
+    if (!player) throw new InvalidActionError('TARGET_INVALID', 'unknown player');
+    const card =
+      player.hand.find((c) => c.instanceId === input.cardInstanceId) ??
+      player.monsterZones.find((c) => c.instanceId === input.cardInstanceId) ??
+      player.spellTrapZones.find((c) => c.instanceId === input.cardInstanceId);
+    if (!card) throw new InvalidActionError('CARD_NOT_IN_HAND', 'card not found');
+
+    this.effects.addToChain(playerId, card, input.targets ?? []);
+    // En Fase 0, resolvemos inmediatamente sin abrir ventana de respuesta.
+    // Fase 1: abrir ventana 15s para el rival vía Room timer.
+    this.effects.resolveChain();
+  }
+
+  handleEndPhase(playerId: string): void {
+    this.validator.validateEndPhase(playerId);
+    this.phases.advance();
+  }
+}

@@ -87,9 +87,75 @@ pnpm dev
 ```bash
 curl http://localhost:3001/health           # api → {ok:true,...}
 curl http://localhost:2567/health           # game-server → {ok:true,...}
+open http://localhost:3001/docs             # Swagger UI con TODOS los endpoints
 open http://localhost:2567/colyseus         # Colyseus monitor (lista de salas)
 open http://localhost:3000                  # Next.js placeholder
 ```
+
+## API endpoints (resumen — ver `/docs` para spec completa)
+
+**Auth (Web2-first):**
+- `POST /auth/google` `/auth/microsoft` `/auth/facebook` — login social puro (sin wallet)
+- `POST /auth/waypoint` — login con wallet auto via Sky Mavis Waypoint
+- `POST /auth/wallet/nonce` + `POST /auth/link/wallet` — flujo SIWE EIP-4361
+- `POST /auth/link/waypoint` — atar wallet a usuario Web2 ya logueado
+
+**Users:**
+- `GET /users/me` `PATCH /users/me` `GET /users/me/cards` (auth)
+- `GET /users/:username` — perfil **público** sin info sensible
+
+**Game:**
+- `GET /cards` `GET /cards/:id` — catálogo
+- `GET /decks` `POST /decks` `GET/PUT/DELETE /decks/:id` `POST /decks/:id/activate`
+- `GET /axies/:id` `GET /axies/sync` (auth)
+- `GET /matches/history` (filtros: mode, opponentId, finishedOnly) `GET /matches/:id` `GET /matches/:id/replay` (público)
+- `GET /leaderboard` (modes: ranked, rankedNFT)
+
+**AXS off-chain ledger:**
+- `GET /axs/balance` `GET /axs/transactions` `POST /axs/burn` (auth)
+
+**Tournaments (8 endpoints):**
+- `GET/POST /tournaments` `GET /tournaments/:id`
+- `POST /tournaments/:id/register` `POST /tournaments/:id/start` `POST /tournaments/:id/match/report`
+- `GET /tournaments/:id/leaderboard` `POST /tournaments/:id/cancel`
+
+**Quests:**
+- `GET /quests` (lista activas + progreso) `POST /quests/:id/claim` (atómico)
+
+**Notifications (in-app feed):**
+- `GET /notifications?unread=true` (con `unreadCount` para badge)
+- `POST /notifications/:id/read` `POST /notifications/read-all`
+
+**Admin** (requiere `isAdmin=true`, promove vía `pnpm db:make-admin <username>`):
+- `POST /admin/tournaments/...` (create/start/cancel)
+- `POST /admin/users/:id/grant-axs` `/promote` `/demote`
+- `POST /admin/notifications/broadcast` (filtros: minElo, onlyWithWallet)
+
+**Internal** (game-server → api, token compartido):
+- `POST /internal/matches` (persiste match + triggea ELO + quests + W/L counters + notifications automáticamente)
+
+## Features implementados (highlights)
+
+- **Web2-first auth** con Google/Microsoft/Facebook + opt-in Ronin wallet (Waypoint o SIWE EIP-4361 directa)
+- **AXS ledger off-chain** transaccional con earn/burn atómico vía Prisma $transaction
+- **Daily Quests** con kinds WIN_PVE/WIN_PVP/PLAY_GAMES/COMPLETE_TOURNAMENT, claim atómico (anti-doble-claim vía updateMany)
+- **Tournaments** single-elim con bye automático + prize distribution + refunds en cancelación
+- **ELO Arpad K=32** auto-update en ranked matches via `/internal/matches`
+- **Match persistence** + replay log inline (cap 10k entries) + W/L/D counters denormalizados
+- **PvE Bot greedy** (Easy/Normal) con auto-play en PvERoom + cap defensivo 50 acciones
+- **Triggered effects** vía EventBus + TriggerRegistry: 4 cartas (Mirror Web, Poison Backlash, Lunacian Counterstrike, Sky Mavis Field)
+- **Aura system** state-based vía AuraRegistry: 2 cartas pasivas (Tide Surge, Verdant Sentinel)
+- **Constraint pasivos** en ActionValidator: piercingDirect (Venomscale Stalker)
+- **Notifications in-app** con hooks automáticos en match/quest/wallet/tournament + admin broadcast filtrable
+- **Public profiles** `GET /users/:username` con totalGames + winRate + ranks
+- **Swagger UI** en `/docs` con 42+ paths documentados + JWT auth integration
+- **Service-to-service** auth con timing-safe token (game-server ↔ api)
+- **Redis graceful fallback** in-memory en dev cuando no hay conexión real
+- **dotenv auto-load** desde root para que cualquier `pnpm` script funcione sin cargar env vars manualmente
+
+**99+ tests verde** (api/bracket: 14, api/AxsService: 13, api/AccountService: 7, game-rules: 43 con elo, game-server: 20 con auras+pveBot+triggered+duel).
+
+**12/15 cartas con efecto operativo (80%).** Faltan trapImmune, duelLock, lockPosition para Fase 2.
 
 ## Comandos top-level
 

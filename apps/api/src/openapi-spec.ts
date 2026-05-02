@@ -44,6 +44,7 @@ export const openApiSpec = {
     { name: 'axs', description: 'Balance + transacciones AXS (off-chain)' },
     { name: 'tournaments', description: 'Torneos PvP con entrada y premios en AXS' },
     { name: 'quests', description: 'Daily quests' },
+    { name: 'notifications', description: 'Feed in-app del usuario' },
     { name: 'admin', description: 'Endpoints admin (requiere isAdmin=true)' },
     { name: 'internal', description: 'Service-to-service (game-server → api)' },
   ],
@@ -155,6 +156,17 @@ export const openApiSpec = {
         responses: { '200': okResponse('{ count, cards[] }'), '401': { description: 'Auth required' } },
       },
     },
+    '/users/{username}': {
+      get: {
+        tags: ['users'],
+        summary: 'Perfil PÚBLICO (no requiere auth). Sin email/wallet/axsBalance.',
+        parameters: [{ name: 'username', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': okResponse('{ ...publicProfile, totalGames, winRate }'),
+          '404': { description: 'User not found' },
+        },
+      },
+    },
     // ── Cards (catálogo público) ──────────────────────────────────────
     '/cards': {
       get: {
@@ -243,11 +255,66 @@ export const openApiSpec = {
     // ── Quests ────────────────────────────────────────────────────────
     '/quests': { get: { tags: ['quests'], summary: 'Quests activas + progreso del user', security: [{ bearerAuth: [] }], responses: { '200': okResponse('{ quests[] }'), '401': { description: 'Auth required' } } } },
     '/quests/{id}/claim': { post: { tags: ['quests'], summary: 'Reclama AXS de quest completada (atómico, anti-doble-claim)', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '201': okResponse('{ rewardAxs, newBalance }'), ...errorResponses } } },
+    // ── Notifications ─────────────────────────────────────────────────
+    '/notifications': {
+      get: {
+        tags: ['notifications'],
+        summary: 'Feed in-app del user (filtros: unread, limit, offset)',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'unread', in: 'query', schema: { type: 'boolean' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', default: 50 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 } },
+        ],
+        responses: { '200': okResponse('{ unreadCount, count, notifications[] }'), '401': { description: 'Auth required' } },
+      },
+    },
+    '/notifications/{id}/read': {
+      post: {
+        tags: ['notifications'],
+        summary: 'Marca una notificación como leída (anti-spoof: WHERE incluye userId)',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { '200': okResponse('{ updated: 0 | 1 }'), ...errorResponses },
+      },
+    },
+    '/notifications/read-all': {
+      post: {
+        tags: ['notifications'],
+        summary: 'Marca todas las notificaciones del user como leídas',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': okResponse('{ updated: number }'), '401': { description: 'Auth required' } },
+      },
+    },
     // ── Admin ─────────────────────────────────────────────────────────
     '/admin/tournaments': { post: { tags: ['admin'], summary: 'Crea torneo (admin)', security: [{ bearerAuth: [] }], responses: { '201': okResponse('Tournament'), '403': { description: 'Admin only' } } } },
     '/admin/users/{id}/grant-axs': { post: { tags: ['admin'], summary: 'Emite AXS al usuario (compensaciones)', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': okResponse('{ newBalance, txId }'), '403': { description: 'Admin only' } } } },
     '/admin/users/{id}/promote': { post: { tags: ['admin'], summary: 'Promueve user a admin', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': okResponse('user'), '403': { description: 'Admin only' } } } },
     '/admin/users/{id}/demote': { post: { tags: ['admin'], summary: 'Quita admin a un user', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': okResponse('user'), '403': { description: 'Admin only' } } } },
+    '/admin/notifications/broadcast': {
+      post: {
+        tags: ['admin'],
+        summary: 'Broadcast SYSTEM notification a múltiples users (filtros: minElo, onlyWithWallet)',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['message'],
+                properties: {
+                  message: { type: 'string', maxLength: 500 },
+                  minElo: { type: 'integer', minimum: 0, description: 'Filtra a users con eloRanked >= esto' },
+                  onlyWithWallet: { type: 'boolean', description: 'Solo a users con wallet linkeada' },
+                  metadata: { type: 'object', description: 'Metadata extra para deep-linking en frontend' },
+                },
+              },
+            },
+          },
+        },
+        responses: { '201': okResponse('{ created: number }'), '403': { description: 'Admin only' } },
+      },
+    },
     // ── Internal (game-server → api) ──────────────────────────────────
     '/internal/matches': {
       post: {

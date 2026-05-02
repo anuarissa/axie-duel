@@ -131,7 +131,23 @@ export class GameEngine {
     }
   }
 
-  handleDeclareAttack(playerId: string, raw: unknown): void {
+  /**
+   * Resultado completo del combate, devuelto al room para broadcast a clientes.
+   * `cancelled` cuando un trap negó el ataque (Mirror Web etc).
+   */
+  handleDeclareAttack(playerId: string, raw: unknown): {
+    cancelled: boolean;
+    attackerName: string | undefined;
+    defenderName: string | undefined;
+    attackerAtk: number | undefined;
+    defenderAtk: number | undefined;
+    defenderDef: number | undefined;
+    direct: boolean | undefined;
+    attackerDestroyed: boolean | undefined;
+    defenderDestroyed: boolean | undefined;
+    damageToAttackerOwner: number | undefined;
+    damageToDefenderOwner: number | undefined;
+  } {
     const input = this.validator.validateDeclareAttack(playerId, raw);
     const player = this.state.players.get(playerId);
     const attacker = player?.monsterZones.find((c) => c.instanceId === input.attackerInstanceId);
@@ -148,25 +164,47 @@ export class GameEngine {
       attackerAtkPenalty: 0,
     };
     this.events.emit(declareEvent);
+    const attackerDef = this.cards.getById(attacker.cardId);
+    const attackerName = attackerDef?.name ?? attacker.cardId;
     if (declareEvent.cancelled) {
-      attacker.hasAttacked = true; // se gasta el ataque del turno aunque sea cancelado
-      return;
+      attacker.hasAttacked = true;
+      return {
+        cancelled: true,
+        attackerName,
+        defenderName: undefined,
+        attackerAtk: undefined,
+        defenderAtk: undefined,
+        defenderDef: undefined,
+        direct: undefined,
+        attackerDestroyed: undefined,
+        defenderDestroyed: undefined,
+        damageToAttackerOwner: undefined,
+        damageToDefenderOwner: undefined,
+      };
     }
     if (declareEvent.attackerAtkPenalty > 0) {
       attacker.atkMod -= declareEvent.attackerAtkPenalty;
     }
+    const opponentId = [...this.state.players.keys()].find((id) => id !== playerId);
+    const defender =
+      input.targetInstanceId !== 'DIRECT' && opponentId
+        ? this.state.players.get(opponentId)?.monsterZones.find((c) => c.instanceId === input.targetInstanceId) ?? null
+        : null;
+    const defenderDef = defender ? this.cards.getById(defender.cardId) : null;
+    // Snapshot stats ANTES del combate para reportar al cliente.
+    const attackerStatsSnap = attackerDef && attackerDef.type === 'Monster'
+      ? this.combat.effectiveStatsWithAuras(attackerDef, attacker, playerId)
+      : { atk: 0, def: 0 };
+    const defenderStatsSnap = defender && defenderDef && defenderDef.type === 'Monster'
+      ? this.combat.effectiveStatsWithAuras(defenderDef, defender, opponentId ?? '')
+      : null;
+
     const outcome = this.combat.declareAttack(playerId, input.attackerInstanceId, input.targetInstanceId);
     this.replay.log('DECLARE_ATTACK', playerId, {
       attackerInstanceId: input.attackerInstanceId,
       targetInstanceId: input.targetInstanceId,
     });
     this.replay.log('COMBAT_RESOLVED', playerId, { ...outcome });
-    // Emit onBattleResolve para handlers tipo Lethal Strike.
-    const opponentId = [...this.state.players.keys()].find((id) => id !== playerId);
-    const defender =
-      input.targetInstanceId !== 'DIRECT' && opponentId
-        ? this.state.players.get(opponentId)?.monsterZones.find((c) => c.instanceId === input.targetInstanceId) ?? null
-        : null;
     this.events.emit({
       type: 'onBattleResolve',
       attackerOwnerId: playerId,
@@ -175,6 +213,20 @@ export class GameEngine {
       defender,
       outcome,
     });
+
+    return {
+      cancelled: false,
+      attackerName,
+      defenderName: defenderDef?.name,
+      attackerAtk: attackerStatsSnap.atk,
+      defenderAtk: defenderStatsSnap?.atk,
+      defenderDef: defenderStatsSnap?.def,
+      direct: outcome.direct,
+      attackerDestroyed: outcome.attackerDestroyed,
+      defenderDestroyed: outcome.defenderDestroyed,
+      damageToAttackerOwner: outcome.damageToAttackerOwner,
+      damageToDefenderOwner: outcome.damageToDefenderOwner,
+    };
   }
 
   handleActivateEffect(playerId: string, raw: unknown): void {
@@ -225,6 +277,20 @@ export class GameEngine {
         message: r.message,
       });
     }
+  }
+
+  /** Cambio manual ATK ↔ DEF de un monster propio en MAIN_1/MAIN_2. */
+  handleChangePosition(playerId: string, raw: unknown): void {
+    const input = this.validator.validateChangePosition(playerId, raw);
+    const player = this.state.players.get(playerId);
+    const monster = player?.monsterZones.find((c) => c.instanceId === input.cardInstanceId);
+    if (!monster) throw new InvalidActionError('TARGET_INVALID', 'monster not on field');
+    monster.position = monster.position === 'ATK' ? 'DEF' : 'ATK';
+    monster.positionChangedThisTurn = true;
+    this.replay.log('CHANGE_POSITION', playerId, {
+      cardInstanceId: input.cardInstanceId,
+      newPosition: monster.position,
+    });
   }
 
   handleEndPhase(playerId: string): void {

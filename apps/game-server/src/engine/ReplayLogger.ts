@@ -27,6 +27,7 @@ export interface ReplayEntry {
     | 'SET_CARD'
     | 'ACTIVATE_EFFECT'
     | 'DECLARE_ATTACK'
+    | 'CHANGE_POSITION'
     | 'COMBAT_RESOLVED'
     | 'EFFECT_TRIGGERED'
     | 'EFFECT_RESOLVED'

@@ -71,24 +71,38 @@ export default function DashboardPage() {
   async function loadAll() {
     setLoading(true);
     setError(null);
+    const errors: string[] = [];
     try {
-      const [meR, decksR, questsR, notifsR] = await Promise.all([
+      const [meR, decksR, questsR, notifsR] = await Promise.allSettled([
         apiFetch<UserMe>('/users/me'),
         apiFetch<{ decks: DeckSummary[] }>('/decks'),
         apiFetch<{ quests: QuestProgress[] }>('/quests'),
         apiFetch<{ unreadCount: number; notifications: Notification[] }>('/notifications'),
       ]);
-      setMe(meR);
-      setDecks(decksR.decks);
-      setQuests(questsR.quests);
-      setNotifs(notifsR);
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        clearJwt();
-        router.replace('/login');
-        return;
+
+      // /users/me es crítico: si falla con 401, redirigir a login
+      if (meR.status === 'rejected') {
+        const err = meR.reason;
+        if (err instanceof ApiError && err.status === 401) {
+          clearJwt();
+          router.replace('/login');
+          return;
+        }
+        errors.push(`/users/me: ${err instanceof Error ? err.message : String(err)}`);
+      } else {
+        setMe(meR.value);
       }
-      setError(err instanceof Error ? err.message : String(err));
+
+      if (decksR.status === 'fulfilled') setDecks(decksR.value.decks);
+      else errors.push(`/decks: ${decksR.reason instanceof Error ? decksR.reason.message : String(decksR.reason)}`);
+
+      if (questsR.status === 'fulfilled') setQuests(questsR.value.quests);
+      else errors.push(`/quests: ${questsR.reason instanceof Error ? questsR.reason.message : String(questsR.reason)}`);
+
+      if (notifsR.status === 'fulfilled') setNotifs(notifsR.value);
+      else errors.push(`/notifications: ${notifsR.reason instanceof Error ? notifsR.reason.message : String(notifsR.reason)}`);
+
+      if (errors.length > 0) setError(errors.join('\n'));
     } finally {
       setLoading(false);
     }
@@ -113,8 +127,31 @@ export default function DashboardPage() {
     await loadAll();
   }
 
-  if (loading || !me) {
+  if (loading) {
     return <main className="loading-screen">Cargando dashboard…</main>;
+  }
+
+  if (!me) {
+    return (
+      <main className="dashboard">
+        <div className="card-section" style={{ background: 'rgba(255,118,118,0.08)' }}>
+          <strong style={{ color: '#ff7676' }}>No se pudo cargar tu perfil.</strong>
+          {error ? (
+            <pre style={{ marginTop: '0.75rem', whiteSpace: 'pre-wrap', fontSize: '0.8rem', opacity: 0.85 }}>
+              {error}
+            </pre>
+          ) : null}
+          <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
+            <button className="btn-primary" onClick={() => loadAll()}>
+              Reintentar
+            </button>
+            <button className="btn-secondary" onClick={logout}>
+              Logout y volver a login
+            </button>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (

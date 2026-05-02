@@ -713,201 +713,1305 @@ pre {
   width: 100%;
 }
 
-/* ── PvE play room ───────────────────────────────────────────────── */
-.play-page {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 1rem;
+/* ───────────────────────────────────────────────────────────────────
+ * PvE play room — TCG board (Yu-Gi-Oh Master Duel inspired)
+ * Axie palette: cyan #14C3F4 | purple #8C5DF6 | pink #FF6B9D | yellow #FFD23F
+ * Layout: viewport-fit, ambos campos visibles sin scroll
+ * ─────────────────────────────────────────────────────────────────── */
+:root {
+  --axie-cyan: #14C3F4;
+  --axie-purple: #8C5DF6;
+  --axie-pink: #FF6B9D;
+  --axie-yellow: #FFD23F;
+  --axie-green: #5DFFA0;
+  --tcg-bg-deep: #060617;
+  --tcg-bg: #0E0B26;
+  --tcg-bg-soft: #181438;
+  --tcg-line: rgba(140, 93, 246, 0.25);
 }
-.play-toolbar {
+
+.tcg-page {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 48px 1fr auto;
+  background:
+    radial-gradient(ellipse at 20% 0%, rgba(140, 93, 246, 0.18), transparent 55%),
+    radial-gradient(ellipse at 80% 100%, rgba(20, 195, 244, 0.15), transparent 55%),
+    radial-gradient(ellipse at 50% 50%, rgba(255, 107, 157, 0.06), transparent 70%),
+    var(--tcg-bg-deep);
+  color: #f5f3ff;
+  overflow: hidden;
+  font-family: var(--font-sans, system-ui);
+}
+
+/* Toolbar slim */
+.tcg-toolbar {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0.75rem;
+  padding: 0 1rem;
+  background: linear-gradient(180deg, rgba(140, 93, 246, 0.18), rgba(140, 93, 246, 0));
+  border-bottom: 1px solid var(--tcg-line);
+  font-size: 0.85rem;
+  z-index: 10;
 }
-.play-status {
-  font-size: 0.875rem;
+.tcg-toolbar a, .tcg-toolbar button {
+  font-size: 0.8rem;
+}
+.tcg-back {
+  color: var(--axie-cyan);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.tcg-back:hover { color: #fff; }
+.tcg-status {
   display: flex;
-  gap: 1rem;
+  gap: 1.25rem;
   align-items: center;
-  flex-wrap: wrap;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(245, 243, 255, 0.55);
 }
-.play-pill {
-  background: rgba(107, 142, 255, 0.15);
-  color: #a0b5ff;
-  padding: 0.2rem 0.7rem;
+.tcg-status strong { color: #fff; font-weight: 600; }
+.tcg-pill {
+  padding: 0.25rem 0.85rem;
   border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.tcg-pill.your-turn {
+  background: linear-gradient(135deg, rgba(255, 210, 63, 0.25), rgba(255, 210, 63, 0.08));
+  color: var(--axie-yellow);
+  border: 1px solid rgba(255, 210, 63, 0.4);
+  box-shadow: 0 0 18px rgba(255, 210, 63, 0.25);
+}
+.tcg-pill.opp-turn {
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.18), rgba(255, 107, 157, 0.05));
+  color: var(--axie-pink);
+  border: 1px solid rgba(255, 107, 157, 0.35);
+}
+.tcg-surrender {
+  background: rgba(255, 107, 157, 0.08);
+  border: 1px solid rgba(255, 107, 157, 0.3);
+  color: var(--axie-pink);
+  padding: 0.3rem 0.85rem;
+  border-radius: 999px;
+  cursor: pointer;
   font-weight: 600;
   font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  transition: all 0.15s;
 }
-.play-pill.your-turn {
-  background: rgba(255, 217, 102, 0.2);
-  color: #ffd966;
+.tcg-surrender:hover { background: rgba(255, 107, 157, 0.18); }
+
+/* Main board: 2 sides + center divider, fits in viewport */
+.tcg-board {
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  gap: 0;
+  padding: 0.5rem 1rem;
+  min-height: 0;
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
 }
-.play-pill.opp-turn {
-  background: rgba(255, 138, 138, 0.18);
-  color: #ff9090;
+
+.tcg-side {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1rem;
+  padding: 0.4rem 0;
+  align-items: center;
+  min-height: 0;
 }
-.play-board {
+.tcg-side.opponent {
+  border-bottom: 1px solid var(--tcg-line);
+}
+
+/* HUD lateral por jugador */
+.tcg-hud {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-.play-side {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-}
-.play-side.opponent { background: rgba(255, 138, 138, 0.05); }
-.play-side.you      { background: rgba(107, 200, 255, 0.05); }
-.play-side-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  font-size: 0.875rem;
-}
-.play-lp {
-  font-weight: 800;
-  font-size: 1.25rem;
-  color: #5dffa0;
-}
-.play-lp.low { color: #ff7676; }
-.play-zones {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
   gap: 0.4rem;
-  margin-bottom: 0.4rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(140, 93, 246, 0.12), rgba(20, 195, 244, 0.05));
+  border: 1px solid var(--tcg-line);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(8px);
+  font-size: 0.75rem;
 }
-.play-slot {
-  aspect-ratio: 0.7;
+.tcg-hud.opponent {
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.1), rgba(140, 93, 246, 0.05));
+  border-color: rgba(255, 107, 157, 0.25);
+}
+.tcg-hud-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #fff;
+}
+.tcg-hud-lp {
+  font-weight: 800;
+  font-size: 1.6rem;
+  font-family: 'Cascadia Mono', ui-monospace, monospace;
+  letter-spacing: 0.02em;
+  color: var(--axie-green);
+  line-height: 1;
+}
+.tcg-hud-lp.low { color: var(--axie-pink); }
+.tcg-hud-lp .lp-suffix {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(245, 243, 255, 0.5);
+  margin-left: 0.3rem;
+  letter-spacing: 0.1em;
+}
+.tcg-hud-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.tcg-hud-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--axie-green), var(--axie-cyan));
+  transition: width 0.4s ease;
+}
+.tcg-hud-bar-fill.low {
+  background: linear-gradient(90deg, var(--axie-pink), #ff3a6c);
+}
+.tcg-hud-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}
+.tcg-hud-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   background: rgba(0, 0, 0, 0.25);
-  border: 1px dashed rgba(255, 255, 255, 0.08);
+  padding: 0.4rem 0.25rem;
   border-radius: 0.4rem;
+}
+.tcg-hud-stat-value {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--axie-cyan);
+  font-family: 'Cascadia Mono', ui-monospace, monospace;
+}
+.tcg-hud-stat-label {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(245, 243, 255, 0.5);
+}
+
+/* Zonas (5 monsters + 5 spell/trap) */
+.tcg-zones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-height: 0;
+}
+.tcg-zone-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 110px));
+  gap: 0.5rem;
+  justify-content: center;
+}
+/* No mirror del lado del oponente: queremos que sus monsters queden cerca del divider central
+ * (cara a cara con los míos) y sus spell/trap arriba alejados. El JSX ya renderiza spell/trap
+ * primero y monsters después, así que el orden visual natural es el correcto. */
+.tcg-slot {
+  aspect-ratio: 0.72;
+  background:
+    linear-gradient(145deg, rgba(140, 93, 246, 0.04), rgba(0, 0, 0, 0.5));
+  border: 1px dashed rgba(140, 93, 246, 0.2);
+  border-radius: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.6875rem;
-  color: rgba(255, 255, 255, 0.25);
   position: relative;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(140, 93, 246, 0.35);
   cursor: default;
-}
-.play-slot.has-card {
-  border: 1px solid rgba(255, 217, 102, 0.4);
-  background: linear-gradient(145deg, rgba(255, 217, 102, 0.08), rgba(0, 0, 0, 0.4));
-  cursor: pointer;
-}
-.play-slot.has-card.def-down { background: linear-gradient(145deg, rgba(80, 80, 100, 0.4), rgba(0, 0, 0, 0.5)); }
-.play-slot.targetable {
-  border: 2px solid #ffd966;
-  box-shadow: 0 0 12px rgba(255, 217, 102, 0.4);
-}
-.play-card-mini {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 0.25rem;
-  font-size: 0.625rem;
-  text-align: center;
+  transition: all 0.15s;
   overflow: hidden;
 }
-.play-card-mini-name {
+.tcg-slot.spelltrap {
+  border-color: rgba(20, 195, 244, 0.18);
+  color: rgba(20, 195, 244, 0.35);
+}
+.tcg-slot.has-card {
+  border-style: solid;
+  cursor: pointer;
+}
+.tcg-slot.targetable {
+  border: 2px solid var(--axie-yellow);
+  box-shadow: 0 0 22px rgba(255, 210, 63, 0.45);
+  animation: tcg-pulse 1.4s ease-in-out infinite;
+}
+@keyframes tcg-pulse {
+  0%, 100% { box-shadow: 0 0 22px rgba(255, 210, 63, 0.45); }
+  50%      { box-shadow: 0 0 32px rgba(255, 210, 63, 0.75); }
+}
+
+/* Card on slot */
+.tcg-card {
+  width: 100%;
+  height: 100%;
+  border-radius: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.3rem;
+  text-align: center;
+  overflow: hidden;
+  position: relative;
+  font-family: var(--font-sans, system-ui);
+}
+.tcg-card.monster {
+  background:
+    linear-gradient(180deg, rgba(255, 210, 63, 0.18) 0%, rgba(140, 93, 246, 0.12) 100%),
+    linear-gradient(145deg, #2a1c4a, #1a0d2e);
+  border: 1px solid rgba(255, 210, 63, 0.55);
+  box-shadow: 0 4px 14px rgba(255, 210, 63, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.tcg-card.spell {
+  background:
+    linear-gradient(180deg, rgba(93, 255, 160, 0.2) 0%, rgba(20, 195, 244, 0.12) 100%),
+    linear-gradient(145deg, #0f2a3a, #061826);
+  border: 1px solid rgba(93, 255, 160, 0.5);
+  box-shadow: 0 4px 14px rgba(93, 255, 160, 0.15);
+}
+.tcg-card.trap {
+  background:
+    linear-gradient(180deg, rgba(255, 107, 157, 0.22) 0%, rgba(140, 93, 246, 0.12) 100%),
+    linear-gradient(145deg, #3a0f25, #1a0613);
+  border: 1px solid rgba(255, 107, 157, 0.5);
+  box-shadow: 0 4px 14px rgba(255, 107, 157, 0.15);
+}
+.tcg-card.face-down {
+  background:
+    repeating-linear-gradient(45deg, rgba(140, 93, 246, 0.2) 0, rgba(140, 93, 246, 0.2) 8px, rgba(20, 195, 244, 0.15) 8px, rgba(20, 195, 244, 0.15) 16px),
+    linear-gradient(145deg, #1a1240, #0a0825);
+  border: 1px solid rgba(20, 195, 244, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tcg-card.face-down::after {
+  content: '⌬';
+  font-size: 1.6rem;
+  color: rgba(20, 195, 244, 0.5);
+  text-shadow: 0 0 12px rgba(20, 195, 244, 0.6);
+}
+/* Mis cartas Set: cursor pointer + tag visible que indica tipo */
+.tcg-card.face-down.mine {
+  cursor: help;
+  border-color: rgba(255, 210, 63, 0.45);
+  box-shadow: 0 0 8px rgba(255, 210, 63, 0.15) inset;
+}
+.tcg-card.face-down.mine.is-monster-set {
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 210, 63, 0.22) 0, rgba(255, 210, 63, 0.22) 8px, rgba(255, 122, 58, 0.15) 8px, rgba(255, 122, 58, 0.15) 16px),
+    linear-gradient(145deg, #2a1c0a, #1a0d05);
+  border-color: rgba(255, 210, 63, 0.55);
+}
+.tcg-card.face-down.mine.is-st-set {
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 107, 157, 0.22) 0, rgba(255, 107, 157, 0.22) 8px, rgba(140, 93, 246, 0.15) 8px, rgba(140, 93, 246, 0.15) 16px),
+    linear-gradient(145deg, #2a0a1f, #1a0613);
+  border-color: rgba(255, 107, 157, 0.5);
+}
+.tcg-card-facedown-tag {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  z-index: 5;
+  letter-spacing: 0.05em;
+}
+.tcg-card.face-down > *:not(.tcg-card-facedown-tag) { display: none; }
+.tcg-card-name {
+  font-size: 0.62rem;
   font-weight: 700;
-  font-size: 0.6875rem;
-  line-height: 1.1;
+  line-height: 1.05;
   margin-bottom: 0.15rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.play-card-mini-stats {
-  display: flex;
-  justify-content: space-around;
-  font-size: 0.625rem;
-  margin-top: auto;
-  padding-top: 0.2rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+.tcg-card-stars {
+  font-size: 0.55rem;
+  color: var(--axie-yellow);
+  letter-spacing: 0.08em;
+  margin-bottom: 0.1rem;
 }
-.play-card-mini-stats span { font-weight: 600; }
-.play-card-position {
+.tcg-card-art {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  opacity: 0.85;
+}
+.tcg-card-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.58rem;
+  font-weight: 700;
+  font-family: 'Cascadia Mono', ui-monospace, monospace;
+  padding-top: 0.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  margin-top: auto;
+}
+.tcg-card-atk { color: var(--axie-yellow); }
+.tcg-card-def { color: var(--axie-cyan); }
+.tcg-card-pos {
   position: absolute;
   top: 2px;
   right: 4px;
-  font-size: 0.5625rem;
-  color: #ffd966;
-  font-weight: 700;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.2rem;
+  z-index: 5;
 }
-.play-hand {
+/* ATK position: badge rojo, postura ofensiva. DEF: badge azul, postura defensiva (carta rotada 90° en YGO clásico). */
+.tcg-card .tcg-card-pos {
+  background: linear-gradient(135deg, var(--axie-yellow), #ff7a3a);
+  color: #1a0d05;
+}
+.tcg-card.def-position {
+  transform: rotate(90deg) scale(0.92);
+  margin: 6% 0;
+}
+.tcg-card.def-position .tcg-card-pos {
+  background: linear-gradient(135deg, var(--axie-cyan), #6ec8ff);
+  color: #051a2a;
+}
+.tcg-card-type-tag {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tcg-card.attacked {
+  filter: grayscale(0.6) brightness(0.65);
+  transform: rotate(90deg) scale(0.85);
+}
+
+/* Center divider — phase indicator */
+.tcg-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0;
+  position: relative;
+}
+.tcg-divider::before, .tcg-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--tcg-line), transparent);
+}
+.tcg-phase-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 1.2rem;
+  background: linear-gradient(135deg, rgba(140, 93, 246, 0.25), rgba(20, 195, 244, 0.15));
+  border: 1px solid var(--tcg-line);
+  border-radius: 999px;
+  margin: 0 1rem;
+  backdrop-filter: blur(6px);
+}
+.tcg-phase-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 0.15em;
+  background: linear-gradient(90deg, var(--axie-cyan), var(--axie-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-transform: uppercase;
+}
+.tcg-phase-hint {
+  font-size: 0.6rem;
+  color: rgba(245, 243, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Footer: hand + actions */
+.tcg-footer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  padding: 0.75rem 1rem 1rem;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(140, 93, 246, 0.08) 100%);
+  border-top: 1px solid var(--tcg-line);
+  align-items: end;
+  z-index: 5;
+}
+.tcg-hand {
   display: flex;
   gap: 0.4rem;
-  overflow-x: auto;
-  padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 0.5rem;
-  min-height: 100px;
+  justify-content: center;
+  perspective: 800px;
+  min-height: 130px;
+  align-items: flex-end;
 }
-.play-hand-card {
-  flex: 0 0 70px;
-  aspect-ratio: 0.7;
-  background: linear-gradient(145deg, #2a1c4a, #1a0d2e);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+.tcg-hand-card {
+  flex: 0 0 78px;
+  aspect-ratio: 0.72;
   border-radius: 0.4rem;
   cursor: pointer;
   padding: 0.25rem;
   display: flex;
   flex-direction: column;
-  font-size: 0.625rem;
   text-align: center;
-  transition: transform 0.15s, border-color 0.15s;
   overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s;
+  position: relative;
 }
-.play-hand-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255, 217, 102, 0.5);
+.tcg-hand-card:hover {
+  transform: translateY(-12px) scale(1.05);
+  z-index: 10;
+  filter: brightness(1.15);
 }
-.play-hand-card.selected {
-  border-color: #ffd966;
-  box-shadow: 0 0 12px rgba(255, 217, 102, 0.5);
+.tcg-hand-card.selected {
+  transform: translateY(-16px) scale(1.08);
+  filter: brightness(1.2) drop-shadow(0 0 18px rgba(255, 210, 63, 0.7));
+  z-index: 11;
 }
-.play-action-bar {
+.tcg-hand-card.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+.tcg-hand-empty {
+  color: rgba(140, 93, 246, 0.4);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.tcg-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: stretch;
+  min-width: 200px;
+}
+.tcg-actions button {
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: all 0.15s;
+  border: none;
+}
+.tcg-actions .tcg-btn-primary {
+  background: linear-gradient(135deg, var(--axie-cyan), var(--axie-purple));
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(140, 93, 246, 0.4);
+}
+.tcg-actions .tcg-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(140, 93, 246, 0.55);
+}
+.tcg-actions .tcg-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.tcg-actions .tcg-btn-attack {
+  background: linear-gradient(135deg, var(--axie-pink), #ff3a6c);
+  color: #fff;
+}
+.tcg-actions .tcg-btn-attack:hover:not(:disabled) { filter: brightness(1.15); }
+.tcg-actions .tcg-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--tcg-line);
+  color: rgba(245, 243, 255, 0.7);
+}
+.tcg-actions .tcg-btn-ghost:hover { background: rgba(255, 255, 255, 0.05); }
+
+.tcg-instruction {
+  background: rgba(255, 210, 63, 0.08);
+  border-left: 2px solid var(--axie-yellow);
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.25rem;
+  font-size: 0.72rem;
+  color: rgba(245, 243, 255, 0.85);
+  line-height: 1.4;
+}
+
+/* Floating log panel */
+.tcg-log-panel {
+  position: fixed;
+  right: 1rem;
+  top: 64px;
+  width: 280px;
+  max-height: 50vh;
+  background: rgba(10, 8, 30, 0.85);
+  border: 1px solid var(--tcg-line);
+  border-radius: 0.75rem;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  z-index: 20;
+  overflow: hidden;
+  font-family: 'Cascadia Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  transition: transform 0.25s, opacity 0.25s;
+}
+.tcg-log-panel.collapsed {
+  transform: translateX(calc(100% - 40px));
+}
+.tcg-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  background: linear-gradient(135deg, rgba(140, 93, 246, 0.25), rgba(140, 93, 246, 0.1));
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--axie-cyan);
+  border-bottom: 1px solid var(--tcg-line);
+}
+.tcg-log-body {
+  padding: 0.5rem 0.65rem;
+  overflow-y: auto;
+  flex: 1;
+}
+.tcg-log-entry {
+  line-height: 1.45;
+  margin-bottom: 0.15rem;
+}
+.tcg-log-entry.error  { color: var(--axie-pink); }
+.tcg-log-entry.action { color: var(--axie-cyan); }
+.tcg-log-entry.system { color: var(--axie-yellow); }
+.tcg-log-entry.info   { color: rgba(245, 243, 255, 0.7); }
+
+/* Game over overlay */
+.tcg-gameover {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(10, 8, 30, 0.85), rgba(0, 0, 0, 0.95));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(6px);
+}
+.tcg-gameover-card {
+  background: linear-gradient(135deg, rgba(140, 93, 246, 0.2), rgba(20, 195, 244, 0.1));
+  border: 1px solid var(--tcg-line);
+  border-radius: 1rem;
+  padding: 2.5rem 3rem;
+  text-align: center;
+  min-width: 360px;
+}
+.tcg-gameover-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: linear-gradient(90deg, var(--axie-cyan), var(--axie-purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tcg-gameover-title.lose {
+  background: linear-gradient(90deg, var(--axie-pink), #ff3a6c);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* ── HUD wrap con deck stack ────────────────────────────────────── */
+.tcg-hud-wrap {
+  display: grid;
+  grid-template-columns: 1fr 70px;
+  gap: 0.5rem;
+  align-items: center;
+}
+.tcg-hud-wrap.opponent { grid-template-columns: 70px 1fr; }
+.tcg-hud-wrap.opponent .tcg-hud { order: 2; }
+.tcg-hud-wrap.opponent .tcg-deckstack { order: 1; }
+
+.tcg-deckstack {
+  position: relative;
+  width: 60px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+}
+.tcg-deckcard {
+  position: absolute;
+  inset: 0;
+  border-radius: 0.4rem;
+  background:
+    repeating-linear-gradient(45deg, rgba(140, 93, 246, 0.35) 0, rgba(140, 93, 246, 0.35) 6px, rgba(20, 195, 244, 0.25) 6px, rgba(20, 195, 244, 0.25) 12px),
+    linear-gradient(145deg, #1a1240, #0a0825);
+  border: 1px solid rgba(20, 195, 244, 0.45);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.tcg-deckcard::after {
+  content: '⌬';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: rgba(20, 195, 244, 0.6);
+  text-shadow: 0 0 8px rgba(20, 195, 244, 0.5);
+}
+.tcg-deckstack-count {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, var(--axie-cyan), var(--axie-purple));
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  font-family: 'Cascadia Mono', ui-monospace, monospace;
+}
+
+/* ── Card tooltip (hover) ───────────────────────────────────────── */
+.tcg-tooltip {
+  position: fixed;
+  top: 64px;
+  left: 1rem;
+  width: 280px;
+  background: rgba(10, 8, 30, 0.95);
+  border: 1px solid var(--tcg-line);
+  border-radius: 0.75rem;
+  padding: 0.85rem 1rem;
+  backdrop-filter: blur(12px);
+  z-index: 50;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  font-size: 0.78rem;
+  animation: tcg-tooltip-in 0.15s ease-out;
+}
+@keyframes tcg-tooltip-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.tcg-tooltip.monster { border-left: 3px solid var(--axie-yellow); }
+.tcg-tooltip.spell   { border-left: 3px solid var(--axie-green); }
+.tcg-tooltip.trap    { border-left: 3px solid var(--axie-pink); }
+.tcg-tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.tcg-tooltip-rarity {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.6rem;
+}
+.tcg-tooltip-rarity.rarity-common    { background: rgba(180, 180, 180, 0.2); color: #ccc; }
+.tcg-tooltip-rarity.rarity-rare      { background: rgba(20, 195, 244, 0.2); color: var(--axie-cyan); }
+.tcg-tooltip-rarity.rarity-epic      { background: rgba(140, 93, 246, 0.25); color: var(--axie-purple); }
+.tcg-tooltip-rarity.rarity-legendary { background: rgba(255, 210, 63, 0.25); color: var(--axie-yellow); }
+.tcg-tooltip-rarity.rarity-mystic    { background: rgba(255, 107, 157, 0.25); color: var(--axie-pink); }
+.tcg-tooltip-typetag {
+  color: rgba(245, 243, 255, 0.55);
+  font-weight: 600;
+}
+.tcg-tooltip-name {
+  margin: 0 0 0.3rem 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #fff;
+}
+.tcg-tooltip-stars {
+  font-size: 0.85rem;
+  color: var(--axie-yellow);
+  letter-spacing: 0.1em;
+  margin-bottom: 0.3rem;
+}
+.tcg-tooltip-stars span {
+  font-size: 0.65rem;
+  color: rgba(255, 210, 63, 0.7);
+  margin-left: 0.4rem;
+}
+.tcg-tooltip-attr {
+  display: inline-block;
+  background: rgba(140, 93, 246, 0.2);
+  color: var(--axie-purple);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.06em;
+}
+.tcg-tooltip-statgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+}
+.tcg-tooltip-statgrid > div {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.4rem 0.3rem;
+  border-radius: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.tcg-tooltip-statgrid span {
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  color: rgba(245, 243, 255, 0.5);
+  letter-spacing: 0.08em;
+}
+.tcg-tooltip-statgrid strong {
+  font-size: 1rem;
+  color: var(--axie-cyan);
+  font-family: 'Cascadia Mono', ui-monospace, monospace;
+  margin-top: 0.15rem;
+}
+.tcg-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  margin-bottom: 0.3rem;
+  padding: 0.25rem 0.4rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 0.3rem;
+}
+.tcg-tooltip-row strong { color: var(--axie-yellow); font-family: 'Cascadia Mono', ui-monospace, monospace; }
+.tcg-tooltip-desc {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: rgba(245, 243, 255, 0.85);
+  margin: 0.4rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 0.4rem;
+}
+.tcg-tooltip-effect {
+  background: rgba(255, 210, 63, 0.08);
+  border-left: 2px solid var(--axie-yellow);
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.3rem;
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: rgba(255, 240, 200, 0.95);
+  margin-bottom: 0.4rem;
+}
+.tcg-tooltip-effect strong { color: var(--axie-yellow); display: block; margin-bottom: 0.15rem; font-size: 0.62rem; }
+.tcg-tooltip-foot {
+  font-size: 0.6rem;
+  color: rgba(245, 243, 255, 0.45);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.35rem;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+/* ── Hand action menu (popover sobre la mano al click) ───────────── */
+.tcg-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 90;
+  animation: tcg-fade-in 0.15s;
+}
+@keyframes tcg-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.tcg-handmenu {
+  position: fixed;
+  bottom: 180px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(140, 93, 246, 0.18), rgba(20, 195, 244, 0.1)), rgba(10, 8, 30, 0.97);
+  border: 1px solid var(--tcg-line);
+  border-radius: 0.85rem;
+  padding: 1rem 1.25rem;
+  backdrop-filter: blur(14px);
+  z-index: 95;
+  min-width: 320px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 32px rgba(140, 93, 246, 0.25);
+  animation: tcg-handmenu-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes tcg-handmenu-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(20px) scale(0.92); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+.tcg-handmenu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--tcg-line);
+}
+.tcg-handmenu-header strong {
+  font-size: 1rem;
+  color: #fff;
+  font-weight: 700;
+}
+.tcg-handmenu-close {
+  background: transparent;
+  border: none;
+  color: rgba(245, 243, 255, 0.5);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.3rem;
+  transition: all 0.15s;
+}
+.tcg-handmenu-close:hover { background: rgba(255, 107, 157, 0.15); color: var(--axie-pink); }
+.tcg-handmenu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+.tcg-handmenu-btn {
+  background: linear-gradient(135deg, rgba(140, 93, 246, 0.2), rgba(20, 195, 244, 0.12));
+  border: 1px solid var(--tcg-line);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-align: left;
+  transition: all 0.15s;
+}
+.tcg-handmenu-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(140, 93, 246, 0.35), rgba(20, 195, 244, 0.2));
+  transform: translateX(2px);
+  border-color: var(--axie-cyan);
+}
+.tcg-handmenu-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.tcg-handmenu-hint {
+  font-size: 0.7rem;
+  color: var(--axie-pink);
+  background: rgba(255, 107, 157, 0.08);
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.3rem;
+  border-left: 2px solid var(--axie-pink);
+}
+.tcg-handmenu-desc {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: rgba(245, 243, 255, 0.7);
+  margin: 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ── Animación de robo de carta ─────────────────────────────────── */
+.tcg-draw-anim {
+  position: fixed;
+  bottom: 200px;
+  left: 80px;
+  width: 70px;
+  height: 96px;
+  border-radius: 0.4rem;
+  background:
+    repeating-linear-gradient(45deg, rgba(140, 93, 246, 0.4) 0, rgba(140, 93, 246, 0.4) 6px, rgba(20, 195, 244, 0.3) 6px, rgba(20, 195, 244, 0.3) 12px),
+    linear-gradient(145deg, #1a1240, #0a0825);
+  border: 1px solid rgba(20, 195, 244, 0.6);
+  box-shadow: 0 8px 24px rgba(20, 195, 244, 0.4);
+  z-index: 80;
+  pointer-events: none;
+  animation: tcg-draw 0.7s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+@keyframes tcg-draw {
+  0% {
+    transform: translate(0, 0) scale(0.7) rotate(-12deg);
+    opacity: 0.8;
+  }
+  60% {
+    transform: translate(50vw, -40px) scale(1.1) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(50vw, 80px) scale(0.6) rotate(0deg);
+    opacity: 0;
+  }
+}
+
+/* ── Toasts visibles arriba al centro (no en el log lateral) ────── */
+.tcg-toast-stack {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 60;
+  max-width: 420px;
+  width: calc(100% - 2rem);
+  pointer-events: none;
+}
+.tcg-toast {
+  background: rgba(10, 8, 30, 0.95);
+  border: 1px solid var(--tcg-line);
+  border-left: 4px solid var(--axie-cyan);
+  border-radius: 0.6rem;
+  padding: 0.7rem 1rem;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55), 0 0 24px rgba(140, 93, 246, 0.18);
+  animation: tcg-toast-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-size: 0.82rem;
+}
+@keyframes tcg-toast-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.tcg-toast-error   { border-left-color: var(--axie-pink); }
+.tcg-toast-combat  { border-left-color: var(--axie-yellow); }
+.tcg-toast-success { border-left-color: var(--axie-green); }
+.tcg-toast-info    { border-left-color: var(--axie-cyan); }
+.tcg-toast-title {
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 0.15rem;
+}
+.tcg-toast-error   .tcg-toast-title { color: var(--axie-pink); }
+.tcg-toast-combat  .tcg-toast-title { color: var(--axie-yellow); }
+.tcg-toast-success .tcg-toast-title { color: var(--axie-green); }
+.tcg-toast-body {
+  color: rgba(245, 243, 255, 0.8);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+/* ── Flash de combate sobre el lado del atacante ─────────────────── */
+.tcg-combat-flash {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 30vh;
+  pointer-events: none;
+  z-index: 4;
+  animation: tcg-flash 0.6s ease-out forwards;
+}
+.tcg-combat-flash.me {
+  bottom: 25vh;
+  background: radial-gradient(ellipse at center, rgba(255, 210, 63, 0.35), transparent 65%);
+}
+.tcg-combat-flash.opp {
+  top: 60px;
+  background: radial-gradient(ellipse at center, rgba(255, 107, 157, 0.35), transparent 65%);
+}
+@keyframes tcg-flash {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ── Pulse del deck cuando se roba (highlight del mazo) ──────────── */
+.tcg-hud-wrap.you .tcg-deckstack { transition: filter 0.2s; }
+.tcg-deckstack.pulse { animation: tcg-deck-pulse 0.7s ease-out; }
+@keyframes tcg-deck-pulse {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  40%      { filter: drop-shadow(0 0 14px var(--axie-cyan)); }
+}
+
+/* ── Selección de monster propio (atacante o para cambio de pos) ─── */
+.tcg-slot.selected-monster {
+  border: 2px solid var(--axie-yellow);
+  box-shadow: 0 0 26px rgba(255, 210, 63, 0.6), inset 0 0 18px rgba(255, 210, 63, 0.25);
+  animation: tcg-selected-pulse 1.2s ease-in-out infinite;
+}
+@keyframes tcg-selected-pulse {
+  0%, 100% { box-shadow: 0 0 26px rgba(255, 210, 63, 0.45), inset 0 0 18px rgba(255, 210, 63, 0.2); }
+  50%      { box-shadow: 0 0 38px rgba(255, 210, 63, 0.75), inset 0 0 22px rgba(255, 210, 63, 0.35); }
+}
+
+/* ── Overlay grande de Spell/Trap activado ──────────────────────── */
+.tcg-spell-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(140, 93, 246, 0.35), rgba(0, 0, 0, 0.7));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 70;
+  pointer-events: none;
+  animation: tcg-spell-bg 1.8s ease-out forwards;
+}
+@keyframes tcg-spell-bg {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+.tcg-spell-overlay-card {
+  width: 280px;
+  padding: 1.5rem 2rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(20, 195, 244, 0.25), rgba(140, 93, 246, 0.18)), rgba(10, 8, 30, 0.95);
+  border: 2px solid var(--axie-cyan);
+  text-align: center;
+  box-shadow: 0 0 60px rgba(20, 195, 244, 0.55), inset 0 0 40px rgba(20, 195, 244, 0.2);
+  animation: tcg-spell-card 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.tcg-spell-overlay-card.trap {
+  background: linear-gradient(180deg, rgba(255, 107, 157, 0.3), rgba(140, 93, 246, 0.15)), rgba(10, 8, 30, 0.95);
+  border-color: var(--axie-pink);
+  box-shadow: 0 0 60px rgba(255, 107, 157, 0.55), inset 0 0 40px rgba(255, 107, 157, 0.2);
+}
+@keyframes tcg-spell-card {
+  0%   { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+  25%  { transform: scale(1.1) rotate(2deg); opacity: 1; }
+  50%  { transform: scale(1) rotate(0deg); opacity: 1; }
+  85%  { transform: scale(1) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1.15) rotate(0deg); opacity: 0; }
+}
+.tcg-spell-overlay-tag {
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  color: rgba(245, 243, 255, 0.7);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+.tcg-spell-overlay-name {
+  font-size: 1.7rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+  background: linear-gradient(90deg, var(--axie-cyan), var(--axie-yellow));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tcg-spell-overlay-card.trap .tcg-spell-overlay-name {
+  background: linear-gradient(90deg, var(--axie-pink), var(--axie-yellow));
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.tcg-spell-overlay-type {
+  font-size: 0.85rem;
+  color: rgba(245, 243, 255, 0.6);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ── Resaltar slots oponentes targetables con pulse rojo ──────────── */
+.tcg-slot.targetable {
+  border: 2px solid var(--axie-pink) !important;
+  box-shadow: 0 0 24px rgba(255, 107, 157, 0.6) !important;
+  animation: tcg-target-pulse 1s ease-in-out infinite;
+  cursor: crosshair !important;
+}
+@keyframes tcg-target-pulse {
+  0%, 100% { box-shadow: 0 0 24px rgba(255, 107, 157, 0.55); }
+  50%      { box-shadow: 0 0 36px rgba(255, 107, 157, 0.85); }
+}
+.tcg-slot.targetable::before {
+  content: '🎯';
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 0.85rem;
+  z-index: 10;
+  filter: drop-shadow(0 0 6px var(--axie-pink));
+  animation: tcg-target-icon 0.8s ease-in-out infinite;
+}
+@keyframes tcg-target-icon {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.3); }
+}
+
+/* ── VFX combate: atacante hace lunge, defensor flash, destruido se desvanece ─ */
+.tcg-slot.vfx-attacker > .tcg-card {
+  animation: tcg-attacker-lunge 0.8s ease-out;
+  z-index: 30;
+  position: relative;
+}
+@keyframes tcg-attacker-lunge {
+  0%   { transform: translate(0, 0) scale(1); filter: brightness(1); }
+  25%  { transform: translate(0, -16px) scale(1.06); filter: brightness(1.4) drop-shadow(0 0 16px var(--axie-yellow)); }
+  50%  { transform: translate(0, 8px) scale(1.08); filter: brightness(1.5) drop-shadow(0 0 22px var(--axie-pink)); }
+  100% { transform: translate(0, 0) scale(1); filter: brightness(1); }
+}
+.tcg-slot.vfx-attacker.def-position > .tcg-card,
+.tcg-slot.vfx-attacker > .tcg-card.def-position {
+  /* Si el atacante está en DEF (raro, pero posible), mantener rotación 90° */
+  animation: tcg-attacker-lunge-def 0.8s ease-out;
+}
+@keyframes tcg-attacker-lunge-def {
+  0%   { transform: rotate(90deg) scale(0.92); }
+  50%  { transform: rotate(90deg) scale(1.08); filter: brightness(1.5) drop-shadow(0 0 22px var(--axie-pink)); }
+  100% { transform: rotate(90deg) scale(0.92); }
+}
+.tcg-slot.vfx-defender > .tcg-card {
+  animation: tcg-defender-hit 0.5s ease-out;
+}
+@keyframes tcg-defender-hit {
+  0%   { transform: translate(0, 0); filter: brightness(1); }
+  20%  { transform: translate(-3px, 0); filter: brightness(2) drop-shadow(0 0 18px #fff); }
+  35%  { transform: translate(4px, 0); filter: brightness(1.6); }
+  50%  { transform: translate(-3px, 0); }
+  65%  { transform: translate(3px, 0); }
+  80%  { transform: translate(-2px, 0); }
+  100% { transform: translate(0, 0); filter: brightness(1); }
+}
+.tcg-slot.vfx-destroyed > .tcg-card {
+  animation: tcg-destroyed 0.7s ease-out forwards;
+}
+@keyframes tcg-destroyed {
+  0%   { transform: scale(1) rotate(0deg); opacity: 1; filter: brightness(1.2); }
+  30%  { transform: scale(1.15) rotate(-3deg); opacity: 1; filter: brightness(2.5) drop-shadow(0 0 20px var(--axie-pink)); }
+  100% { transform: scale(0) rotate(15deg); opacity: 0; filter: brightness(0); }
+}
+
+/* ── Tribute selection: monsters tributables y panel inferior ───── */
+.tcg-slot.tributable {
+  border: 2px solid var(--axie-pink);
+  box-shadow: 0 0 18px rgba(255, 107, 157, 0.4), inset 0 0 14px rgba(255, 107, 157, 0.18);
+  cursor: pointer;
+  animation: tcg-tributable-pulse 1.4s ease-in-out infinite;
+}
+@keyframes tcg-tributable-pulse {
+  0%, 100% { box-shadow: 0 0 18px rgba(255, 107, 157, 0.35), inset 0 0 14px rgba(255, 107, 157, 0.15); }
+  50%      { box-shadow: 0 0 28px rgba(255, 107, 157, 0.65), inset 0 0 18px rgba(255, 107, 157, 0.3); }
+}
+.tcg-slot.tribute-selected {
+  border: 3px solid var(--axie-yellow) !important;
+  box-shadow: 0 0 28px rgba(255, 210, 63, 0.7), inset 0 0 22px rgba(255, 210, 63, 0.35) !important;
+  animation: none !important;
+}
+.tcg-slot.tribute-selected::after {
+  content: '✕';
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--axie-yellow);
+  text-shadow: 0 0 12px rgba(255, 210, 63, 0.9), 0 0 4px rgba(0, 0, 0, 0.9);
+  z-index: 11;
+  pointer-events: none;
+}
+.tcg-tribute-panel {
+  position: fixed;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(255, 107, 157, 0.18), rgba(140, 93, 246, 0.1)), rgba(10, 8, 30, 0.97);
+  border: 1px solid rgba(255, 107, 157, 0.5);
+  border-radius: 0.85rem;
+  padding: 1rem 1.4rem;
+  z-index: 95;
+  min-width: 360px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 32px rgba(255, 107, 157, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: tcg-handmenu-in 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.tcg-tribute-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 107, 157, 0.25);
+}
+.tcg-tribute-header strong {
+  font-size: 1rem;
+  color: var(--axie-yellow);
+}
+.tcg-tribute-header span {
+  font-size: 0.75rem;
+  color: rgba(245, 243, 255, 0.7);
+}
+.tcg-tribute-progress {
+  font-family: 'Cascadia Mono', ui-monospace, monospace;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--axie-cyan);
+  text-align: center;
+  margin: 0.4rem 0;
+}
+.tcg-tribute-hint {
+  font-size: 0.7rem;
+  color: rgba(245, 243, 255, 0.65);
+  text-align: center;
+  margin-bottom: 0.7rem;
+  line-height: 1.4;
+}
+.tcg-tribute-actions {
   display: flex;
   gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
+  justify-content: center;
+}
+.tcg-tribute-actions button {
+  padding: 0.55rem 1.1rem;
   border-radius: 0.5rem;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
 }
-.play-log {
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 0.5rem;
-  padding: 0.75rem;
-  margin-top: 0.75rem;
-  max-height: 160px;
-  overflow-y: auto;
-  font-family: 'Cascadia Mono', monospace;
-  font-size: 0.75rem;
+.tcg-tribute-actions .tcg-btn-primary {
+  background: linear-gradient(135deg, var(--axie-yellow), #ff7a3a);
+  color: #1a0d05;
 }
-.play-log-entry { line-height: 1.5; }
-.play-log-entry.error { color: #ff9090; }
-.play-log-entry.action { color: #5dbcff; }
-.play-log-entry.system { color: #ffd966; }
-
-.play-instruction {
-  background: rgba(255, 217, 102, 0.1);
-  border-left: 3px solid #ffd966;
-  padding: 0.5rem 0.875rem;
-  border-radius: 0.25rem;
-  font-size: 0.8125rem;
-  margin-top: 0.5rem;
+.tcg-tribute-actions .tcg-btn-primary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
+.tcg-tribute-actions .tcg-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--tcg-line);
+  color: rgba(245, 243, 255, 0.7);
+}
+.tcg-tribute-actions .tcg-btn-ghost:hover { background: rgba(255, 255, 255, 0.05); }

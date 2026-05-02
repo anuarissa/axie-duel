@@ -41,6 +41,10 @@ const ActivateEffectInput = z.object({
   targets: z.array(z.string()).optional(),
 });
 
+const ChangePositionInput = z.object({
+  cardInstanceId: z.string().min(1),
+});
+
 export class ActionValidator {
   constructor(
     private state: DuelStateSchema,
@@ -185,6 +189,36 @@ export class ActionValidator {
     if (this.state.activePlayerId !== playerId) {
       throw new InvalidActionError('NOT_YOUR_TURN', 'Solo el jugador activo termina la fase.');
     }
+  }
+
+  /**
+   * Cambio manual de posición ATK ↔ DEF de un monster en el campo.
+   * Reglas YGO: solo el jugador activo, durante MAIN_1 o MAIN_2, sobre un monster que NO atacó
+   * NI fue invocado en este mismo turno.
+   */
+  validateChangePosition(playerId: string, raw: unknown): z.infer<typeof ChangePositionInput> {
+    if (this.state.activePlayerId !== playerId) {
+      throw new InvalidActionError('NOT_YOUR_TURN', 'No es tu turno.');
+    }
+    if (this.state.phase !== Phase.MAIN_1 && this.state.phase !== Phase.MAIN_2) {
+      throw new InvalidActionError('WRONG_PHASE', 'El cambio de posición solo se hace en Main Phase.');
+    }
+    const parsed = ChangePositionInput.safeParse(raw);
+    if (!parsed.success) {
+      throw new InvalidActionError('TARGET_INVALID', 'Payload inválido.');
+    }
+    const player = this.requirePlayer(playerId);
+    const monster = player.monsterZones.find((c) => c.instanceId === parsed.data.cardInstanceId);
+    if (!monster || !monster.instanceId) {
+      throw new InvalidActionError('TARGET_INVALID', 'Monster no encontrado en zona.');
+    }
+    if (monster.hasAttacked) {
+      throw new InvalidActionError('ALREADY_ATTACKED', 'No podés cambiar posición de un monster que atacó este turno.');
+    }
+    if (monster.positionChangedThisTurn) {
+      throw new InvalidActionError('CONDITION_NOT_MET', 'Este monster ya cambió de posición este turno.');
+    }
+    return parsed.data;
   }
 
   private requirePlayer(playerId: string): PlayerSchema {

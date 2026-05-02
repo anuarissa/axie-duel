@@ -177,11 +177,21 @@ export class PvEBot {
         }
         if (!bestTarget || cost < bestTarget.cost) bestTarget = { id: m.instanceId, cost };
       }
-      if (bestTarget && bestTarget.cost < 500) {
+      // Threshold de agresión por dificultad. Easy ataca incluso con pérdida razonable.
+      const aggressionThreshold = this.difficulty === 'Easy' ? 1500 : this.difficulty === 'Normal' ? 1000 : 600;
+      if (bestTarget && bestTarget.cost < aggressionThreshold) {
         target = bestTarget.id;
+      } else if (bestTarget) {
+        // En vez de pasar, atacar al target con menor cost igual — el bot debe ser activo.
+        // Solo se abstiene si el cost es absurdamente alto (perder >50% de su LP en una jugada).
+        if (bestTarget.cost < 4000) {
+          target = bestTarget.id;
+        } else {
+          attacker.hasAttacked = true;
+          return true;
+        }
       } else {
-        // No hay target favorable, NO atacar (lo dejamos para próximo turno).
-        attacker.hasAttacked = true; // pseudo-pass para no loop
+        attacker.hasAttacked = true;
         return true;
       }
     }

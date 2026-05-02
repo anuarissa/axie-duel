@@ -13,6 +13,7 @@ import { GameEngine } from '../engine/GameEngine.js';
 import { InvalidActionError } from '../engine/ActionValidator.js';
 import { PvEBot, type BotDifficulty } from '../ai/PvEBot.js';
 import { gameLogger } from '../logger.js';
+import type { OnBattleResolveEvent, OnSpellActivatedEvent } from '../engine/EventBus.js';
 import type { Logger } from 'pino';
 
 interface JoinOptions {
@@ -21,6 +22,48 @@ interface JoinOptions {
 }
 
 const BOT_TURN_DELAY_MS = 300;
+
+// Deck de 40 cartas con variedad: bias a low-level monsters (la UI no soporta tribute aún),
+// más spells y traps para mostrar las 3 categorías. Total = 40.
+const VARIED_PLAYER_DECK: string[] = [
+  // Monsters low-level (jugables sin tribute) — 12
+  ...Array<string>(6).fill('mon_beast_001'),   // Olek (L4, 1700/1200)
+  ...Array<string>(6).fill('mon_plant_001'),   // (L3)
+  // Monsters mid/high — 6 (requieren tribute, para mostrar variedad)
+  ...Array<string>(3).fill('mon_aqua_001'),    // (L5)
+  ...Array<string>(2).fill('mon_bird_001'),    // (L7)
+  ...Array<string>(1).fill('mon_reptile_001'), // (L8)
+  // Spells — 10
+  ...Array<string>(2).fill('spl_001'),
+  ...Array<string>(2).fill('spl_002'),
+  ...Array<string>(2).fill('spl_003'),
+  ...Array<string>(2).fill('spl_004'),
+  ...Array<string>(2).fill('spl_005'),
+  // Traps — 12
+  ...Array<string>(3).fill('trp_001'),
+  ...Array<string>(3).fill('trp_002'),
+  ...Array<string>(2).fill('trp_003'),
+  ...Array<string>(2).fill('trp_004'),
+  ...Array<string>(2).fill('trp_005'),
+];
+
+const VARIED_BOT_DECK: string[] = [
+  // Bot deck similar pero con shuffle distinto — el server ya hace shuffle por seed.
+  ...Array<string>(8).fill('mon_aqua_001'),
+  ...Array<string>(6).fill('mon_beast_001'),
+  ...Array<string>(4).fill('mon_plant_001'),
+  ...Array<string>(2).fill('mon_bird_001'),
+  ...Array<string>(2).fill('spl_001'),
+  ...Array<string>(2).fill('spl_002'),
+  ...Array<string>(2).fill('spl_003'),
+  ...Array<string>(2).fill('spl_004'),
+  ...Array<string>(2).fill('spl_005'),
+  ...Array<string>(2).fill('trp_001'),
+  ...Array<string>(2).fill('trp_002'),
+  ...Array<string>(2).fill('trp_003'),
+  ...Array<string>(2).fill('trp_004'),
+  ...Array<string>(2).fill('trp_005'),
+];
 
 export class PvERoom extends Room {
   override maxClients = 1;
@@ -45,6 +88,7 @@ export class PvERoom extends Room {
       if (!id) throw new InvalidActionError('CARD_NOT_IN_HAND', 'cardInstanceId required');
       this.engine.handleSetCard(client.sessionId, id);
     }));
+    this.onMessage('CHANGE_POSITION', (client, raw) => this.safeAction(client, () => this.engine.handleChangePosition(client.sessionId, raw)));
     this.onMessage('END_PHASE', (client) => {
       this.safeAction(client, () => this.engine.handleEndPhase(client.sessionId));
       // Si es turno del bot ahora, ejecutarlo después de un pequeño delay.
@@ -55,19 +99,50 @@ export class PvERoom extends Room {
       this.state.winnerId = 'BOT';
       this.state.winReason = 'SURRENDER';
     });
+
+    // Broadcast del resultado de cada combate (cubre ataques del jugador Y del bot).
+    const cardDb = this.engine.cards;
+    this.engine.events.on<OnBattleResolveEvent>('onBattleResolve', (e) => {
+      const attackerDef = cardDb.getById(e.attacker.cardId);
+      const defenderDef = e.defender ? cardDb.getById(e.defender.cardId) : null;
+      this.broadcast('COMBAT_RESULT', {
+        attackerOwnerId: e.attackerOwnerId,
+        defenderOwnerId: e.defenderOwnerId,
+        attackerInstanceId: e.attacker.instanceId,
+        defenderInstanceId: e.defender?.instanceId,
+        attackerName: attackerDef?.name ?? e.attacker.cardId,
+        defenderName: defenderDef?.name,
+        direct: e.outcome.direct,
+        attackerDestroyed: e.outcome.attackerDestroyed,
+        defenderDestroyed: e.outcome.defenderDestroyed,
+        damageToAttackerOwner: e.outcome.damageToAttackerOwner,
+        damageToDefenderOwner: e.outcome.damageToDefenderOwner,
+      });
+    });
+
+    // También broadcast cuando un Spell o Trap se activa, para feedback visual.
+    this.engine.events.on<OnSpellActivatedEvent>('onSpellActivated', (e) => {
+      const def = cardDb.getById(e.source.cardId);
+      this.broadcast('CARD_ACTIVATED', {
+        ownerId: e.ownerId,
+        cardName: def?.name ?? e.source.cardId,
+        kind: 'Spell',
+        cancelled: e.cancelled,
+      });
+    });
   }
 
   override async onJoin(client: Client, options: JoinOptions = {}): Promise<void> {
     this.engine.setupPlayer({
       id: client.sessionId,
       username: options.username ?? 'You',
-      mainDeckCardIds: Array(40).fill('mon_beast_001'),
+      mainDeckCardIds: VARIED_PLAYER_DECK,
       isFirstPlayer: true,
     });
     this.engine.setupPlayer({
       id: 'BOT',
       username: 'BotOpponent',
-      mainDeckCardIds: Array(40).fill('mon_aqua_001'),
+      mainDeckCardIds: VARIED_BOT_DECK,
       isFirstPlayer: false,
     });
     this.bot = new PvEBot(this.engine, 'BOT', options.difficulty ?? 'Easy');

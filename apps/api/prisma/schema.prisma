@@ -12,10 +12,24 @@ datasource db {
 
 model User {
   id            String        @id @default(cuid())
-  waypointSub   String        @unique // sub claim del JWT de Waypoint (ID estable de Sky Mavis)
   email         String?       @unique
+  emailVerified Boolean       @default(false)
   username      String        @unique
-  walletAddress String?       @unique // address de Ronin del Waypoint
+  /// Display name del provider (ej: "Anuar Issa" desde Google).
+  displayName   String?
+  avatarUrl     String?
+  // ── Providers Web2 (cualquiera basta para iniciar sesión, NO requiere wallet) ──
+  /// `sub` de Google ID Token. NULL si nunca usó Google.
+  googleSub     String?       @unique
+  /// `oid` de Microsoft ID Token. NULL si nunca usó Microsoft.
+  microsoftSub  String?       @unique
+  /// User ID de Facebook Graph API. NULL si nunca usó Facebook.
+  facebookSub   String?       @unique
+  // ── Web3: TODO opcional, se setea al linkear wallet desde la UI ──────
+  /// `sub` del JWT de Waypoint. NULL si no linkeó wallet vía Waypoint.
+  waypointSub   String?       @unique
+  /// Address EVM (Ronin). NULL = jugador 100% Web2 sin wallet linkeada.
+  walletAddress String?       @unique
   hasNFTAxies   Boolean       @default(false)
   eloRanked     Int           @default(1000)
   eloRankedNFT  Int           @default(1000)

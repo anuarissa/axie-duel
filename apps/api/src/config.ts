@@ -27,6 +27,13 @@ const ConfigSchema = z.object({
   AXS_MODE: z.enum(['offchain', 'onchain']).default('offchain'),
   AXS_TOKEN_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional().or(z.literal('').transform(() => undefined)),
   AXS_STARTER_BONUS: z.coerce.number().min(0).default(100),
+  // ── OAuth providers Web2. Cada uno opcional — si falta, el endpoint
+  // correspondiente (/auth/google, /auth/microsoft, /auth/facebook) responde
+  // 401 con code PROVIDER_DISABLED. Configurás los providers que quieras ofrecer.
+  GOOGLE_CLIENT_ID: z.string().min(1).optional().or(z.literal('').transform(() => undefined)),
+  MICROSOFT_CLIENT_ID: z.string().min(1).optional().or(z.literal('').transform(() => undefined)),
+  FACEBOOK_APP_ID: z.string().min(1).optional().or(z.literal('').transform(() => undefined)),
+  FACEBOOK_APP_SECRET: z.string().min(1).optional().or(z.literal('').transform(() => undefined)),
 });
 
 export type Config = z.infer<typeof ConfigSchema>;

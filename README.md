@@ -152,15 +152,42 @@ Endpoints (todos en `/tournaments`):
 
 **Formato Fase 0:** Single-elim con bye automáticos cuando los participantes no son potencia de 2. Premios se reparten según `prizeDistribution: [{rank: 1, share: 0.5}, ...]`. Las shares deben sumar 1.
 
-## Filosofía dual Web2 / Web3
+## Filosofía dual Web2 / Web3 (REGLA DE ORO — no se rompe)
 
-- **Cualquier persona** puede crear cuenta vía Waypoint (Gmail/Apple/Facebook) y jugar en 30s.
-- Si tiene **Axies NFT** en su Ronin Wallet, los importa y obtiene ventajas paralelas (NO de poder bruto):
-  - Axies NFT como cartas únicas con sus partes específicas.
-  - +1 espacio en Extra Deck por cada NFT (máx +5).
-  - Acceso a Ranked Premium (recompensas en RON).
-  - Drops Premium acuñados como ERC-721 en Ronin (vendibles en marketplace).
-- Master prompt sección 5: balance crítico — un jugador Free hábil debe poder vencer a un NFT en casual.
+**Web2 es el camino principal. Wallet = opcional, solo para premios cripto reales.**
+
+### Login (sin wallet, sin cripto)
+
+| Endpoint | Provider | Setup developer console |
+| --- | --- | --- |
+| `POST /auth/google` | Google (Gmail) | https://console.cloud.google.com/ → Credentials → OAuth 2.0 Client ID |
+| `POST /auth/microsoft` | Microsoft (Outlook/Hotmail) | https://entra.microsoft.com/ → App registrations |
+| `POST /auth/facebook` | Facebook | https://developers.facebook.com/apps/ → Facebook Login |
+
+Cualquiera de los 3 alcanza para JUGAR todo: PvE, PvP Casual, PvP Ranked, daily quests, torneos con AXS off-chain. Al primer login el usuario recibe automáticamente:
+- 3 mazos starter (Beast / Aquatic / Plant) con Axies starter no-NFT.
+- 100 AXS de bonus (`AXS_STARTER_BONUS` configurable en `.env`).
+
+### Linkear Ronin Wallet (opcional, solo para premios cripto reales)
+
+Una vez logueado en Web2, el usuario puede ir a su perfil y elegir:
+
+| Endpoint | Qué hace |
+| --- | --- |
+| `POST /auth/link/waypoint` | Linkea wallet via Waypoint MPC (recomendado, login social transparente) |
+| `POST /auth/link/wallet` | Linkea wallet directa (Ronin Wallet extension, MetaMask) — requiere firma EIP-4361 |
+
+Al linkear, el backend consulta on-chain `balanceOf` del contrato Axie. Si tiene **≥3 Axies NFT**:
+- `hasNFTAxies = true` en su perfil.
+- Desbloquea **Ranked Premium** (ladder con recompensas en RON / AXS real).
+- Sus Axies NFT entran como cartas únicas en su catálogo personal.
+- Acceso a torneos premium con prize pool en cripto.
+
+**Si nunca linkea wallet, juega 100% gratis sin tocar blockchain.** El balance se mantiene en AXS off-chain (sin valor cripto). Cuando quiera convertirlos a cripto: linkea wallet + acuña.
+
+### Balance crítico (master prompt sección 5)
+
+Un jugador Web2 hábil **debe poder vencer** a un jugador con NFTs en PvP casual. Las ventajas NFT son **de progresión y economía**, no de poder bruto. Diferencia máxima de stats efectivos: **+10%** vía rareza intrínseca de partes únicas.
 
 ## Decisiones técnicas (`// DECISION:` en código)
 

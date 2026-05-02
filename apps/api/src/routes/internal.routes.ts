@@ -16,6 +16,7 @@ import { config } from '../config.js';
 import { AuthError, ValidationError } from '../lib/errors.js';
 import { logger } from '../lib/logger.js';
 import { questService, type QuestKind } from '../services/QuestService.js';
+import { calculateElo, type EloOutcome } from '@axie-duel/game-rules';
 
 const router = Router();
 
@@ -70,10 +71,10 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
         duration: body.duration,
         turnsPlayed: body.turnsPlayed,
         finishedAt: new Date(),
-        // El replay log se guarda futuro en S3 (Fase 3). Por ahora lo dejamos en `null`
-        // y solo persistimos el resumen del match.
         replayUrl: null,
-        ...(body.reason ? {} : {}),
+        ...(body.reason ? { reason: body.reason } : {}),
+        // Inline el replay log en JSONB para Fase 0. Fase 3 lo movemos a S3 + url.
+        ...(body.replayLog ? { replayLog: body.replayLog as object } : {}),
       },
     });
 
@@ -99,7 +100,53 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
       );
     }
 
-    res.status(201).json({ matchId: match.id });
+    // Hook ELO: solo para PvP_Ranked y PvP_RankedNFT. Aplicamos al field
+    // correspondiente (eloRanked o eloRankedNFT). PvE / PvP_Casual no afectan.
+    let eloDeltas: { player1: number; player2: number } | null = null;
+    const isRanked = body.mode === 'PvP_Ranked' || body.mode === 'PvP_RankedNFT';
+    if (isRanked && body.player2Id && body.player1Id !== 'BOT' && body.player2Id !== 'BOT') {
+      try {
+        const eloField = body.mode === 'PvP_RankedNFT' ? 'eloRankedNFT' : 'eloRanked';
+        const [p1, p2] = await Promise.all([
+          prisma.user.findUnique({ where: { id: body.player1Id }, select: { id: true, [eloField]: true } as never }),
+          prisma.user.findUnique({ where: { id: body.player2Id }, select: { id: true, [eloField]: true } as never }),
+        ]);
+        if (p1 && p2) {
+          const elo1 = (p1 as Record<string, number>)[eloField] ?? 1000;
+          const elo2 = (p2 as Record<string, number>)[eloField] ?? 1000;
+          const outcome: EloOutcome = !body.winnerId
+            ? 'DRAW'
+            : body.winnerId === body.player1Id
+              ? 'P1_WIN'
+              : 'P2_WIN';
+          const change = calculateElo(elo1, elo2, outcome);
+          await Promise.all([
+            prisma.user.update({
+              where: { id: body.player1Id },
+              data: { [eloField]: change.player1NewElo },
+            }),
+            prisma.user.update({
+              where: { id: body.player2Id },
+              data: { [eloField]: change.player2NewElo },
+            }),
+          ]);
+          eloDeltas = { player1: change.player1Delta, player2: change.player2Delta };
+          // Persistir el delta en el Match para historiales y verificación.
+          await prisma.match.update({
+            where: { id: match.id },
+            data: { eloDeltas: eloDeltas as object },
+          });
+          logger.info(
+            { matchId: match.id, mode: body.mode, eloDeltas, eloField },
+            'elo updated',
+          );
+        }
+      } catch (err) {
+        logger.warn({ err, matchId: match.id }, 'elo update failed');
+      }
+    }
+
+    res.status(201).json({ matchId: match.id, eloDeltas });
   } catch (err) {
     next(err);
   }

@@ -54,12 +54,21 @@ export interface OnPhaseChangeEvent {
   activePlayerId: string;
 }
 
+export interface OnSpellActivatedEvent {
+  type: 'onSpellActivated';
+  ownerId: string;
+  source: CardSchema;
+  /** Mutable: counter trap puede setear true para negar la spell. */
+  cancelled: boolean;
+}
+
 export type EngineEvent =
   | OnSummonEvent
   | OnAttackDeclareEvent
   | OnBattleResolveEvent
   | OnTurnStartEvent
-  | OnPhaseChangeEvent;
+  | OnPhaseChangeEvent
+  | OnSpellActivatedEvent;
 
 export type EngineEventType = EngineEvent['type'];
 

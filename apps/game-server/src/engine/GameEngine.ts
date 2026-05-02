@@ -24,6 +24,7 @@ import { DeckManager } from './DeckManager.js';
 import { SeededRng } from './rng.js';
 import { EventBus } from './EventBus.js';
 import { TriggerRegistry } from './TriggerRegistry.js';
+import { ReplayLogger } from './ReplayLogger.js';
 import { registerTriggersForCard } from '../cards/triggered/registry.js';
 import { CardDatabase } from '../cards/CardDatabase.js';
 import type { Logger } from 'pino';
@@ -48,6 +49,7 @@ export class GameEngine {
   public readonly phases: PhaseManager;
   public readonly events: EventBus;
   public readonly triggers: TriggerRegistry;
+  public readonly replay: ReplayLogger;
 
   constructor(
     private state: DuelStateSchema,
@@ -59,6 +61,7 @@ export class GameEngine {
     this.state.rngSeed = seed ?? '';
     this.events = new EventBus();
     this.triggers = new TriggerRegistry(this.events);
+    this.replay = new ReplayLogger();
     this.deckManager = new DeckManager(this.rng);
     this.validator = new ActionValidator(this.state, this.cards);
     this.summon = new SummonSystem(this.state, this.cards);
@@ -96,6 +99,12 @@ export class GameEngine {
     this.state.status = 'IN_PROGRESS';
     this.state.phase = Phase.DRAW;
     this.state.turnDeadlineMs = Date.now() + DEFAULT_DUEL_CONFIG.turnDurationMs;
+    this.replay.start();
+    this.replay.log('MATCH_START', undefined, {
+      players: ids,
+      firstPlayer: first.id,
+      seed: this.state.rngSeed,
+    });
     this.log.info({ first: first.id }, 'match started');
     // El primer jugador NO roba en su turno 1 (ver shouldDrawInDrawPhase).
     // PhaseManager respeta esa regla en onEnterPhase(DRAW).
@@ -106,6 +115,11 @@ export class GameEngine {
   handleNormalSummon(playerId: string, raw: unknown): void {
     const input = this.validator.validateNormalSummon(playerId, raw);
     this.summon.normalSummon(playerId, input.cardInstanceId, input.tributes ?? [], input.position);
+    this.replay.log('NORMAL_SUMMON', playerId, {
+      cardInstanceId: input.cardInstanceId,
+      position: input.position,
+      tributes: input.tributes ?? [],
+    });
     // Emit onSummon — triggered effects (ej: "field spell que da +300 ATK") corren acá.
     const player = this.state.players.get(playerId);
     const monster = player?.monsterZones.find((c) => c.instanceId === input.cardInstanceId);
@@ -139,6 +153,11 @@ export class GameEngine {
       attacker.atkMod -= declareEvent.attackerAtkPenalty;
     }
     const outcome = this.combat.declareAttack(playerId, input.attackerInstanceId, input.targetInstanceId);
+    this.replay.log('DECLARE_ATTACK', playerId, {
+      attackerInstanceId: input.attackerInstanceId,
+      targetInstanceId: input.targetInstanceId,
+    });
+    this.replay.log('COMBAT_RESOLVED', playerId, { ...outcome });
     // Emit onBattleResolve para handlers tipo Lethal Strike.
     const opponentId = [...this.state.players.keys()].find((id) => id !== playerId);
     const defender =
@@ -165,15 +184,61 @@ export class GameEngine {
       player.spellTrapZones.find((c) => c.instanceId === input.cardInstanceId);
     if (!card) throw new InvalidActionError('CARD_NOT_IN_HAND', 'card not found');
 
+    // Si la carta es Spell, emitir onSpellActivated PRIMERO para que counter
+    // traps (negateAndDestroy) tengan ventana de cancelar.
+    const def = this.cards.getById(card.cardId);
+    if (def?.type === 'Spell') {
+      const spellEvent = {
+        type: 'onSpellActivated' as const,
+        ownerId: playerId,
+        source: card,
+        cancelled: false,
+      };
+      this.events.emit(spellEvent);
+      this.replay.log('ACTIVATE_EFFECT', playerId, {
+        cardInstanceId: input.cardInstanceId,
+        targets: input.targets ?? [],
+        spellNegated: spellEvent.cancelled,
+      });
+      if (spellEvent.cancelled) {
+        // Spell negada por counter trap → mover a graveyard sin resolver.
+        moveCardToGraveyard(player, card);
+        return;
+      }
+    } else {
+      this.replay.log('ACTIVATE_EFFECT', playerId, {
+        cardInstanceId: input.cardInstanceId,
+        targets: input.targets ?? [],
+      });
+    }
+
     this.effects.addToChain(playerId, card, input.targets ?? []);
     // En Fase 0, resolvemos inmediatamente sin abrir ventana de respuesta.
     // Fase 1: abrir ventana 15s para el rival vía Room timer.
-    this.effects.resolveChain();
+    const results = this.effects.resolveChain();
+    for (const r of results) {
+      this.replay.log('EFFECT_RESOLVED', playerId, {
+        success: r.success,
+        message: r.message,
+      });
+    }
   }
 
   handleEndPhase(playerId: string): void {
     this.validator.validateEndPhase(playerId);
+    const prevPhase = this.state.phase;
+    const prevTurn = this.state.turnNumber;
     this.phases.advance();
+    if (this.state.turnNumber !== prevTurn) {
+      this.replay.log('TURN_CHANGED', this.state.activePlayerId, {
+        turnNumber: this.state.turnNumber,
+      });
+    } else {
+      this.replay.log('PHASE_CHANGED', playerId, {
+        from: prevPhase,
+        to: this.state.phase,
+      });
+    }
   }
 
   /**
@@ -214,6 +279,29 @@ export class GameEngine {
       registry: this.triggers,
       log: this.log,
     });
+    this.replay.log('SET_CARD', playerId, { cardInstanceId });
     this.log.info({ player: playerId, card: card.cardId, instanceId: card.instanceId }, 'card set');
+  }
+}
+
+/** Helper: mueve una carta de cualquier zona del jugador a su graveyard. */
+function moveCardToGraveyard(player: PlayerSchema, card: CardSchema): void {
+  const inHand = player.hand.findIndex((c) => c.instanceId === card.instanceId);
+  if (inHand !== -1) {
+    player.graveyard.push(player.hand[inHand]!);
+    player.hand.splice(inHand, 1);
+    player.handSize = player.hand.length;
+    return;
+  }
+  for (const zones of [player.spellTrapZones, player.monsterZones]) {
+    const idx = zones.findIndex((c) => c.instanceId === card.instanceId);
+    if (idx !== -1) {
+      const c = zones[idx]!;
+      player.graveyard.push(c);
+      const empty = new (c.constructor as { new (): typeof c })();
+      empty.instanceId = '';
+      zones[idx] = empty;
+      return;
+    }
   }
 }

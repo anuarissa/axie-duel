@@ -18,6 +18,8 @@ export interface PersistMatchInput {
   duration: number;
   turnsPlayed: number;
   reason?: string;
+  /** Log determinista de eventos (de ReplayLogger.serialize()). */
+  replayLog?: ReadonlyArray<unknown>;
 }
 
 export class ApiClient {

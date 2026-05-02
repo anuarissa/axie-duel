@@ -61,9 +61,47 @@ const atkDebuffFactory: TriggerFactory = (def, { state, source, ownerId, registr
   });
 };
 
+/**
+ * negateAndDestroy (Lunacian Counterstrike — Counter Trap): cuando el oponente
+ * ACTIVA una Spell, la negamos y la trap se destruye (one-shot).
+ */
+const negateAndDestroyFactory: TriggerFactory = (_def, { state, source, ownerId, registry, log }) => {
+  registry.register(source.instanceId, 'onSpellActivated', (event) => {
+    if (event.type !== 'onSpellActivated') return;
+    if (event.ownerId === ownerId) return; // solo contra spells del oponente
+    event.cancelled = true;
+    log.info({ trap: source.instanceId, spell: event.source.instanceId }, 'negateAndDestroy triggered');
+    moveToGraveyard(state, source, ownerId);
+    registry.unregisterAll(source.instanceId);
+  });
+};
+
+/**
+ * fieldTrigger (Sky Mavis Field — Field Spell continuous): cada vez que ALGUIEN
+ * invoca un Axie monster, +atkBonus ATK al monster invocado.
+ *
+ * NO es one-shot: queda activo mientras la field spell esté en zona.
+ * Cleanup automático cuando se destruye via unregisterAll.
+ *
+ * Limit "1 vez por turno" pendiente Fase 2 (necesita reset en onTurnStart).
+ */
+const fieldTriggerFactory: TriggerFactory = (def, { source, registry, log }) => {
+  const atkBonus = typeof def.effect?.params?.atkBonus === 'number' ? def.effect.params.atkBonus : 300;
+  registry.register(source.instanceId, 'onSummon', (event) => {
+    if (event.type !== 'onSummon') return;
+    event.monster.atkMod += atkBonus;
+    log.info(
+      { field: source.instanceId, target: event.monster.instanceId, atkBonus },
+      'fieldTrigger applied',
+    );
+  });
+};
+
 const TRIGGER_FACTORIES: Record<string, TriggerFactory> = {
   negateAttack: negateAttackFactory,
   atkDebuff: atkDebuffFactory,
+  negateAndDestroy: negateAndDestroyFactory,
+  fieldTrigger: fieldTriggerFactory,
 };
 
 /** Inspecciona la carta y registra triggers si los soporta. */

@@ -229,7 +229,17 @@ model Match {
   mode        String    // 'PvE' | 'PvP_Casual' | 'PvP_Ranked' | 'PvP_RankedNFT'
   duration    Int       // segundos
   turnsPlayed Int
+  /// URL externa al replay (S3, Supabase Storage). Para Fase 3 cuando los logs sean grandes.
   replayUrl   String?
+  /// Log determinista de eventos del duelo. Para Fase 0 inline en JSONB.
+  /// Cada entrada: `{ ts, type, playerId?, data? }`. Combinado con rngSeed + decklists iniciales,
+  /// permite reconstruir el duelo paso a paso.
+  replayLog   Json?
+  /// 'LIFE_POINTS_ZERO' | 'DECK_OUT' | 'SURRENDER' | 'DISCONNECT_TIMEOUT' | 'SPECIAL_CARD_CONDITION'
+  reason      String?
+  /// Delta de ELO aplicado al ranked match. JSON: { player1: +12, player2: -12 }.
+  /// null si el match no era ranked.
+  eloDeltas   Json?
   finishedAt  DateTime?
   createdAt   DateTime  @default(now())
   players     User[]    @relation("PlayerMatches")

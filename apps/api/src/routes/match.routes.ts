@@ -70,14 +70,41 @@ router.get('/:id', authRequired, async (req: Request<{ id: string }>, res: Respo
     const m = await prisma.match.findUnique({ where: { id: req.params.id } });
     if (!m) throw new NotFoundError('Match');
     const userId = req.user!.userId;
-    if (m.player1Id !== userId && m.player2Id !== userId) {
-      // Por ahora cualquiera puede ver match resumen para Match History público.
-      // Si querés private match history estricto, descomentar la siguiente línea:
-      // throw new ForbiddenError('Not your match');
+    // No incluir replayLog en este endpoint — puede ser pesado (10k entries max).
+    // Está disponible vía GET /matches/:id/replay.
+    const { replayLog, ...summary } = m;
+    void replayLog;
+    res.json({
+      ...summary,
+      outcome: m.winnerId === userId ? 'WIN' : m.winnerId ? 'LOSS' : 'DRAW',
+      hasReplay: m.replayLog != null,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Devuelve el replayLog inline del match. Público (los matches son visibles
+ * para feature "ver replay" + analytics community-driven).
+ */
+router.get('/:id/replay', async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+  try {
+    const m = await prisma.match.findUnique({
+      where: { id: req.params.id },
+      select: { id: true, replayLog: true, replayUrl: true, mode: true, finishedAt: true },
+    });
+    if (!m) throw new NotFoundError('Match');
+    if (!m.replayLog && !m.replayUrl) {
+      res.json({ matchId: m.id, replayLog: null, replayUrl: null, message: 'no replay available' });
+      return;
     }
     res.json({
-      ...m,
-      outcome: m.winnerId === userId ? 'WIN' : m.winnerId ? 'LOSS' : 'DRAW',
+      matchId: m.id,
+      mode: m.mode,
+      finishedAt: m.finishedAt,
+      replayLog: m.replayLog,
+      replayUrl: m.replayUrl,
     });
   } catch (err) {
     next(err);

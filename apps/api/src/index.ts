@@ -22,6 +22,8 @@ import tournamentRoutes from './routes/tournament.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import internalRoutes from './routes/internal.routes.js';
 import questRoutes from './routes/quest.routes.js';
+import swaggerUi from 'swagger-ui-express';
+import { openApiSpec } from './openapi-spec.js';
 
 const app = express();
 
@@ -42,6 +44,18 @@ app.use(generalRateLimit);
 app.get('/health', (_req, res) => {
   res.json({ ok: true, service: 'axie-duel-api', env: config.NODE_ENV });
 });
+
+// Swagger UI con la spec OpenAPI 3.1. Visible en http://localhost:3001/docs.
+// JSON crudo en /openapi.json para herramientas (Postman, codegen).
+app.get('/openapi.json', (_req, res) => res.json(openApiSpec));
+app.use(
+  '/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(openApiSpec as object, {
+    customSiteTitle: 'Axie Duel API',
+    swaggerOptions: { persistAuthorization: true },
+  }),
+);
 
 app.use('/auth', authRoutes);
 app.use('/users', userRoutes);

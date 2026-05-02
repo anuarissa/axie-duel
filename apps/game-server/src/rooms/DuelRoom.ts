@@ -106,6 +106,10 @@ export class DuelRoom extends Room {
     const player2Id = playerIds[1] ?? null;
     const winnerId = this.state.winnerId || null;
     const duration = this.startedAt ? Math.round((Date.now() - this.startedAt) / 1000) : 0;
+    // Final entry del replay: GAME_OVER.
+    this.engine.replay.log('GAME_OVER', winnerId ?? undefined, {
+      reason: this.state.winReason,
+    });
     const result = await apiClient.persistMatch({
       player1Id,
       player2Id,
@@ -114,9 +118,13 @@ export class DuelRoom extends Room {
       duration,
       turnsPlayed: this.state.turnNumber,
       ...(this.state.winReason ? { reason: this.state.winReason } : {}),
+      replayLog: this.engine.replay.serialize(),
     });
     if (result) {
-      this.log.info({ matchId: result.matchId }, 'match persisted to API');
+      this.log.info(
+        { matchId: result.matchId, replayEntries: this.engine.replay.size() },
+        'match persisted to API',
+      );
     }
   }
 

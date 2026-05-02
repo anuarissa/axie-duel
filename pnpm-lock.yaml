@@ -71,6 +71,9 @@ importers:
       pino-pretty:
         specifier: ^11.2.2
         version: 11.3.0
+      swagger-ui-express:
+        specifier: ^5.0.1
+        version: 5.0.1(express@4.22.1)
       viem:
         specifier: ^2.21.7
         version: 2.48.7(typescript@5.9.3)(zod@3.25.76)
@@ -90,6 +93,9 @@ importers:
       '@types/node':
         specifier: ^20.14.10
         version: 20.19.39
+      '@types/swagger-ui-express':
+        specifier: ^4.1.7
+        version: 4.1.8
       dotenv-cli:
         specifier: ^7.4.2
         version: 7.4.4
@@ -108,6 +114,9 @@ importers:
       vitest:
         specifier: ^2.1.2
         version: 2.1.9(@types/node@20.19.39)
+      vitest-mock-extended:
+        specifier: ^2.0.2
+        version: 2.0.2(typescript@5.9.3)(vitest@2.1.9(@types/node@20.19.39))
 
   apps/game-server:
     dependencies:
@@ -131,7 +140,7 @@ importers:
         version: 0.17.13(@colyseus/core@0.17.42)(express@4.22.1)
       colyseus:
         specifier: ^0.17.0
-        version: 0.17.10(@colyseus/auth@0.16.6(@colyseus/core@0.17.42)(express@4.22.1))(@colyseus/better-call@1.3.3(zod@3.25.76))(@colyseus/core@0.17.42)(@colyseus/redis-driver@0.16.1(@colyseus/schema@4.0.21(typescript@5.9.3))(@pm2/io@6.1.0))(@colyseus/redis-presence@0.16.4(@colyseus/schema@4.0.21(typescript@5.9.3))(@pm2/io@6.1.0))(@colyseus/schema@4.0.21(typescript@5.9.3))(@colyseus/uwebsockets-transport@0.16.10(@colyseus/core@0.17.42))(@colyseus/ws-transport@0.17.13)(@pm2/io@6.1.0)(express@4.22.1)(vite@5.4.21(@types/node@20.19.39))(zod@3.25.76)
+        version: 0.17.10(@colyseus/auth@0.16.6(@colyseus/core@0.17.42)(express@4.22.1))(@colyseus/better-call@1.3.3(zod@3.25.76))(@colyseus/core@0.17.42)(@colyseus/redis-driver@0.16.1(@colyseus/schema@4.0.21(typescript@5.9.3))(@pm2/io@6.1.0))(@colyseus/redis-presence@0.16.4(@colyseus/schema@4.0.21(typescript@5.9.3))(@pm2/io@6.1.0))(@colyseus/schema@4.0.21(typescript@5.9.3))(@colyseus/uwebsockets-transport@0.16.10(@colyseus/core@0.17.42))(@colyseus/ws-transport@0.17.13)(@pm2/io@6.1.0)(express@4.22.1)(zod@3.25.76)
       dotenv:
         specifier: ^16.4.5
         version: 16.6.1
@@ -1060,6 +1069,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@scarf/scarf@1.4.0':
+    resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
+
   '@scure/base@1.2.6':
     resolution: {integrity: sha512-g/nm5FgUa//MCj1gV09zTJTaM6KBAHqLN907YVQqf7zC49+DcO4B1so4ZX07Ef10Twr6nuqYEH9GEggFXA4Fmg==}
 
@@ -1169,6 +1181,9 @@ packages:
 
   '@types/serve-static@1.15.10':
     resolution: {integrity: sha512-tRs1dB+g8Itk72rlSI2ZrW6vZg0YrLI81iQSTkMmOqnqCaNr/8Ek4VwWcN5vZgCYWbg/JJSGBlUaYGAOP73qBw==}
+
+  '@types/swagger-ui-express@4.1.8':
+    resolution: {integrity: sha512-AhZV8/EIreHFmBV5wAs0gzJUNq9JbbSXgJLQubCC0jtIo6prnI9MIRRxnU4MZX9RB9yXxF1V4R7jtLl/Wcj31g==}
 
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
@@ -2546,6 +2561,15 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
+  swagger-ui-dist@5.32.5:
+    resolution: {integrity: sha512-7/FQfWe9A4qoyYFdAwy0chD0uDYidDp/ZT9VQ9LZlgD4AnnHJk8/+ytAA1HkJYOPySmK6helPDdJQMlcumt7HA==}
+
+  swagger-ui-express@5.0.1:
+    resolution: {integrity: sha512-SrNU3RiBGTLLmFU8GIJdOdanJTl4TOmT27tt3bWWHppqYmAZ6IDuEuBvMU6nZq0zLEe6b/1rACXCgLZqO6ZfrA==}
+    engines: {node: '>= v0.10.32'}
+    peerDependencies:
+      express: '>=4.0.0 || >=5.0.0-beta'
+
   test-exclude@7.0.2:
     resolution: {integrity: sha512-u9E6A+ZDYdp7a4WnarkXPZOx8Ilz46+kby6p1yZ8zsGTz9gYa6FIS7lj2oezzNKmtdyyJNNmmXDppga5GB7kSw==}
     engines: {node: '>=18'}
@@ -2584,6 +2608,14 @@ packages:
     engines: {node: '>=18.12'}
     peerDependencies:
       typescript: '>=4.8.4'
+
+  ts-essentials@10.2.0:
+    resolution: {integrity: sha512-z9FlLywg0XEV46Ws1FwYN4NZDMr9qAe38lTTtgVBqzhhyEgwrnCUkFe4MEqnvar1kY1kFEnlkp56bxn2g0V+UA==}
+    peerDependencies:
+      typescript: '>=4.5.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   tslib@1.9.3:
     resolution: {integrity: sha512-4krF8scpejhaOgqzBEcGM7yDIEfi0/8+8zDRZhNZZ2kjmHJ4hv3zCbQWxoJGz1iw5U0Jl0nma13xzHXcncMavQ==}
@@ -2690,6 +2722,12 @@ packages:
         optional: true
       terser:
         optional: true
+
+  vitest-mock-extended@2.0.2:
+    resolution: {integrity: sha512-n3MBqVITKyclZ0n0y66hkT4UiiEYFQn9tteAnIxT0MPz1Z8nFcPUG3Cf0cZOyoPOj/cq6Ab1XFw2lM/qM5EDWQ==}
+    peerDependencies:
+      typescript: 3.x || 4.x || 5.x
+      vitest: '>=2.0.0'
 
   vitest@2.1.9:
     resolution: {integrity: sha512-MSmPM9REYqDGBI8439mA4mWhV5sKmDlBKWIYbA3lRb2PTHACE0mgKwA8yQ2xq9vxDTuk4iPrECBAEW2aoFXY0Q==}
@@ -3367,6 +3405,8 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.2':
     optional: true
 
+  '@scarf/scarf@1.4.0': {}
+
   '@scure/base@1.2.6': {}
 
   '@scure/bip32@1.7.0':
@@ -3482,6 +3522,11 @@ snapshots:
       '@types/http-errors': 2.0.5
       '@types/node': 20.19.39
       '@types/send': 0.17.6
+
+  '@types/swagger-ui-express@4.1.8':
+    dependencies:
+      '@types/express': 4.17.25
+      '@types/serve-static': 1.15.10
 
   '@types/ws@8.18.1':
     dependencies:
@@ -3801,7 +3846,7 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  colyseus@0.17.10(@colyseus/auth@0.16.6(@colyseus/core@0.17.42)(express@4.22.1))(@colyseus/better-call@1.3.3(zod@3.25.76))(@colyseus/core@0.17.42)(@colyseus/redis-driver@0.16.1(@colyseus/schema@4.0.21(typescript@5.9.3))(@pm2/io@6.1.0))(@colyseus/redis-presence@0.16.4(@colyseus/schema@4.0.21(typescript@5.9.3))(@pm2/io@6.1.0))(@colyseus/schema@4.0.21(typescript@5.9.3))(@colyseus/uwebsockets-transport@0.16.10(@colyseus/core@0.17.42))(@colyseus/ws-transport@0.17.13)(@pm2/io@6.1.0)(express@4.22.1)(vite@5.4.21(@types/node@20.19.39))(zod@3.25.76):
+  colyseus@0.17.10(@colyseus/auth@0.16.6(@colyseus/core@0.17.42)(express@4.22.1))(@colyseus/better-call@1.3.3(zod@3.25.76))(@colyseus/core@0.17.42)(@colyseus/redis-driver@0.16.1(@colyseus/schema@4.0.21(typescript@5.9.3))(@pm2/io@6.1.0))(@colyseus/redis-presence@0.16.4(@colyseus/schema@4.0.21(typescript@5.9.3))(@pm2/io@6.1.0))(@colyseus/schema@4.0.21(typescript@5.9.3))(@colyseus/uwebsockets-transport@0.16.10(@colyseus/core@0.17.42))(@colyseus/ws-transport@0.17.13)(@pm2/io@6.1.0)(express@4.22.1)(zod@3.25.76):
     dependencies:
       '@colyseus/auth': 0.16.6(@colyseus/core@0.17.42)(express@4.22.1)
       '@colyseus/core': 0.17.42(@colyseus/better-call@1.3.3(zod@3.25.76))(@colyseus/schema@4.0.21(typescript@5.9.3))(@colyseus/ws-transport@0.17.13)(@pm2/io@6.1.0)(express@4.22.1)(zod@3.25.76)
@@ -3813,8 +3858,6 @@ snapshots:
       '@colyseus/tools': 0.17.19(@colyseus/core@0.17.42)(@colyseus/ws-transport@0.17.13)
       '@colyseus/uwebsockets-transport': 0.16.10(@colyseus/core@0.17.42)
       '@colyseus/ws-transport': 0.17.13(@colyseus/core@0.17.42)(express@4.22.1)
-    optionalDependencies:
-      vite: 5.4.21(@types/node@20.19.39)
     transitivePeerDependencies:
       - '@colyseus/better-call'
       - '@pm2/io'
@@ -5019,6 +5062,15 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
+  swagger-ui-dist@5.32.5:
+    dependencies:
+      '@scarf/scarf': 1.4.0
+
+  swagger-ui-express@5.0.1(express@4.22.1):
+    dependencies:
+      express: 4.22.1
+      swagger-ui-dist: 5.32.5
+
   test-exclude@7.0.2:
     dependencies:
       '@istanbuljs/schema': 0.1.6
@@ -5048,6 +5100,10 @@ snapshots:
 
   ts-api-utils@2.5.0(typescript@5.9.3):
     dependencies:
+      typescript: 5.9.3
+
+  ts-essentials@10.2.0(typescript@5.9.3):
+    optionalDependencies:
       typescript: 5.9.3
 
   tslib@1.9.3: {}
@@ -5153,6 +5209,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 20.19.39
       fsevents: 2.3.3
+
+  vitest-mock-extended@2.0.2(typescript@5.9.3)(vitest@2.1.9(@types/node@20.19.39)):
+    dependencies:
+      ts-essentials: 10.2.0(typescript@5.9.3)
+      typescript: 5.9.3
+      vitest: 2.1.9(@types/node@20.19.39)
 
   vitest@2.1.9(@types/node@20.19.39):
     dependencies:

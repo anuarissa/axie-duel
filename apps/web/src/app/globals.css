@@ -712,3 +712,202 @@ pre {
 .builder-actions button {
   width: 100%;
 }
+
+/* ── PvE play room ───────────────────────────────────────────────── */
+.play-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+.play-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+}
+.play-status {
+  font-size: 0.875rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.play-pill {
+  background: rgba(107, 142, 255, 0.15);
+  color: #a0b5ff;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.play-pill.your-turn {
+  background: rgba(255, 217, 102, 0.2);
+  color: #ffd966;
+}
+.play-pill.opp-turn {
+  background: rgba(255, 138, 138, 0.18);
+  color: #ff9090;
+}
+.play-board {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.play-side {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+}
+.play-side.opponent { background: rgba(255, 138, 138, 0.05); }
+.play-side.you      { background: rgba(107, 200, 255, 0.05); }
+.play-side-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+.play-lp {
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: #5dffa0;
+}
+.play-lp.low { color: #ff7676; }
+.play-zones {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+.play-slot {
+  aspect-ratio: 0.7;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  color: rgba(255, 255, 255, 0.25);
+  position: relative;
+  cursor: default;
+}
+.play-slot.has-card {
+  border: 1px solid rgba(255, 217, 102, 0.4);
+  background: linear-gradient(145deg, rgba(255, 217, 102, 0.08), rgba(0, 0, 0, 0.4));
+  cursor: pointer;
+}
+.play-slot.has-card.def-down { background: linear-gradient(145deg, rgba(80, 80, 100, 0.4), rgba(0, 0, 0, 0.5)); }
+.play-slot.targetable {
+  border: 2px solid #ffd966;
+  box-shadow: 0 0 12px rgba(255, 217, 102, 0.4);
+}
+.play-card-mini {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0.25rem;
+  font-size: 0.625rem;
+  text-align: center;
+  overflow: hidden;
+}
+.play-card-mini-name {
+  font-weight: 700;
+  font-size: 0.6875rem;
+  line-height: 1.1;
+  margin-bottom: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.play-card-mini-stats {
+  display: flex;
+  justify-content: space-around;
+  font-size: 0.625rem;
+  margin-top: auto;
+  padding-top: 0.2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.play-card-mini-stats span { font-weight: 600; }
+.play-card-position {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-size: 0.5625rem;
+  color: #ffd966;
+  font-weight: 700;
+}
+.play-hand {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 0.5rem;
+  min-height: 100px;
+}
+.play-hand-card {
+  flex: 0 0 70px;
+  aspect-ratio: 0.7;
+  background: linear-gradient(145deg, #2a1c4a, #1a0d2e);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.4rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  font-size: 0.625rem;
+  text-align: center;
+  transition: transform 0.15s, border-color 0.15s;
+  overflow: hidden;
+}
+.play-hand-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 217, 102, 0.5);
+}
+.play-hand-card.selected {
+  border-color: #ffd966;
+  box-shadow: 0 0 12px rgba(255, 217, 102, 0.5);
+}
+.play-action-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 0.5rem;
+}
+.play-log {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 0.75rem;
+  max-height: 160px;
+  overflow-y: auto;
+  font-family: 'Cascadia Mono', monospace;
+  font-size: 0.75rem;
+}
+.play-log-entry { line-height: 1.5; }
+.play-log-entry.error { color: #ff9090; }
+.play-log-entry.action { color: #5dbcff; }
+.play-log-entry.system { color: #ffd966; }
+
+.play-instruction {
+  background: rgba(255, 217, 102, 0.1);
+  border-left: 3px solid #ffd966;
+  padding: 0.5rem 0.875rem;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  margin-top: 0.5rem;
+}

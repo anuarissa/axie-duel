@@ -165,9 +165,9 @@ export default function DashboardPage() {
       <div className="card-section">
         <h2>Jugar</h2>
         <div className="action-buttons">
-          <button className="btn-primary" disabled title="Disponible cuando termine el paso 4 del frontend">
+          <Link href="/play/pve" className="btn-primary">
             🤖 Jugar vs Bot (PvE)
-          </button>
+          </Link>
           <button className="btn-primary" disabled title="Próximamente">
             ⚔️ Buscar partida casual (PvP)
           </button>

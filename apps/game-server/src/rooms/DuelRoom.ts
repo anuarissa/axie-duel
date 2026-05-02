@@ -10,6 +10,7 @@ import { DuelStateSchema } from './schema/DuelStateSchema.js';
 import { GameEngine } from '../engine/GameEngine.js';
 import { InvalidActionError } from '../engine/ActionValidator.js';
 import { gameLogger } from '../logger.js';
+import { apiClient } from '../services/ApiClient.js';
 import type { Logger } from 'pino';
 
 interface JoinOptions {
@@ -25,6 +26,8 @@ export class DuelRoom extends Room {
   declare state: DuelStateSchema;
   private engine!: GameEngine;
   private log!: Logger;
+  private startedAt = 0;
+  private persisted = false;
 
   override onCreate(options: { mode?: string }): void {
     const initial = new DuelStateSchema();
@@ -62,6 +65,7 @@ export class DuelRoom extends Room {
 
     if (this.state.players.size === 2) {
       this.engine.startMatch();
+      this.startedAt = Date.now();
     }
   }
 
@@ -76,8 +80,39 @@ export class DuelRoom extends Room {
     this.log.info({ player: client.sessionId }, 'player left');
   }
 
-  override onDispose(): void {
+  override async onDispose(): Promise<void> {
+    await this.persistMatchIfNeeded();
     this.log.info('DuelRoom disposed');
+  }
+
+  /**
+   * Persiste el Match en Postgres vía /internal/matches del API.
+   * Idempotente — `this.persisted` previene doble-call si onLeave + onDispose disparan.
+   */
+  private async persistMatchIfNeeded(): Promise<void> {
+    if (this.persisted) return;
+    if (this.state.status !== 'GAME_OVER' && this.state.players.size < 2) {
+      // Sala se descartó sin haberse iniciado → no hay match que persistir.
+      return;
+    }
+    this.persisted = true;
+    const playerIds = [...this.state.players.keys()];
+    const player1Id = playerIds[0] ?? '';
+    const player2Id = playerIds[1] ?? null;
+    const winnerId = this.state.winnerId || null;
+    const duration = this.startedAt ? Math.round((Date.now() - this.startedAt) / 1000) : 0;
+    const result = await apiClient.persistMatch({
+      player1Id,
+      player2Id,
+      winnerId,
+      mode: this.state.mode as 'PvE' | 'PvP_Casual' | 'PvP_Ranked' | 'PvP_RankedNFT',
+      duration,
+      turnsPlayed: this.state.turnNumber,
+      ...(this.state.winReason ? { reason: this.state.winReason } : {}),
+    });
+    if (result) {
+      this.log.info({ matchId: result.matchId }, 'match persisted to API');
+    }
   }
 
   private safeAction(client: Client, fn: () => void): void {

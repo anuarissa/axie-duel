@@ -26,6 +26,10 @@ const ConfigSchema = z.object({
   GAME_SERVER_PORT: z.coerce.number().int().positive().default(2567),
   REDIS_URL: z.string().url().default('redis://localhost:6379'),
   ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
+  /// URL base del API REST (apps/api) para persistir Matches al GAME_OVER.
+  API_BASE_URL: z.string().url().default('http://localhost:3001'),
+  /// Token shared con apps/api para llamadas internas. DEBE matchear INTERNAL_SERVICE_TOKEN del api.
+  INTERNAL_SERVICE_TOKEN: z.string().min(32).default('dev_internal_token_min_32_chars_xxxxxxx'),
 });
 
 export const config = ConfigSchema.parse(process.env);

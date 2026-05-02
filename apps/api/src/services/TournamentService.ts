@@ -92,51 +92,55 @@ export class TournamentService {
   }
 
   async register(tournamentId: string, userId: string) {
-    return this.db.$transaction(async (tx) => {
-      const t = await tx.tournament.findUnique({ where: { id: tournamentId } });
-      if (!t) throw new NotFoundError('Tournament');
-      if (t.status !== 'REGISTRATION') throw new RuleViolationError('Tournament not open for registration');
-      if (new Date() > t.registrationDeadline) throw new RuleViolationError('Registration deadline passed');
+    // Validaciones (lecturas no-transaccionales).
+    const t = await this.db.tournament.findUnique({ where: { id: tournamentId } });
+    if (!t) throw new NotFoundError('Tournament');
+    if (t.status !== 'REGISTRATION') throw new RuleViolationError('Tournament not open for registration');
+    if (new Date() > t.registrationDeadline) throw new RuleViolationError('Registration deadline passed');
 
-      const existing = await tx.tournamentParticipant.findUnique({
-        where: { tournamentId_userId: { tournamentId, userId } },
-      });
-      if (existing) throw new RuleViolationError('Already registered');
-
-      const count = await tx.tournamentParticipant.count({ where: { tournamentId } });
-      if (count >= t.maxParticipants) throw new RuleViolationError('Tournament full');
-
-      if (t.requiresNFTAxies) {
-        const user = await tx.user.findUnique({ where: { id: userId }, select: { hasNFTAxies: true } });
-        if (!user?.hasNFTAxies) throw new RuleViolationError('This tournament requires NFT Axies');
-      }
-
-      // Cobrar entrada (delegar a AxsService — usa la misma DB tx no es trivial; usamos servicio normal).
-      // OJO: si la burn falla, lanzamos error y la outer tx hace rollback de TournamentParticipant.
-      // Pero AxsService internamente abre su propia $transaction, así que el rollback de outer no la deshace.
-      // Para simplicidad Fase 0 cobramos PRIMERO, luego registramos. Si registrar falla, devolvemos AXS.
-      if (t.entryCostAxs.gt(0)) {
-        await axsService.burn(userId, t.entryCostAxs.toString(), 'BURN_TOURNAMENT_ENTRY', `tournament:${tournamentId}`);
-      }
-
-      try {
-        return await tx.tournamentParticipant.create({
-          data: { tournamentId, userId },
-          include: { user: { select: { username: true } } },
-        });
-      } catch (err) {
-        // Reembolsar en caso de fallo.
-        if (t.entryCostAxs.gt(0)) {
-          await axsService.earn(
-            userId,
-            t.entryCostAxs.toString(),
-            'EARN_REFUND',
-            `refund:tournament:${tournamentId}`,
-          );
-        }
-        throw err;
-      }
+    const existing = await this.db.tournamentParticipant.findUnique({
+      where: { tournamentId_userId: { tournamentId, userId } },
     });
+    if (existing) throw new RuleViolationError('Already registered');
+
+    const count = await this.db.tournamentParticipant.count({ where: { tournamentId } });
+    if (count >= t.maxParticipants) throw new RuleViolationError('Tournament full');
+
+    if (t.requiresNFTAxies) {
+      const user = await this.db.user.findUnique({ where: { id: userId }, select: { hasNFTAxies: true } });
+      if (!user?.hasNFTAxies) throw new RuleViolationError('This tournament requires NFT Axies');
+    }
+
+    // 1. Cobrar entrada (AxsService abre su propia $transaction interna).
+    //    NO envolver en outer $transaction: Supabase pgbouncer (Transaction mode)
+    //    no soporta nested transactions → timeout. Aprendido en E2E.
+    if (t.entryCostAxs.gt(0)) {
+      await axsService.burn(
+        userId,
+        t.entryCostAxs.toString(),
+        'BURN_TOURNAMENT_ENTRY',
+        `tournament:${tournamentId}`,
+      );
+    }
+
+    // 2. Crear participant. Si falla (race condition con otro register simultáneo
+    //    del mismo user → choca contra unique constraint), reembolsar atómicamente.
+    try {
+      return await this.db.tournamentParticipant.create({
+        data: { tournamentId, userId },
+        include: { user: { select: { username: true } } },
+      });
+    } catch (err) {
+      if (t.entryCostAxs.gt(0)) {
+        await axsService.earn(
+          userId,
+          t.entryCostAxs.toString(),
+          'EARN_REFUND',
+          `refund:tournament:${tournamentId}`,
+        );
+      }
+      throw err;
+    }
   }
 
   async start(tournamentId: string) {

@@ -22,6 +22,7 @@ import { EffectResolver } from './EffectResolver.js';
 import { PhaseManager } from './PhaseManager.js';
 import { DeckManager } from './DeckManager.js';
 import { SeededRng } from './rng.js';
+import { EventBus } from './EventBus.js';
 import { CardDatabase } from '../cards/CardDatabase.js';
 import type { Logger } from 'pino';
 
@@ -43,6 +44,7 @@ export class GameEngine {
   public readonly combat: CombatSystem;
   public readonly effects: EffectResolver;
   public readonly phases: PhaseManager;
+  public readonly events: EventBus;
 
   constructor(
     private state: DuelStateSchema,
@@ -52,6 +54,7 @@ export class GameEngine {
     this.cards = new CardDatabase();
     this.rng = new SeededRng(seed ?? `${Date.now()}-${Math.random()}`);
     this.state.rngSeed = seed ?? '';
+    this.events = new EventBus();
     this.deckManager = new DeckManager(this.rng);
     this.validator = new ActionValidator(this.state, this.cards);
     this.summon = new SummonSystem(this.state, this.cards);
@@ -99,11 +102,53 @@ export class GameEngine {
   handleNormalSummon(playerId: string, raw: unknown): void {
     const input = this.validator.validateNormalSummon(playerId, raw);
     this.summon.normalSummon(playerId, input.cardInstanceId, input.tributes ?? [], input.position);
+    // Emit onSummon — triggered effects (ej: "field spell que da +300 ATK") corren acá.
+    const player = this.state.players.get(playerId);
+    const monster = player?.monsterZones.find((c) => c.instanceId === input.cardInstanceId);
+    if (monster) {
+      this.events.emit({ type: 'onSummon', ownerId: playerId, monster, method: 'normal' });
+    }
   }
 
   handleDeclareAttack(playerId: string, raw: unknown): void {
     const input = this.validator.validateDeclareAttack(playerId, raw);
-    this.combat.declareAttack(playerId, input.attackerInstanceId, input.targetInstanceId);
+    const player = this.state.players.get(playerId);
+    const attacker = player?.monsterZones.find((c) => c.instanceId === input.attackerInstanceId);
+    if (!attacker) {
+      throw new InvalidActionError('TARGET_INVALID', 'attacker not on field');
+    }
+    // Emit onAttackDeclare — handlers como Mirror Web pueden setear cancelled=true.
+    const declareEvent = {
+      type: 'onAttackDeclare' as const,
+      attackerOwnerId: playerId,
+      attacker,
+      targetInstanceId: input.targetInstanceId,
+      cancelled: false,
+      attackerAtkPenalty: 0,
+    };
+    this.events.emit(declareEvent);
+    if (declareEvent.cancelled) {
+      attacker.hasAttacked = true; // se gasta el ataque del turno aunque sea cancelado
+      return;
+    }
+    if (declareEvent.attackerAtkPenalty > 0) {
+      attacker.atkMod -= declareEvent.attackerAtkPenalty;
+    }
+    const outcome = this.combat.declareAttack(playerId, input.attackerInstanceId, input.targetInstanceId);
+    // Emit onBattleResolve para handlers tipo Lethal Strike.
+    const opponentId = [...this.state.players.keys()].find((id) => id !== playerId);
+    const defender =
+      input.targetInstanceId !== 'DIRECT' && opponentId
+        ? this.state.players.get(opponentId)?.monsterZones.find((c) => c.instanceId === input.targetInstanceId) ?? null
+        : null;
+    this.events.emit({
+      type: 'onBattleResolve',
+      attackerOwnerId: playerId,
+      defenderOwnerId: opponentId ?? '',
+      attacker,
+      defender,
+      outcome,
+    });
   }
 
   handleActivateEffect(playerId: string, raw: unknown): void {

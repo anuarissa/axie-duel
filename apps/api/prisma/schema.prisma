@@ -35,6 +35,9 @@ model User {
   /// Address EVM (Ronin). NULL = jugador 100% Web2 sin wallet linkeada.
   walletAddress String?       @unique
   hasNFTAxies   Boolean       @default(false)
+  /// true = puede acceder a /admin/* (crear torneos, kickear users, etc.).
+  /// Se promueve manualmente: `pnpm --filter @axie-duel/api db:make-admin <username>`.
+  isAdmin       Boolean       @default(false)
   eloRanked     Int           @default(1000)
   eloRankedNFT  Int           @default(1000)
   level         Int           @default(1)

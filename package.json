@@ -18,6 +18,7 @@
     "db:migrate": "pnpm --filter @axie-duel/api prisma:migrate",
     "db:generate": "pnpm --filter @axie-duel/api prisma:generate",
     "db:seed": "pnpm --filter @axie-duel/api db:seed",
+    "db:make-admin": "pnpm --filter @axie-duel/api db:make-admin",
     "db:studio": "pnpm --filter @axie-duel/api prisma:studio",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",

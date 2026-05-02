@@ -45,6 +45,9 @@ const ConfigSchema = z.object({
   AXIE_GRAPHQL_URL: z.string().url().default('https://graphql-gateway.axieinfinity.com/graphql'),
   AXIE_GAME_API_URL: z.string().url().default('https://game-api.axie.technology'),
   ALLOWED_ORIGINS: z.string().default('http://localhost:3000'),
+  /// Token compartido entre game-server y api para llamadas internas (POST /internal/matches).
+  /// Generar con: openssl rand -hex 32. DEBE coincidir con GAME_SERVER_INTERNAL_TOKEN del game-server.
+  INTERNAL_SERVICE_TOKEN: z.string().min(32).default('dev_internal_token_min_32_chars_xxxxxxx'),
   AXS_MODE: z.enum(['offchain', 'onchain']).default('offchain'),
   AXS_TOKEN_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional().or(z.literal('').transform(() => undefined)),
   AXS_STARTER_BONUS: z.coerce.number().min(0).default(100),

@@ -94,4 +94,75 @@ describe('resolveCombat', () => {
       expect(r.direct).toBe(true);
     });
   });
+
+  describe('Class advantage (+15% ATK)', () => {
+    it('Plant attacking Bird: +15% damage, defender destroyed even when ATK == ATK base', () => {
+      const atk = makeInstance('a1', 'p1', 'ATK');
+      const def = makeInstance('d1', 'p2', 'ATK');
+      // floor(1700 * 1.15) = 1954 → mayor que 1700 base del defender → destruye
+      const r = resolveCombat(
+        atk, { atk: 1700, def: 0 }, 'p1',
+        def, { atk: 1700, def: 0 }, 'p2',
+        { attackerClass: 'Plant', defenderClass: 'Bird' },
+      );
+      expect(r.destroyed).toEqual(['d1']);
+      expect(r.damage).toEqual({ p2: 254 }); // 1954 - 1700
+      expect(r.direct).toBe(false);
+      expect(r.advantageBonus).toBe(15);
+      expect(r.effectiveAtk).toBe(1954);
+    });
+
+    it('Bird attacking Plant: NO advantage, standard combat', () => {
+      const atk = makeInstance('a1', 'p1', 'ATK');
+      const def = makeInstance('d1', 'p2', 'ATK');
+      const r = resolveCombat(
+        atk, { atk: 1700, def: 0 }, 'p1',
+        def, { atk: 1700, def: 0 }, 'p2',
+        { attackerClass: 'Bird', defenderClass: 'Plant' },
+      );
+      expect(r.destroyed).toEqual(['a1', 'd1']); // empate, ambos mueren
+      expect(r.advantageBonus).toBe(0);
+      expect(r.effectiveAtk).toBe(1700);
+    });
+
+    it('Beast attacking Plant: +15% advantage', () => {
+      const atk = makeInstance('a1', 'p1', 'ATK');
+      const def = makeInstance('d1', 'p2', 'ATK');
+      const r = resolveCombat(
+        atk, { atk: 2000, def: 0 }, 'p1',
+        def, { atk: 1500, def: 0 }, 'p2',
+        { attackerClass: 'Beast', defenderClass: 'Plant' },
+      );
+      expect(r.destroyed).toEqual(['d1']);
+      // 2000 * 1.15 = 2300 → 2300 - 1500 = 800 damage
+      expect(r.damage).toEqual({ p2: 800 });
+      expect(r.advantageBonus).toBe(15);
+      expect(r.effectiveAtk).toBe(2300);
+    });
+
+    it('No options provided: backward compatible, no advantage', () => {
+      const atk = makeInstance('a1', 'p1', 'ATK');
+      const def = makeInstance('d1', 'p2', 'ATK');
+      const r = resolveCombat(
+        atk, { atk: 2000, def: 0 }, 'p1',
+        def, { atk: 1500, def: 0 }, 'p2',
+      );
+      expect(r.advantageBonus).toBe(0);
+      expect(r.effectiveAtk).toBe(2000);
+      expect(r.damage).toEqual({ p2: 500 });
+    });
+
+    it('Direct attack with advantage: +15% LP damage', () => {
+      const atk = makeInstance('a1', 'p1', 'ATK');
+      const r = resolveCombat(
+        atk, { atk: 2000, def: 0 }, 'p1',
+        null, null, 'p2',
+        { attackerClass: 'Beast', defenderClass: 'Plant' },
+      );
+      // 2000 * 1.15 = 2300 LP de daño directo
+      expect(r.damage).toEqual({ p2: 2300 });
+      expect(r.direct).toBe(true);
+      expect(r.advantageBonus).toBe(15);
+    });
+  });
 });

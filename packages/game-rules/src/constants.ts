@@ -49,6 +49,34 @@ export const MATCHMAKING_TOLERANCE_GROW_MS = 60_000;
 
 export const RANKED_NFT_MIN_NFT_AXIES = 3;
 
+/**
+ * Sistema de ventaja de clases (Axie Origins style).
+ * Triángulo simétrico: cada clase tiene ventaja sobre 2 y desventaja vs las otras 2.
+ * El attacker con ventaja sobre la clase del defender obtiene +15% al ATK efectivo.
+ *
+ * Plant > Bird, Aqua    (las plantas anclan / drenan)
+ * Bird  > Beast, Aqua   (los pájaros pican)
+ * Beast > Plant, Reptile (las bestias muerden)
+ * Aqua  > Beast, Reptile (el agua ahoga)
+ * Reptile > Plant, Bird (los reptiles cazan)
+ */
+export type AxieClass = 'Beast' | 'Aqua' | 'Plant' | 'Bird' | 'Reptile';
+
+export const CLASS_ADVANTAGES: Record<AxieClass, AxieClass[]> = {
+  Plant:   ['Bird', 'Aqua'],
+  Bird:    ['Beast', 'Aqua'],
+  Beast:   ['Plant', 'Reptile'],
+  Aqua:    ['Beast', 'Reptile'],
+  Reptile: ['Plant', 'Bird'],
+};
+
+export const CLASS_ADVANTAGE_MULTIPLIER = 1.15; // +15%
+
+/** Devuelve true si attacker.class tiene ventaja contra defender.class. */
+export function hasClassAdvantage(attacker: AxieClass, defender: AxieClass): boolean {
+  return CLASS_ADVANTAGES[attacker]?.includes(defender) ?? false;
+}
+
 export const DEFAULT_DUEL_CONFIG: DuelConfig = {
   initialLifePoints: LIFE_POINTS_INITIAL,
   startingHandSize: STARTING_HAND_SIZE,

@@ -25,11 +25,18 @@ router.get('/me', authRequired, async (req: Request, res: Response, next: NextFu
         level: true,
         xp: true,
         axsBalance: true,
+        lunacianCoins: true,
+        starterPicked: true,
+        starterArchetype: true,
         createdAt: true,
       },
     });
     if (!user) throw new NotFoundError('User');
-    res.json({ ...user, axsBalance: user.axsBalance.toString() });
+    res.json({
+      ...user,
+      axsBalance: user.axsBalance.toString(),
+      lunacianCoins: user.lunacianCoins.toString(),
+    });
   } catch (err) {
     next(err);
   }

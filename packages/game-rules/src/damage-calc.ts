@@ -4,6 +4,7 @@
  */
 
 import type { CardInstance, MonsterCard } from '@axie-duel/shared-types';
+import { CLASS_ADVANTAGE_MULTIPLIER, hasClassAdvantage, type AxieClass } from './constants.js';
 
 export interface CombatResult {
   /** instanceId de los monstruos destruidos (puede ser 0, 1 o 2). */
@@ -12,11 +13,21 @@ export interface CombatResult {
   damage: Record<string, number>;
   /** Si el ataque fue directo (no había monstruo defensor). */
   direct: boolean;
+  /** % bonus aplicado al ATK por ventaja de clase (0 = sin ventaja, 15 = +15%). */
+  advantageBonus: number;
+  /** ATK efectivo finalmente usado (post-multiplier). Útil para UI. */
+  effectiveAtk: number;
 }
 
 interface MonsterStats {
   atk: number;
   def: number;
+}
+
+export interface ResolveCombatOptions {
+  /** Clase Axie del atacante. Si presente y attackerOwnerId tiene ventaja → +15% ATK. */
+  attackerClass?: AxieClass;
+  defenderClass?: AxieClass;
 }
 
 /**
@@ -28,6 +39,7 @@ interface MonsterStats {
  * @param defender - Instancia del defensor, o null si es ataque directo.
  * @param defenderStats - ATK/DEF efectivos del defensor.
  * @param defenderOwnerId - playerId del dueño del defensor (== oponente).
+ * @param options - Class advantage opcional (si attacker tiene class advantage sobre defender, +15% ATK).
  */
 export function resolveCombat(
   attacker: CardInstance,
@@ -36,30 +48,47 @@ export function resolveCombat(
   defender: CardInstance | null,
   defenderStats: MonsterStats | null,
   defenderOwnerId: string,
+  options: ResolveCombatOptions = {},
 ): CombatResult {
+  // Aplicar ventaja de clase al ATK efectivo del atacante si corresponde.
+  let advantageBonus = 0;
+  let effectiveAtk = attackerStats.atk;
+  if (options.attackerClass && options.defenderClass) {
+    if (hasClassAdvantage(options.attackerClass, options.defenderClass)) {
+      effectiveAtk = Math.floor(attackerStats.atk * CLASS_ADVANTAGE_MULTIPLIER);
+      advantageBonus = 15;
+    }
+  }
+
   // Daño directo: no hay monstruo defensor.
   if (!defender || !defenderStats) {
     return {
       destroyed: [],
-      damage: { [defenderOwnerId]: attackerStats.atk },
+      damage: { [defenderOwnerId]: effectiveAtk },
       direct: true,
+      advantageBonus,
+      effectiveAtk,
     };
   }
 
   // Defensor en ATK (incluye boca arriba): comparar ATK vs ATK.
   if (defender.position === 'ATK') {
-    if (attackerStats.atk > defenderStats.atk) {
+    if (effectiveAtk > defenderStats.atk) {
       return {
         destroyed: [defender.instanceId],
-        damage: { [defenderOwnerId]: attackerStats.atk - defenderStats.atk },
+        damage: { [defenderOwnerId]: effectiveAtk - defenderStats.atk },
         direct: false,
+        advantageBonus,
+        effectiveAtk,
       };
     }
-    if (attackerStats.atk < defenderStats.atk) {
+    if (effectiveAtk < defenderStats.atk) {
       return {
         destroyed: [attacker.instanceId],
-        damage: { [attackerOwnerId]: defenderStats.atk - attackerStats.atk },
+        damage: { [attackerOwnerId]: defenderStats.atk - effectiveAtk },
         direct: false,
+        advantageBonus,
+        effectiveAtk,
       };
     }
     // Empate: ambos destruidos, sin daño.
@@ -67,29 +96,35 @@ export function resolveCombat(
       destroyed: [attacker.instanceId, defender.instanceId],
       damage: {},
       direct: false,
+      advantageBonus,
+      effectiveAtk,
     };
   }
 
   // Defensor en DEF (boca arriba o boca abajo): comparar ATK vs DEF.
   // Boca abajo se voltea automáticamente al ser atacado (flip).
-  if (attackerStats.atk > defenderStats.def) {
+  if (effectiveAtk > defenderStats.def) {
     // Atacante destruye defensor sin daño.
     return {
       destroyed: [defender.instanceId],
       damage: {},
       direct: false,
+      advantageBonus,
+      effectiveAtk,
     };
   }
-  if (attackerStats.atk < defenderStats.def) {
+  if (effectiveAtk < defenderStats.def) {
     // Atacante recibe el "daño en defensa" igual a la diferencia.
     return {
       destroyed: [],
-      damage: { [attackerOwnerId]: defenderStats.def - attackerStats.atk },
+      damage: { [attackerOwnerId]: defenderStats.def - effectiveAtk },
       direct: false,
+      advantageBonus,
+      effectiveAtk,
     };
   }
   // ATK == DEF: nada pasa.
-  return { destroyed: [], damage: {}, direct: false };
+  return { destroyed: [], damage: {}, direct: false, advantageBonus, effectiveAtk };
 }
 
 /**

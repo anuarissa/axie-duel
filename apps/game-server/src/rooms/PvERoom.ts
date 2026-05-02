@@ -19,6 +19,37 @@ import type { Logger } from 'pino';
 interface JoinOptions {
   username?: string;
   difficulty?: BotDifficulty;
+  /** Si presente, el game-server hace fetch a /internal/decks/:id en api para obtener
+   * la composición real del deck activo del jugador. Si no, usa VARIED_PLAYER_DECK fallback. */
+  deckId?: string;
+}
+
+const API_BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:3001';
+const INTERNAL_TOKEN = process.env.INTERNAL_SERVICE_TOKEN ?? '';
+
+/**
+ * Fetch deck cards desde el api (server-to-server). Aplana DeckCard.quantity en lista de cardIds.
+ * Si falla (timeout, 404, etc), retorna null y el caller usa fallback.
+ */
+async function fetchDeckCards(deckId: string, log: Logger): Promise<string[] | null> {
+  try {
+    const r = await fetch(`${API_BASE_URL}/internal/decks/${deckId}`, {
+      headers: { 'X-Internal-Token': INTERNAL_TOKEN },
+    });
+    if (!r.ok) {
+      log.warn({ deckId, status: r.status }, 'fetchDeckCards: non-OK response');
+      return null;
+    }
+    const body = (await r.json()) as { mainCardIds?: string[] };
+    if (!Array.isArray(body.mainCardIds) || body.mainCardIds.length === 0) {
+      log.warn({ deckId }, 'fetchDeckCards: empty mainCardIds');
+      return null;
+    }
+    return body.mainCardIds;
+  } catch (err) {
+    log.warn({ err, deckId }, 'fetchDeckCards: failed');
+    return null;
+  }
 }
 
 const BOT_TURN_DELAY_MS = 300;
@@ -117,6 +148,10 @@ export class PvERoom extends Room {
         defenderDestroyed: e.outcome.defenderDestroyed,
         damageToAttackerOwner: e.outcome.damageToAttackerOwner,
         damageToDefenderOwner: e.outcome.damageToDefenderOwner,
+        advantageBonus: e.outcome.advantageBonus,
+        effectiveAtk: e.outcome.effectiveAtk,
+        attackerClass: e.outcome.attackerClass,
+        defenderClass: e.outcome.defenderClass,
       });
     });
 
@@ -133,10 +168,22 @@ export class PvERoom extends Room {
   }
 
   override async onJoin(client: Client, options: JoinOptions = {}): Promise<void> {
+    // Intentar usar el deck del usuario si pasó deckId.
+    let playerDeck = VARIED_PLAYER_DECK;
+    if (options.deckId) {
+      const fetched = await fetchDeckCards(options.deckId, this.log);
+      if (fetched) {
+        playerDeck = fetched;
+        this.log.info({ deckId: options.deckId, cardCount: fetched.length }, 'using player active deck');
+      } else {
+        this.log.info({ deckId: options.deckId }, 'deck fetch failed, using fallback VARIED_PLAYER_DECK');
+      }
+    }
+
     this.engine.setupPlayer({
       id: client.sessionId,
       username: options.username ?? 'You',
-      mainDeckCardIds: VARIED_PLAYER_DECK,
+      mainDeckCardIds: playerDeck,
       isFirstPlayer: true,
     });
     this.engine.setupPlayer({

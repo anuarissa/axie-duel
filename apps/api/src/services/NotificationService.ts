@@ -16,6 +16,7 @@ import { logger } from '../lib/logger.js';
 export type NotificationKind =
   | 'AXS_EARNED'
   | 'AXS_BURNED'
+  | 'COINS_EARNED'
   | 'QUEST_COMPLETED'
   | 'TOURNAMENT_WON'
   | 'TOURNAMENT_REGISTERED'
@@ -23,6 +24,7 @@ export type NotificationKind =
   | 'CARD_DROP'
   | 'WALLET_LINKED'
   | 'NFT_MINTED'
+  | 'STARTER_CLAIMED'
   | 'SYSTEM';
 
 export interface ListOptions {

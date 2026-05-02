@@ -26,7 +26,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Client, type Room } from 'colyseus.js';
-import { getJwt } from '../../../lib/auth';
+import { getJwt, apiFetch } from '../../../lib/auth';
 
 const GAME_SERVER = process.env.NEXT_PUBLIC_GAME_SERVER_URL ?? 'ws://localhost:2567';
 
@@ -122,6 +122,9 @@ export default function PvePage() {
     requiredTributes: number;
     selectedTributes: string[];
   } | null>(null);
+  const [lunacianCoins, setLunacianCoins] = useState<string>('—');
+  const [activeDeckName, setActiveDeckName] = useState<string | null>(null);
+  const [coinsAnimating, setCoinsAnimating] = useState(false);
   const lastHandSizeRef = useRef<number>(0);
   const drawAnimIdRef = useRef<number>(0);
   const toastIdRef = useRef<number>(0);
@@ -150,6 +153,15 @@ export default function PvePage() {
 
     void (async () => {
       try {
+        // En paralelo: catálogo + decks (para deck activo) + perfil (para LC).
+        const [meData, decksData] = await Promise.all([
+          apiFetch<{ lunacianCoins: string }>('/users/me').catch(() => ({ lunacianCoins: '0' })),
+          apiFetch<{ decks: Array<{ id: string; name: string; isActive: boolean }> }>('/decks').catch(() => ({ decks: [] })),
+        ]);
+        if (!mounted) return;
+        setLunacianCoins(meData.lunacianCoins ?? '0');
+        const activeDeck = decksData.decks.find((d) => d.isActive);
+
         // Cargar catálogo de cartas para mostrar nombres + tooltips ricos.
         const r = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:3001'}/cards`);
         const cardsRes = (await r.json()) as {
@@ -187,9 +199,19 @@ export default function PvePage() {
         });
         setCatalog(cat);
 
-        // Conectar a Colyseus PvERoom.
+        // Conectar a Colyseus PvERoom (con deckId si hay deck activo).
+        if (activeDeck) {
+          setActiveDeckName(activeDeck.name);
+        } else {
+          pushToast('info', 'Sin deck activo', 'Jugando con deck por defecto. Activá un deck en /decks para usar el tuyo.');
+        }
         const client = new Client(GAME_SERVER);
-        const joinedRoom = await client.joinOrCreate('pve', { username: 'You', difficulty: 'Easy' });
+        const joinOpts: { username: string; difficulty: 'Easy'; deckId?: string } = {
+          username: 'You',
+          difficulty: 'Easy',
+        };
+        if (activeDeck) joinOpts.deckId = activeDeck.id;
+        const joinedRoom = await client.joinOrCreate('pve', joinOpts);
         if (!mounted) {
           await joinedRoom.leave();
           return;
@@ -235,6 +257,10 @@ export default function PvePage() {
           defenderDestroyed?: boolean;
           damageToAttackerOwner?: number;
           damageToDefenderOwner?: number;
+          advantageBonus?: number;
+          effectiveAtk?: number;
+          attackerClass?: string;
+          defenderClass?: string;
         }) => {
           const meAttacking = data.attackerOwnerId === joinedRoom.sessionId;
           const aName = data.attackerName ?? 'Attacker';
@@ -263,6 +289,10 @@ export default function PvePage() {
             if (!data.attackerDestroyed && !data.defenderDestroyed && dmgToFoe === 0 && dmgToYou === 0) {
               lines.push('Sin destrucción ni daño (stats iguales o defensa boca abajo)');
             }
+          }
+          // Indicador de ventaja de clase (Plant>Bird, Bird>Beast, etc).
+          if (data.advantageBonus && data.advantageBonus > 0 && data.attackerClass && data.defenderClass) {
+            lines.unshift(`⚡ Ventaja de clase ${data.attackerClass} > ${data.defenderClass} (+${data.advantageBonus}% ATK → ${data.effectiveAtk})`);
           }
           pushToast('combat', title, lines.join(' · '));
           log('action', `combat: ${title} | ${lines.join(' · ')}`);
@@ -342,6 +372,21 @@ export default function PvePage() {
   useEffect(() => {
     if (!_isMyTurn) setHandMenuCard(null);
   }, [_isMyTurn]);
+
+  // Al GAME_OVER → refresh LC desde el api (el server otorgó +50/+10/+20 LC).
+  const _isGameOver = state?.status === 'GAME_OVER';
+  useEffect(() => {
+    if (!_isGameOver) return;
+    setTimeout(() => {
+      apiFetch<{ lunacianCoins: string }>('/users/me')
+        .then((u) => {
+          setLunacianCoins(u.lunacianCoins);
+          setCoinsAnimating(true);
+          setTimeout(() => setCoinsAnimating(false), 1200);
+        })
+        .catch(() => undefined);
+    }, 800); // pequeño delay para que el server haya procesado el match.
+  }, [_isGameOver]);
 
   function send(type: string, payload: unknown = {}) {
     if (!room) return;
@@ -507,10 +552,14 @@ export default function PvePage() {
         </Link>
         <div className="tcg-status">
           <span><strong>Modo</strong> {state?.mode ?? '—'}</span>
+          {activeDeckName ? <span><strong>Deck</strong> {activeDeckName}</span> : null}
           <span><strong>Turno</strong> {state?.turnNumber ?? '—'}</span>
           <span><strong>Fase</strong> {phase}</span>
           <span className={`tcg-pill ${isMyTurn ? 'your-turn' : 'opp-turn'}`}>
             {isMyTurn ? '⚡ Tu turno' : '⏳ Bot pensando…'}
+          </span>
+          <span className={`lc-chip ${coinsAnimating ? 'pulse' : ''}`}>
+            🪙 {lunacianCoins} <span className="lc-chip-suffix">LC</span>
           </span>
         </div>
         <button className="tcg-surrender" onClick={surrender} disabled={isGameOver}>

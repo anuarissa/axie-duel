@@ -18,6 +18,7 @@ import { logger } from '../lib/logger.js';
 import { questService, type QuestKind } from '../services/QuestService.js';
 import { notificationService } from '../services/NotificationService.js';
 import { cardDropService } from '../services/CardDropService.js';
+import { lunacianCoinsService } from '../services/LunacianCoinsService.js';
 import { calculateElo, type EloOutcome } from '@axie-duel/game-rules';
 
 const router = Router();
@@ -139,6 +140,26 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
         .catch((err) => logger.warn({ err, userId: pid }, 'notification create failed'));
     }
 
+    // Hook Lunacian Coins: cada jugador real recibe LC según outcome.
+    // WIN=50, DRAW=20, LOSS=10. No-fatal si falla (match ya persistido).
+    for (const pid of realPlayerIds) {
+      const outcome = !body.winnerId ? 'DRAW' : body.winnerId === pid ? 'WIN' : 'LOSS';
+      const reward = outcome === 'WIN' ? 50 : outcome === 'DRAW' ? 20 : 10;
+      lunacianCoinsService
+        .earn(pid, reward, 'EARN_MATCH', `match:${match.id}`)
+        .then((ledger) => {
+          notificationService
+            .create(pid, 'COINS_EARNED', `+${reward} Lunacian Coins por tu partida.`, {
+              matchId: match.id,
+              amount: reward,
+              outcome,
+              newBalance: ledger.newBalance,
+            })
+            .catch((err) => logger.warn({ err, userId: pid }, 'COINS_EARNED notification failed'));
+        })
+        .catch((err) => logger.warn({ err, userId: pid }, 'lunacian earn failed'));
+    }
+
     // Hook card drops: SOLO al winner si no es BOT (PvE bot no obtiene cartas).
     // Determinístico via matchId — el mismo match siempre da el mismo drop.
     if (body.winnerId && body.winnerId !== 'BOT') {
@@ -202,6 +223,39 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
     }
 
     res.status(201).json({ matchId: match.id, eloDeltas });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * Game-server llama esto en PvERoom.onJoin para obtener los cards del deck activo
+ * del jugador. Aplana DeckCard.quantity en un Array<cardId> listo para usar.
+ */
+router.get('/decks/:id', async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
+  try {
+    const deck = await prisma.deck.findUnique({
+      where: { id: req.params.id },
+      include: { cards: { select: { cardId: true, quantity: true, zone: true } } },
+    });
+    if (!deck) {
+      res.status(404).json({ error: 'DECK_NOT_FOUND' });
+      return;
+    }
+    // Aplanar Main deck en lista de cardIds (server hace su propio shuffle).
+    const mainCardIds: string[] = [];
+    const extraCardIds: string[] = [];
+    for (const c of deck.cards) {
+      const target = c.zone === 'Extra' ? extraCardIds : mainCardIds;
+      for (let i = 0; i < c.quantity; i++) target.push(c.cardId);
+    }
+    res.json({
+      deckId: deck.id,
+      userId: deck.userId,
+      name: deck.name,
+      mainCardIds,
+      extraCardIds,
+    });
   } catch (err) {
     next(err);
   }

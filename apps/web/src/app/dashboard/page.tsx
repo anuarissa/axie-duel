@@ -18,6 +18,9 @@ interface UserMe {
   level: number;
   xp: number;
   axsBalance: string;
+  lunacianCoins: string;
+  starterPicked: boolean;
+  starterArchetype: 'plant' | 'bird' | 'beast' | null;
 }
 
 interface DeckSummary {
@@ -174,6 +177,10 @@ export default function DashboardPage() {
         </div>
         <div className="dashboard-stats">
           <div className="dashboard-stat">
+            <strong>🪙 {Number(me.lunacianCoins).toLocaleString()}</strong>
+            <span>LC</span>
+          </div>
+          <div className="dashboard-stat">
             <strong>{Number(me.axsBalance).toLocaleString()}</strong>
             <span>AXS</span>
           </div>
@@ -190,6 +197,19 @@ export default function DashboardPage() {
           Logout
         </button>
       </header>
+
+      {/* Banner sticky para reclamar starter deck si todavía no eligió */}
+      {!me.starterPicked ? (
+        <div className="starter-banner">
+          <div className="starter-banner-text">
+            <strong>🎁 Reclamá tu mazo inicial</strong>
+            <span>Elegí entre Plant, Bird o Beast — incluye +50 Lunacian Coins gratis.</span>
+          </div>
+          <Link href="/starter" className="starter-banner-cta">
+            Elegir mazo →
+          </Link>
+        </div>
+      ) : null}
 
       {error ? (
         <div className="card-section" style={{ background: 'rgba(255,118,118,0.08)' }}>

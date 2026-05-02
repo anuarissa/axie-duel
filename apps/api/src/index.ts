@@ -2,6 +2,13 @@
  * REST API entry point. Express :3001.
  */
 
+// JSON.stringify no sabe serializar BigInt por defecto. Lunacian Coins se almacena
+// como BigInt en Prisma → patch global para que res.json() lo convierta a string.
+// Patrón estándar en Node, safe.
+(BigInt.prototype as unknown as { toJSON: () => string }).toJSON = function (this: bigint): string {
+  return this.toString();
+};
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -23,6 +30,7 @@ import adminRoutes from './routes/admin.routes.js';
 import internalRoutes from './routes/internal.routes.js';
 import questRoutes from './routes/quest.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import starterRoutes from './routes/starter.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import { openApiSpec } from './openapi-spec.js';
 
@@ -71,6 +79,7 @@ app.use('/admin', adminRoutes);
 app.use('/internal', internalRoutes);
 app.use('/quests', questRoutes);
 app.use('/notifications', notificationRoutes);
+app.use('/starter', starterRoutes);
 
 app.use(errorHandler);
 

@@ -17,6 +17,13 @@ export interface CombatOutcome {
   damageToAttackerOwner: number;
   damageToDefenderOwner: number;
   direct: boolean;
+  /** % bonus aplicado al ATK por ventaja de clase (0 = sin ventaja, 15 = +15%). */
+  advantageBonus: number;
+  /** ATK efectivo finalmente usado en el cálculo (post-multiplier). */
+  effectiveAtk: number;
+  /** Clases involucradas (para mostrar en el toast del cliente). */
+  attackerClass?: string;
+  defenderClass?: string;
 }
 
 export class CombatSystem {
@@ -81,6 +88,10 @@ export class CombatSystem {
       defender ? ({ instanceId: defender.instanceId, position: defender.position } as never) : null,
       dStats,
       defenderOwnerId,
+      {
+        ...(attackerDef.attribute ? { attackerClass: attackerDef.attribute as 'Beast' | 'Aqua' | 'Plant' | 'Bird' | 'Reptile' } : {}),
+        ...(defenderDef?.attribute ? { defenderClass: defenderDef.attribute as 'Beast' | 'Aqua' | 'Plant' | 'Bird' | 'Reptile' } : {}),
+      },
     );
 
     // Aplicar destrucciones.
@@ -124,6 +135,10 @@ export class CombatSystem {
       damageToAttackerOwner: result.damage[attackerOwnerId] ?? 0,
       damageToDefenderOwner: result.damage[defenderOwnerId] ?? 0,
       direct: result.direct,
+      advantageBonus: result.advantageBonus,
+      effectiveAtk: result.effectiveAtk,
+      ...(attackerDef.attribute ? { attackerClass: attackerDef.attribute } : {}),
+      ...(defenderDef?.attribute ? { defenderClass: defenderDef.attribute } : {}),
     };
     this.log.info(outcome, 'combat resolved');
     return outcome;

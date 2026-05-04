@@ -5,7 +5,7 @@
 # y `railway up` desde C:\dev\axie-duel).
 
 FROM node:20-alpine AS build
-RUN apk add --no-cache python3 make g++ openssl
+RUN apk add --no-cache git python3 make g++ openssl
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 WORKDIR /repo
 

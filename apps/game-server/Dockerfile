@@ -1,7 +1,7 @@
 # Dockerfile para @axie-duel/game-server — buildea desde la raíz del monorepo.
 
 FROM node:20-alpine AS build
-RUN apk add --no-cache python3 make g++
+RUN apk add --no-cache git python3 make g++
 RUN corepack enable && corepack prepare pnpm@9.12.0 --activate
 WORKDIR /repo
 

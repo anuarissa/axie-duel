@@ -160,10 +160,19 @@ export class QuestService {
   /** Lista quests activas + progreso del user (incluye no-iniciadas con current=0). */
   async getActiveQuests(userId: string) {
     const now = new Date();
-    const quests = await this.db.dailyQuest.findMany({
+    let quests = await this.db.dailyQuest.findMany({
       where: { validFrom: { lte: now }, validUntil: { gt: now } },
       orderBy: { kind: 'asc' },
     });
+    // Auto-seed lazy: si no hay quests activas (cron no corrió hoy), crearlas inline.
+    // Más confiable que esperar un cron en MVP local. Idempotente vía createDailyQuests.
+    if (quests.length === 0) {
+      await this.createDailyQuests();
+      quests = await this.db.dailyQuest.findMany({
+        where: { validFrom: { lte: now }, validUntil: { gt: now } },
+        orderBy: { kind: 'asc' },
+      });
+    }
     const progressList = await this.db.userQuestProgress.findMany({
       where: { userId, questId: { in: quests.map((q) => q.id) } },
     });

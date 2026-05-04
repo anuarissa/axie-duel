@@ -4,7 +4,13 @@
  */
 
 import type { CardInstance, MonsterCard } from '@axie-duel/shared-types';
-import { CLASS_ADVANTAGE_MULTIPLIER, hasClassAdvantage, type AxieClass } from './constants.js';
+import {
+  CLASS_ADVANTAGE_MULTIPLIER,
+  CLASS_DISADVANTAGE_MULTIPLIER,
+  classMatchup,
+  type AxieClass,
+  type ClassMatchup,
+} from './constants.js';
 
 export interface CombatResult {
   /** instanceId de los monstruos destruidos (puede ser 0, 1 o 2). */
@@ -13,10 +19,12 @@ export interface CombatResult {
   damage: Record<string, number>;
   /** Si el ataque fue directo (no había monstruo defensor). */
   direct: boolean;
-  /** % bonus aplicado al ATK por ventaja de clase (0 = sin ventaja, 15 = +15%). */
+  /** Signed % aplicado al ATK base: +15 (advantage), -15 (disadvantage), 0 (neutral). */
   advantageBonus: number;
   /** ATK efectivo finalmente usado (post-multiplier). Útil para UI. */
   effectiveAtk: number;
+  /** Matchup type for client VFX (floating text color). */
+  matchup: ClassMatchup;
 }
 
 interface MonsterStats {
@@ -50,17 +58,21 @@ export function resolveCombat(
   defenderOwnerId: string,
   options: ResolveCombatOptions = {},
 ): CombatResult {
-  // Aplicar ventaja de clase al ATK efectivo del atacante si corresponde.
+  // Class triangle modifier: ±15% on attacker ATK.
   let advantageBonus = 0;
+  let matchup: ClassMatchup = 'neutral';
   let effectiveAtk = attackerStats.atk;
   if (options.attackerClass && options.defenderClass) {
-    if (hasClassAdvantage(options.attackerClass, options.defenderClass)) {
+    matchup = classMatchup(options.attackerClass, options.defenderClass);
+    if (matchup === 'advantage') {
       effectiveAtk = Math.floor(attackerStats.atk * CLASS_ADVANTAGE_MULTIPLIER);
       advantageBonus = 15;
+    } else if (matchup === 'disadvantage') {
+      effectiveAtk = Math.floor(attackerStats.atk * CLASS_DISADVANTAGE_MULTIPLIER);
+      advantageBonus = -15;
     }
   }
 
-  // Daño directo: no hay monstruo defensor.
   if (!defender || !defenderStats) {
     return {
       destroyed: [],
@@ -68,10 +80,10 @@ export function resolveCombat(
       direct: true,
       advantageBonus,
       effectiveAtk,
+      matchup,
     };
   }
 
-  // Defensor en ATK (incluye boca arriba): comparar ATK vs ATK.
   if (defender.position === 'ATK') {
     if (effectiveAtk > defenderStats.atk) {
       return {
@@ -80,6 +92,7 @@ export function resolveCombat(
         direct: false,
         advantageBonus,
         effectiveAtk,
+        matchup,
       };
     }
     if (effectiveAtk < defenderStats.atk) {
@@ -89,42 +102,40 @@ export function resolveCombat(
         direct: false,
         advantageBonus,
         effectiveAtk,
+        matchup,
       };
     }
-    // Empate: ambos destruidos, sin daño.
     return {
       destroyed: [attacker.instanceId, defender.instanceId],
       damage: {},
       direct: false,
       advantageBonus,
       effectiveAtk,
+      matchup,
     };
   }
 
-  // Defensor en DEF (boca arriba o boca abajo): comparar ATK vs DEF.
-  // Boca abajo se voltea automáticamente al ser atacado (flip).
   if (effectiveAtk > defenderStats.def) {
-    // Atacante destruye defensor sin daño.
     return {
       destroyed: [defender.instanceId],
       damage: {},
       direct: false,
       advantageBonus,
       effectiveAtk,
+      matchup,
     };
   }
   if (effectiveAtk < defenderStats.def) {
-    // Atacante recibe el "daño en defensa" igual a la diferencia.
     return {
       destroyed: [],
       damage: { [attackerOwnerId]: defenderStats.def - effectiveAtk },
       direct: false,
       advantageBonus,
       effectiveAtk,
+      matchup,
     };
   }
-  // ATK == DEF: nada pasa.
-  return { destroyed: [], damage: {}, direct: false, advantageBonus, effectiveAtk };
+  return { destroyed: [], damage: {}, direct: false, advantageBonus, effectiveAtk, matchup };
 }
 
 /**

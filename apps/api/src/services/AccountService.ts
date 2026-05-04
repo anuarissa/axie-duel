@@ -60,7 +60,9 @@ export class AccountService {
           ...(claims.email && claims.email !== existing.email ? { email: claims.email } : {}),
           ...(claims.email_verified !== undefined ? { emailVerified: claims.email_verified } : {}),
           ...(claims.name && !existing.displayName ? { displayName: claims.name } : {}),
-          ...(claims.picture && !existing.avatarUrl ? { avatarUrl: claims.picture } : {}),
+          // Refrescar avatarUrl SIEMPRE que el ID token traiga un picture: si el user
+          // cambió su foto de Gmail o el URL viejo está roto, esto lo corrige al re-login.
+          ...(claims.picture ? { avatarUrl: claims.picture } : {}),
         },
       });
     }

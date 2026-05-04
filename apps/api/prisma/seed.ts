@@ -39,23 +39,23 @@ async function main() {
   console.info(`[seed] loading ${allCards.length} cards into Card table...`);
 
   for (const c of allCards) {
+    const data = {
+      name: c.name,
+      type: c.type,
+      subType: pickSubtype(c),
+      rarity: c.rarity,
+      attribute: c.type === 'Monster' ? c.attribute : null,
+      level: c.type === 'Monster' ? c.level : null,
+      atk: c.type === 'Monster' ? c.atk : null,
+      def: c.type === 'Monster' ? c.def : null,
+      effectJson: (c.effect ?? {}) as object,
+      imageUrl: c.imageUrl,
+      description: c.description,
+    };
     await prisma.card.upsert({
       where: { id: c.id },
-      update: {},
-      create: {
-        id: c.id,
-        name: c.name,
-        type: c.type,
-        subType: pickSubtype(c),
-        rarity: c.rarity,
-        attribute: c.type === 'Monster' ? c.attribute : null,
-        level: c.type === 'Monster' ? c.level : null,
-        atk: c.type === 'Monster' ? c.atk : null,
-        def: c.type === 'Monster' ? c.def : null,
-        effectJson: (c.effect ?? {}) as object,
-        imageUrl: c.imageUrl,
-        description: c.description,
-      },
+      update: data,
+      create: { id: c.id, ...data },
     });
   }
 

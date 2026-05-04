@@ -5,8 +5,9 @@
     "type": "Trap",
     "subtype": "Normal",
     "rarity": "Common",
+    "acquisitionType": "BASE",
     "imageUrl": "https://placehold.co/420x420/2a0a2a/ffffff?text=Poison+Backlash",
-    "description": "When an opponent monster declares an attack: the attacking monster loses 800 ATK until end of turn.",
+    "description": "When an opponent Axie declares an attack: the attacking Axie loses 800 ATK until end of turn.",
     "isNFT": false,
     "effect": {
       "kind": "atkDebuff",
@@ -22,8 +23,10 @@
     "type": "Trap",
     "subtype": "Normal",
     "rarity": "Rare",
+    "acquisitionType": "PACK_EXPANSION",
+    "axieLinkRequirement": null,
     "imageUrl": "https://placehold.co/420x420/1a1a3a/ffffff?text=Mirror+Web",
-    "description": "Negate the attack of 1 opponent monster.",
+    "description": "Negate the attack of 1 opponent Axie.",
     "isNFT": false,
     "effect": {
       "kind": "negateAttack",
@@ -38,6 +41,8 @@
     "type": "Trap",
     "subtype": "Counter",
     "rarity": "Epic",
+    "acquisitionType": "PACK_EXPANSION",
+    "axieLinkRequirement": null,
     "imageUrl": "https://placehold.co/420x420/3a1a1a/ffffff?text=Counterstrike",
     "description": "Negate the activation of 1 Spell Card and destroy it.",
     "isNFT": false,
@@ -55,13 +60,15 @@
     "type": "Trap",
     "subtype": "Continuous",
     "rarity": "Rare",
+    "acquisitionType": "AXIE_LINKED",
+    "axieLinkRequirement": { "axieClass": "Plant", "minCount": 1 },
     "imageUrl": "https://placehold.co/420x420/0a3a0a/ffffff?text=Webbed+Roots",
-    "description": "While active, opponent's monsters in DEF position cannot change to ATK position.",
+    "description": "While active, opponent's Axies in DEF position cannot change to ATK position.",
     "isNFT": false,
     "effect": {
       "kind": "lockPosition",
       "spellSpeed": 2,
-      "description": "Opponent monsters cannot change DEF -> ATK.",
+      "description": "Opponent Axies cannot change DEF -> ATK.",
       "params": { "lockedTransition": "DEF_TO_ATK" }
     }
   },
@@ -71,14 +78,33 @@
     "type": "Trap",
     "subtype": "Normal",
     "rarity": "Legendary",
+    "acquisitionType": "PACK_EXPANSION",
+    "axieLinkRequirement": null,
     "imageUrl": "https://placehold.co/420x420/4a0a0a/ffffff?text=Lethal+Strike",
-    "description": "When your monster destroys an opponent's monster by battle: deal 1000 damage to your opponent.",
+    "description": "When your Axie destroys an opponent's Axie by battle: deal 1000 damage to your opponent.",
     "isNFT": false,
     "effect": {
       "kind": "burn",
       "spellSpeed": 2,
-      "description": "When you destroy a monster by battle, deal 1000 damage to opponent.",
+      "description": "When you destroy an Axie by battle, deal 1000 damage to opponent.",
       "params": { "amount": 1000, "trigger": "onOwnDestroyByBattle" }
+    }
+  },
+  {
+    "id": "trp_006",
+    "name": "Chimera Roost",
+    "type": "Trap",
+    "subtype": "Continuous",
+    "rarity": "Common",
+    "acquisitionType": "BASE",
+    "imageUrl": "https://placehold.co/420x420/2a1a3a/ffffff?text=Chimera+Roost",
+    "description": "While active, all Lesser Chimera Axies you control gain +200 ATK and +200 DEF.",
+    "isNFT": false,
+    "effect": {
+      "kind": "continuousAura",
+      "spellSpeed": 1,
+      "description": "All Lesser Chimera Axies you control: +200 ATK / +200 DEF.",
+      "params": { "atkBonus": 200, "defBonus": 200, "filter": "ownChimera" }
     }
   }
 ]

@@ -39,18 +39,18 @@ function setupPveGame(): { state: DuelStateSchema; engine: GameEngine; bot: PvEB
 }
 
 describe('PvEBot greedy (Easy)', () => {
-  it('takeTurn no-op cuando no es turno del bot', () => {
+  it('takeTurn no-op cuando no es turno del bot', async () => {
     const { state, bot } = setupPveGame();
+    bot.actionDelayMs = 0;
     expect(state.activePlayerId).toBe('p1');
-    bot.takeTurn();
-    // No debería haber cambiado nada — el bot solo actúa si es su turno.
+    await bot.takeTurn();
     expect(state.activePlayerId).toBe('p1');
     expect(state.turnNumber).toBe(1);
   });
 
-  it('toma turno completo: invoca + ataca + pasa fase, vuelve a p1', () => {
+  it('toma turno completo: invoca + ataca + pasa fase, vuelve a p1', async () => {
     const { state, engine, bot } = setupPveGame();
-    // p1 termina turno 1 sin hacer nada para pasar a turno del bot.
+    bot.actionDelayMs = 0;
     for (let i = 0; i < 6; i++) engine.handleEndPhase('p1');
     expect(state.activePlayerId).toBe('BOT');
     expect(state.turnNumber).toBe(2);
@@ -59,20 +59,15 @@ describe('PvEBot greedy (Easy)', () => {
     const monstersBefore = botPlayer.monsterZones.filter((z) => z.instanceId).length;
     expect(monstersBefore).toBe(0);
 
-    bot.takeTurn();
+    await bot.takeTurn();
 
-    // Después del turno del bot, debería ser turno de p1 nuevamente.
     expect(state.activePlayerId).toBe('p1');
     expect(state.turnNumber).toBe(3);
-    // El bot debería haber invocado al menos 1 monster (mon_aqua_001 es level 5,
-    // requiere 1 tributo, así que en turno 1 del bot NO puede invocarlo sin tributos).
-    // Pero como en el deck son TODOS aqua (level 5), el bot no puede invocar
-    // sin tributos en su primer turno. Aún así debería avanzar fases sin loop.
     const monstersAfter = botPlayer.monsterZones.filter((z) => z.instanceId).length;
-    expect(monstersAfter).toBeGreaterThanOrEqual(0); // 0 o más, lo importante es que terminó
+    expect(monstersAfter).toBeGreaterThanOrEqual(0);
   });
 
-  it('Easy difficulty NO usa tributos (solo invoca level 1-4)', () => {
+  it('Easy difficulty NO usa tributos (solo invoca level 1-4)', async () => {
     const state = new DuelStateSchema();
     const engine = new GameEngine(state, log, 'eseed');
     engine.setupPlayer({
@@ -84,25 +79,22 @@ describe('PvEBot greedy (Easy)', () => {
     engine.setupPlayer({
       id: 'BOT',
       username: 'B',
-      // Mix: 5 cartas low-level + 35 high-level. El bot debería invocar las low.
       mainDeckCardIds: [
-        ...Array(20).fill('mon_beast_001'), // level 4, no tributo
-        ...Array(20).fill('mon_aqua_001'), // level 5, requiere 1 tributo
+        ...Array(20).fill('mon_beast_001'),
+        ...Array(20).fill('mon_aqua_001'),
       ],
       isFirstPlayer: false,
     });
     engine.startMatch();
     const bot = new PvEBot(engine, 'BOT', 'Easy');
+    bot.actionDelayMs = 0;
     for (let i = 0; i < 6; i++) engine.handleEndPhase('p1');
     expect(state.activePlayerId).toBe('BOT');
 
-    bot.takeTurn();
+    await bot.takeTurn();
 
-    // El bot debería haber invocado UN monster level 4 (no tributo).
     const botPlayer = state.players.get('BOT')!;
     const summoned = botPlayer.monsterZones.filter((z) => z.instanceId);
-    // Easy puede o no haber invocado dependiendo de qué cartas le tocaron del top
-    // de la baraja. Si invocó, tiene que ser level 4.
     for (const m of summoned) {
       const def = engine.cards.getById(m.cardId);
       if (def && def.type === 'Monster') {
@@ -111,7 +103,7 @@ describe('PvEBot greedy (Easy)', () => {
     }
   });
 
-  it('Normal difficulty SÍ tributa cuando tiene material', () => {
+  it('Normal difficulty SÍ tributa cuando tiene material', async () => {
     const state = new DuelStateSchema();
     const engine = new GameEngine(state, log, 'nseed');
     engine.setupPlayer({
@@ -123,36 +115,32 @@ describe('PvEBot greedy (Easy)', () => {
     engine.setupPlayer({
       id: 'BOT',
       username: 'B',
-      mainDeckCardIds: Array(40).fill('mon_aqua_001'), // todos level 5
+      mainDeckCardIds: Array(40).fill('mon_aqua_001'),
       isFirstPlayer: false,
     });
     engine.startMatch();
     const bot = new PvEBot(engine, 'BOT', 'Normal');
+    bot.actionDelayMs = 0;
 
-    // Turno 1 del bot: no puede invocar (necesita tributo, no tiene monster en zone).
     for (let i = 0; i < 6; i++) engine.handleEndPhase('p1');
-    bot.takeTurn();
+    await bot.takeTurn();
 
-    // Turno 2 de p1.
     for (let i = 0; i < 6; i++) engine.handleEndPhase('p1');
-    // Turno 2 del bot — pero sigue sin tener monsters porque no invocó en t1.
-    // Reset: configurar manualmente que el bot tenga 1 monster en zone para test.
     expect(state.activePlayerId).toBe('BOT');
-    bot.takeTurn();
-    // El test es funcional: el bot ejecutó takeTurn sin loop infinito.
+    await bot.takeTurn();
     expect(state.turnNumber).toBeGreaterThan(2);
   });
 
-  it('cap defensivo: no entra en loop infinito (max 50 acciones)', () => {
+  it('cap defensivo: no entra en loop infinito (max 50 acciones)', async () => {
     const { state, engine, bot } = setupPveGame();
+    bot.actionDelayMs = 0;
     for (let i = 0; i < 6; i++) engine.handleEndPhase('p1');
     expect(state.activePlayerId).toBe('BOT');
 
     const start = Date.now();
-    bot.takeTurn();
+    await bot.takeTurn();
     const elapsed = Date.now() - start;
-    // Debe completarse en < 1s para 50 acciones max.
     expect(elapsed).toBeLessThan(1000);
-    expect(state.activePlayerId).toBe('p1'); // turno cedido
+    expect(state.activePlayerId).toBe('p1');
   });
 });

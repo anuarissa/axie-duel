@@ -18,5 +18,5 @@ export default function Home() {
     else router.replace('/login');
   }, [router]);
 
-  return <main className="loading-screen">Cargando…</main>;
+  return <main className="loading-screen">Loading…</main>;
 }

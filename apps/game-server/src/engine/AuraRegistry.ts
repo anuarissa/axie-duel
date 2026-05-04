@@ -8,7 +8,7 @@
  *     el aura se aplica al recalcular stats efectivos. Sin event hooks — son state-based.
  *
  * Ejemplos de auras: Tide Surge (+400 ATK a Aquatic propios), Verdant Sentinel
- * (+200 DEF a Plants propios mientras esté en DEF).
+ * (+200 DEF a Plants propios mientras esté en DEF), Ena (-200 ATK a enemy Plants).
  */
 
 import type { CardSchema } from '../rooms/schema/CardSchema.js';
@@ -21,10 +21,18 @@ export type AuraScope =
   | 'ownBeast'
   | 'ownBird'
   | 'ownReptile'
-  | 'oppAll';
+  | 'ownBug'
+  | 'ownChimera'
+  | 'oppAll'
+  | 'enemyPlant'
+  | 'enemyAquatic'
+  | 'enemyBeast'
+  | 'enemyBird'
+  | 'enemyReptile'
+  | 'enemyBug';
 
 export interface AuraEffect {
-  /** Source de la aura (Field Spell, Continuous Spell, Continuous Trap, etc.). */
+  /** Source de la aura (Field Spell, Continuous Spell, Continuous Trap, monster pasivo, etc.). */
   sourceInstanceId: string;
   /** Player que controla la fuente. */
   ownerId: string;
@@ -33,8 +41,14 @@ export interface AuraEffect {
   defBonus: number;
   /** Si true, NO aplica al source mismo (ej: Verdant Sentinel buffea a OTROS plants). */
   excludeSelf?: boolean;
+  /** Solo aplica al SOURCE mismo si la condición se cumple (ej: beastSwarm: solo aplica a este beast si hay otro beast del mismo dueño). */
+  applyOnlyToSelf?: boolean;
+  /** Condición de field para que la aura aplique. 'ownerHasOtherSameClass' = el dueño debe controlar otra carta del mismo attribute. */
+  requireFieldCondition?: 'ownerHasOtherSameClass';
   /** Solo aplica si la fuente está en DEF. (Verdant Sentinel) */
   requireSourcePosition?: 'ATK' | 'DEF' | 'DEF_FACEDOWN';
+  /** Solo aplica si NINGUN otro monster del owner ha atacado este turno (Tripp firstAttackBonus). */
+  requireFirstAttackOfTurn?: boolean;
 }
 
 export class AuraRegistry {
@@ -63,14 +77,21 @@ export class AuraRegistry {
   }
 }
 
+const SCOPE_ATTRIBUTES: Record<string, string> = {
+  ownPlant: 'Plant',     enemyPlant: 'Plant',
+  ownAquatic: 'Aquatic', enemyAquatic: 'Aquatic',
+  ownBeast: 'Beast',     enemyBeast: 'Beast',
+  ownBird: 'Bird',       enemyBird: 'Bird',
+  ownReptile: 'Reptile', enemyReptile: 'Reptile',
+  ownBug: 'Bug',         enemyBug: 'Bug',
+};
+
 /**
  * Calcula bonus de auras aplicables a un monster específico.
  * Devuelve { atkBonus, defBonus } a sumar al stat base.
  *
- * - Itera todas las auras activas.
- * - Verifica scope (matchea attribute del monster + ownership).
- * - Verifica requireSourcePosition (si la fuente debe estar en DEF, etc.).
- * - Verifica excludeSelf.
+ * @param getCardAttribute opcional — si lo proveés, las auras con `requireFieldCondition`
+ * pueden chequear el attribute de otras cartas en field. Sin él, esas condiciones se skipean.
  */
 export function aurasApplicableTo(
   registry: AuraRegistry,
@@ -78,6 +99,8 @@ export function aurasApplicableTo(
   target: CardSchema,
   targetOwnerId: string,
   targetAttribute: string,
+  targetCardId?: string,
+  getCardAttribute?: (cardId: string) => string | undefined,
 ): { atkBonus: number; defBonus: number } {
   let atkBonus = 0;
   let defBonus = 0;
@@ -87,24 +110,65 @@ export function aurasApplicableTo(
     const isOwn = aura.ownerId === targetOwnerId;
     if (aura.scope.startsWith('own') && !isOwn) continue;
     if (aura.scope === 'oppAll' && isOwn) continue;
+    if (aura.scope.startsWith('enemy') && isOwn) continue;
 
-    // Scope/attribute check.
-    if (aura.scope === 'ownPlant' && targetAttribute !== 'Plant') continue;
-    if (aura.scope === 'ownAquatic' && targetAttribute !== 'Aquatic') continue;
-    if (aura.scope === 'ownBeast' && targetAttribute !== 'Beast') continue;
-    if (aura.scope === 'ownBird' && targetAttribute !== 'Bird') continue;
-    if (aura.scope === 'ownReptile' && targetAttribute !== 'Reptile') continue;
+    // Scope/attribute check (skip ownAll/oppAll which span all attributes).
+    if (aura.scope !== 'ownAll' && aura.scope !== 'oppAll') {
+      if (aura.scope === 'ownChimera') {
+        if (!targetCardId || !targetCardId.startsWith('mon_chim_')) continue;
+      } else {
+        const requiredAttr = SCOPE_ATTRIBUTES[aura.scope];
+        if (requiredAttr && targetAttribute !== requiredAttr) continue;
+      }
+    }
 
     // Exclude self.
     if (aura.excludeSelf && aura.sourceInstanceId === target.instanceId) continue;
 
-    // Require source position: la fuente debe seguir en zona Y en la posición esperada.
-    if (aura.requireSourcePosition) {
-      const sourceOwner = state.players.get(aura.ownerId);
-      const source = sourceOwner?.monsterZones.find((c) => c.instanceId === aura.sourceInstanceId)
-        ?? sourceOwner?.spellTrapZones.find((c) => c.instanceId === aura.sourceInstanceId);
-      if (!source) continue;
-      if (source.position !== aura.requireSourcePosition) continue;
+    // Apply ONLY to self (passive monster effects: Buba beastSwarm only buffs Buba itself).
+    if (aura.applyOnlyToSelf && aura.sourceInstanceId !== target.instanceId) continue;
+
+    // Field condition: el dueño debe controlar otra carta del mismo attribute (excluyendo source).
+    // Se asume que el scope del aura ya filtra por attribute (ej: ownBeast → solo aplica si target es Beast).
+    // Acá sólo chequeamos: ¿hay otro own monster en field, distinto del source, del MISMO attribute?
+    if (aura.requireFieldCondition === 'ownerHasOtherSameClass') {
+      const owner = state.players.get(aura.ownerId);
+      if (!owner) continue;
+      let hasSibling = false;
+      for (const c of owner.monsterZones) {
+        if (!c.instanceId) continue;
+        if (c.instanceId === aura.sourceInstanceId) continue;
+        if (!getCardAttribute) {
+          // Sin lookup: aproximar como "cualquier otro monster" → permite la aura.
+          hasSibling = true;
+          break;
+        }
+        if (getCardAttribute(c.cardId) === targetAttribute) {
+          hasSibling = true;
+          break;
+        }
+      }
+      if (!hasSibling) continue;
+    }
+
+    // SIEMPRE verificar que la fuente sigue presente en zona (monster o spell/trap).
+    // Si murió/fue removida, el aura ya no aplica (cleanup implícito sin requerir unregister).
+    const sourceOwner = state.players.get(aura.ownerId);
+    const sourceCard = sourceOwner?.monsterZones.find((c) => c.instanceId === aura.sourceInstanceId)
+      ?? sourceOwner?.spellTrapZones.find((c) => c.instanceId === aura.sourceInstanceId);
+    if (!sourceCard) continue;
+    if (aura.requireSourcePosition && sourceCard.position !== aura.requireSourcePosition) continue;
+
+    // requireFirstAttackOfTurn: el aura solo aplica si NINGUN otro monster del owner
+    // ya atacó este turno. Cuando el primero ataca y otro hace lo mismo, esta aura desaparece.
+    // hasAttacked se resetea al final del turno (PhaseManager).
+    if (aura.requireFirstAttackOfTurn) {
+      const owner = state.players.get(aura.ownerId);
+      if (!owner) continue;
+      const someoneElseAttacked = owner.monsterZones.some(
+        (m) => m.instanceId && m.instanceId !== aura.sourceInstanceId && m.hasAttacked,
+      );
+      if (someoneElseAttacked) continue;
     }
 
     atkBonus += aura.atkBonus;

@@ -1,7 +1,7 @@
 [
   {
     "id": "mon_beast_001",
-    "name": "Olek, the Frost Fang",
+    "name": "Buba, the Frostfang",
     "type": "Monster",
     "rarity": "Common",
     "attribute": "Beast",
@@ -9,8 +9,8 @@
     "level": 4,
     "atk": 1700,
     "def": 1200,
-    "imageUrl": "https://placehold.co/420x420/0d2b1f/ffffff?text=Olek",
-    "description": "A nimble Beast with thick fur. When summoned, gains +200 ATK if you control no other monsters.",
+    "imageUrl": "https://axie.zone/axies/11/axie/axie-full-transparent.png",
+    "description": "Wild Beast pack hunter. Gains +300 ATK while you control another Beast Axie.",
     "isNFT": false,
     "parts": [
       { "id": "eyes_002", "name": "Lucas", "class": "Beast", "type": "eyes", "stage": 2, "abilities": [] },
@@ -21,10 +21,66 @@
       { "id": "tail_002", "name": "Hot Butt", "class": "Beast", "type": "tail", "stage": 2, "abilities": [] }
     ],
     "effect": {
-      "kind": "buff",
+      "kind": "beastSwarm",
       "spellSpeed": 1,
-      "description": "Gain +200 ATK while you control no other monsters.",
-      "params": { "atkBonus": 200, "condition": "loneOnField" }
+      "description": "Passive: +300 ATK while you control another Beast Axie.",
+      "params": { "atkBonus": 300 }
+    }
+  },
+  {
+    "id": "mon_beast_002",
+    "name": "Venom, the Bloodfang",
+    "type": "Monster",
+    "rarity": "Rare",
+    "attribute": "Beast",
+    "monsterType": "Beast",
+    "level": 5,
+    "atk": 2000,
+    "def": 1400,
+    "imageUrl": "https://axie.zone/axies/22/axie/axie-full-transparent.png",
+    "description": "Apex Beast predator. Requires 1 tribute. Applies poison: opponent loses 100 LP at the end of their turn while Venom is on the field.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_002", "name": "Lucas", "class": "Beast", "type": "eyes", "stage": 3, "abilities": [] },
+      { "id": "ears_002", "name": "Goldfish", "class": "Beast", "type": "ears", "stage": 3, "abilities": [] },
+      { "id": "mouth_002", "name": "Razor Bite", "class": "Beast", "type": "mouth", "stage": 3, "abilities": [] },
+      { "id": "horn_002", "name": "Pocky", "class": "Beast", "type": "horn", "stage": 3, "abilities": [] },
+      { "id": "back_002", "name": "Ronin", "class": "Beast", "type": "back", "stage": 3, "abilities": [] },
+      { "id": "tail_002", "name": "Nut Cracker", "class": "Beast", "type": "tail", "stage": 3, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "poisonDoT",
+      "spellSpeed": 1,
+      "description": "Passive: opponent loses 100 LP at the end of their turn while Venom is in field.",
+      "params": { "amount": 100 }
+    }
+  },
+  {
+    "id": "mon_beast_003",
+    "name": "Ronin, the Honor Beast",
+    "type": "Monster",
+    "rarity": "Epic",
+    "attribute": "Beast",
+    "monsterType": "Beast",
+    "level": 6,
+    "atk": 2300,
+    "def": 1600,
+    "imageUrl": "https://axie.zone/axies/33/axie/axie-full-transparent.png",
+    "description": "Lunacian warrior of the Ronin clan. Requires 2 tributes. When summoned, destroy 1 random opponent Spell or Trap.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_002", "name": "Confused", "class": "Beast", "type": "eyes", "stage": 3, "abilities": [] },
+      { "id": "ears_002", "name": "Pocky", "class": "Beast", "type": "ears", "stage": 3, "abilities": [] },
+      { "id": "mouth_002", "name": "Confident", "class": "Beast", "type": "mouth", "stage": 3, "abilities": [] },
+      { "id": "horn_002", "name": "Little Branch", "class": "Beast", "type": "horn", "stage": 3, "abilities": [] },
+      { "id": "back_002", "name": "Ronin", "class": "Beast", "type": "back", "stage": 3, "abilities": [] },
+      { "id": "tail_002", "name": "Hot Butt", "class": "Beast", "type": "tail", "stage": 3, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeployDestroySpellTrap",
+      "spellSpeed": 1,
+      "description": "On summon: destroy 1 random opponent Spell/Trap.",
+      "params": {}
     }
   },
   {
@@ -37,7 +93,7 @@
     "level": 5,
     "atk": 2100,
     "def": 1800,
-    "imageUrl": "https://placehold.co/420x420/0a3a5a/ffffff?text=Nyra",
+    "imageUrl": "https://axie.zone/axies/4/axie/axie-full-transparent.png",
     "description": "Requires 1 tribute. When this Axie is summoned, draw 1 card.",
     "isNFT": false,
     "parts": [
@@ -49,24 +105,24 @@
       { "id": "tail_004", "name": "Shrimp", "class": "Aquatic", "type": "tail", "stage": 2, "abilities": [] }
     ],
     "effect": {
-      "kind": "draw",
+      "kind": "onDeployDraw",
       "spellSpeed": 1,
       "description": "When summoned, draw 1 card.",
-      "params": { "amount": 1, "trigger": "onSummon" }
+      "params": { "amount": 1 }
     }
   },
   {
     "id": "mon_plant_001",
-    "name": "Verdant Sentinel",
+    "name": "Olek, the Verdant Guardian",
     "type": "Monster",
     "rarity": "Common",
     "attribute": "Plant",
     "monsterType": "Plant",
-    "level": 3,
-    "atk": 800,
-    "def": 1900,
-    "imageUrl": "https://placehold.co/420x420/0a4a1a/ffffff?text=Sentinel",
-    "description": "A wall of brambles. While in DEF position, all your other Plant monsters gain +200 DEF.",
+    "level": 4,
+    "atk": 1100,
+    "def": 1700,
+    "imageUrl": "https://axie.zone/axies/12/axie/axie-full-transparent.png",
+    "description": "Bramble guardian. On deploy, gains a 200-point Shield (+200 DEF permanent).",
     "isNFT": false,
     "parts": [
       { "id": "eyes_006", "name": "Bookworm", "class": "Plant", "type": "eyes", "stage": 2, "abilities": [] },
@@ -77,38 +133,178 @@
       { "id": "tail_006", "name": "Carrot", "class": "Plant", "type": "tail", "stage": 2, "abilities": [] }
     ],
     "effect": {
-      "kind": "auraDef",
+      "kind": "onDeployShield",
       "spellSpeed": 1,
-      "description": "While in DEF, your other Plant monsters gain +200 DEF.",
-      "params": { "defBonus": 200, "scope": "ownPlantsExceptSelf", "requirePosition": "DEF" }
+      "description": "On deploy: gains a 200-point Shield (+200 DEF permanent).",
+      "params": { "amount": 200 }
+    }
+  },
+  {
+    "id": "mon_plant_002",
+    "name": "Puffy, the Bloomshield",
+    "type": "Monster",
+    "rarity": "Rare",
+    "attribute": "Plant",
+    "monsterType": "Plant",
+    "level": 5,
+    "atk": 1400,
+    "def": 1900,
+    "imageUrl": "https://axie.zone/axies/77/axie/axie-full-transparent.png",
+    "description": "Floral guardian woven from sunlit petals. Requires 1 tribute. When summoned, restore 500 LP to your hero.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_006", "name": "Cucumber Slice", "class": "Plant", "type": "eyes", "stage": 3, "abilities": [] },
+      { "id": "ears_006", "name": "Leaf Bug", "class": "Plant", "type": "ears", "stage": 3, "abilities": [] },
+      { "id": "mouth_006", "name": "Yam", "class": "Plant", "type": "mouth", "stage": 3, "abilities": [] },
+      { "id": "horn_006", "name": "Rose Bud", "class": "Plant", "type": "horn", "stage": 3, "abilities": [] },
+      { "id": "back_006", "name": "Watering Can", "class": "Plant", "type": "back", "stage": 3, "abilities": [] },
+      { "id": "tail_006", "name": "Carrot", "class": "Plant", "type": "tail", "stage": 3, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeployHeal",
+      "spellSpeed": 1,
+      "description": "On summon: restore 500 LP to your hero.",
+      "params": { "amount": 500 }
+    }
+  },
+  {
+    "id": "mon_plant_003",
+    "name": "Pomodoro, the Sunfruit",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Plant",
+    "monsterType": "Plant",
+    "level": 3,
+    "atk": 800,
+    "def": 1500,
+    "imageUrl": "https://axie.zone/axies/78/axie/axie-full-transparent.png",
+    "description": "Tomato-tank Axie of the verdant grove. On deploy: restore 200 LP to your hero.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_006", "name": "Cucumber Slice", "class": "Plant", "type": "eyes", "stage": 2, "abilities": [] },
+      { "id": "ears_006", "name": "Leaf Bug", "class": "Plant", "type": "ears", "stage": 2, "abilities": [] },
+      { "id": "mouth_006", "name": "Yam", "class": "Plant", "type": "mouth", "stage": 2, "abilities": [] },
+      { "id": "horn_006", "name": "Rose Bud", "class": "Plant", "type": "horn", "stage": 2, "abilities": [] },
+      { "id": "back_006", "name": "Pumpkin", "class": "Plant", "type": "back", "stage": 2, "abilities": [] },
+      { "id": "tail_006", "name": "Carrot", "class": "Plant", "type": "tail", "stage": 2, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeployHeal",
+      "spellSpeed": 1,
+      "description": "On deploy: restore 200 LP to your hero.",
+      "params": { "amount": 200 }
+    }
+  },
+  {
+    "id": "mon_bug_001",
+    "name": "Ena, Forest Guardian",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Bug",
+    "monsterType": "Insect",
+    "level": 4,
+    "atk": 1500,
+    "def": 1100,
+    "imageUrl": "https://axie.zone/axies/55/axie/axie-full-transparent.png",
+    "description": "Mystic Bug huntress. On deploy: draw 1 additional card.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_005", "name": "Bug", "class": "Bug", "type": "eyes", "stage": 2, "abilities": [] },
+      { "id": "ears_005", "name": "Larva", "class": "Bug", "type": "ears", "stage": 2, "abilities": [] },
+      { "id": "mouth_005", "name": "Pincer", "class": "Bug", "type": "mouth", "stage": 2, "abilities": [] },
+      { "id": "horn_005", "name": "Caterpillars", "class": "Bug", "type": "horn", "stage": 2, "abilities": [] },
+      { "id": "back_005", "name": "Bidens", "class": "Bug", "type": "back", "stage": 2, "abilities": [] },
+      { "id": "tail_005", "name": "Buzz Buzz", "class": "Bug", "type": "tail", "stage": 2, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeployDraw",
+      "spellSpeed": 1,
+      "description": "On deploy: draw 1 additional card.",
+      "params": { "amount": 1 }
+    }
+  },
+  {
+    "id": "mon_bug_002",
+    "name": "Tripp, Verdant Hunter",
+    "type": "Monster",
+    "rarity": "Rare",
+    "attribute": "Bug",
+    "monsterType": "Insect",
+    "level": 5,
+    "atk": 2000,
+    "def": 1100,
+    "imageUrl": "https://axie.zone/axies/66/axie/axie-full-transparent.png",
+    "description": "Lethal Bug assassin. High ATK, low DEF. If Tripp attacks first this turn (before any other ally), gains +190 ATK (~10%).",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_005", "name": "Mavis", "class": "Bug", "type": "eyes", "stage": 3, "abilities": [] },
+      { "id": "ears_005", "name": "Antenna", "class": "Bug", "type": "ears", "stage": 3, "abilities": [] },
+      { "id": "mouth_005", "name": "Pincer", "class": "Bug", "type": "mouth", "stage": 3, "abilities": [] },
+      { "id": "horn_005", "name": "Lagging", "class": "Bug", "type": "horn", "stage": 3, "abilities": [] },
+      { "id": "back_005", "name": "Scarab", "class": "Bug", "type": "back", "stage": 3, "abilities": [] },
+      { "id": "tail_005", "name": "Thorny Caterpillar", "class": "Bug", "type": "tail", "stage": 3, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "firstAttackBonus",
+      "spellSpeed": 1,
+      "description": "If Tripp is the first to attack this turn, gains +190 ATK (~10%) for that attack only.",
+      "params": { "atkBonus": 190 }
     }
   },
   {
     "id": "mon_bird_001",
-    "name": "Skydancer Aery",
+    "name": "Backdoor Bird",
     "type": "Monster",
-    "rarity": "Epic",
+    "rarity": "Common",
     "attribute": "Bird",
-    "monsterType": "Beast",
-    "level": 7,
-    "atk": 2500,
-    "def": 1500,
-    "imageUrl": "https://placehold.co/420x420/3a1a4a/ffffff?text=Aery",
-    "description": "Requires 2 tributes. Cannot be targeted by Trap effects on the turn it's summoned.",
+    "monsterType": "Bird",
+    "level": 3,
+    "atk": 1200,
+    "def": 700,
+    "imageUrl": "https://axie.zone/axies/100/axie/axie-full-transparent.png",
+    "description": "Aerial harasser that strikes from beyond the gates. On death by battle, deals 400 direct damage to opponent.",
     "isNFT": false,
     "parts": [
-      { "id": "eyes_008", "name": "Lucky", "class": "Bird", "type": "eyes", "stage": 3, "abilities": [] },
-      { "id": "ears_008", "name": "Nut Cracker", "class": "Bird", "type": "ears", "stage": 3, "abilities": [] },
-      { "id": "mouth_008", "name": "Doubletalk", "class": "Bird", "type": "mouth", "stage": 3, "abilities": [] },
-      { "id": "horn_008", "name": "Eggshell", "class": "Bird", "type": "horn", "stage": 3, "abilities": [] },
-      { "id": "back_008", "name": "Tri Feather", "class": "Bird", "type": "back", "stage": 3, "abilities": [] },
-      { "id": "tail_008", "name": "Swallow", "class": "Bird", "type": "tail", "stage": 3, "abilities": [] }
+      { "id": "eyes_008", "name": "Lucky", "class": "Bird", "type": "eyes", "stage": 2, "abilities": [] },
+      { "id": "ears_008", "name": "Owl", "class": "Bird", "type": "ears", "stage": 2, "abilities": [] },
+      { "id": "mouth_008", "name": "Tiny Swing", "class": "Bird", "type": "mouth", "stage": 2, "abilities": [] },
+      { "id": "horn_008", "name": "Eggshell", "class": "Bird", "type": "horn", "stage": 2, "abilities": [] },
+      { "id": "back_008", "name": "Tri Feather", "class": "Bird", "type": "back", "stage": 2, "abilities": [] },
+      { "id": "tail_008", "name": "Swallow", "class": "Bird", "type": "tail", "stage": 2, "abilities": [] }
     ],
     "effect": {
-      "kind": "trapImmune",
+      "kind": "onDeathDirectDamage",
       "spellSpeed": 1,
-      "description": "On summon turn, cannot be targeted by Trap effects.",
-      "params": { "duration": "summonTurn" }
+      "description": "On death by battle: 400 direct damage to opponent's LP.",
+      "params": { "amount": 400 }
+    }
+  },
+  {
+    "id": "mon_bird_002",
+    "name": "Nut Cracker",
+    "type": "Monster",
+    "rarity": "Rare",
+    "attribute": "Bird",
+    "monsterType": "Bird",
+    "level": 4,
+    "atk": 1500,
+    "def": 900,
+    "imageUrl": "https://axie.zone/axies/101/axie/axie-full-transparent.png",
+    "description": "Sky raptor with crushing beak. When summoned, destroy 1 random opponent Spell or Trap.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_008", "name": "Mavis", "class": "Bird", "type": "eyes", "stage": 2, "abilities": [] },
+      { "id": "ears_008", "name": "Tassels", "class": "Bird", "type": "ears", "stage": 2, "abilities": [] },
+      { "id": "mouth_008", "name": "Cuckoo", "class": "Bird", "type": "mouth", "stage": 2, "abilities": [] },
+      { "id": "horn_008", "name": "Cuckoo", "class": "Bird", "type": "horn", "stage": 2, "abilities": [] },
+      { "id": "back_008", "name": "Pigeon Post", "class": "Bird", "type": "back", "stage": 2, "abilities": [] },
+      { "id": "tail_008", "name": "The Last One", "class": "Bird", "type": "tail", "stage": 2, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeployDestroySpellTrap",
+      "spellSpeed": 1,
+      "description": "On summon: destroy 1 random opponent Spell/Trap.",
+      "params": {}
     }
   },
   {
@@ -121,8 +317,8 @@
     "level": 8,
     "atk": 2800,
     "def": 2400,
-    "imageUrl": "https://placehold.co/420x420/2a3a0a/ffffff?text=Venomscale",
-    "description": "Requires 2 tributes. Each turn you may declare 1 attack from this monster as a direct attack against a player who controls no monsters with ATK >= 2000.",
+    "imageUrl": "https://axie.zone/axies/200/axie/axie-full-transparent.png",
+    "description": "Requires 2 tributes. Each turn you may declare 1 attack from this Axie as a direct attack against a player who controls no Axies with ATK >= 2000.",
     "isNFT": false,
     "parts": [
       { "id": "eyes_010", "name": "Tiny Turtle", "class": "Reptile", "type": "eyes", "stage": 3, "abilities": [] },
@@ -135,8 +331,304 @@
     "effect": {
       "kind": "piercingDirect",
       "spellSpeed": 1,
-      "description": "Once per turn, may attack directly if no opp monster has ATK >= 2000.",
+      "description": "Once per turn, may attack directly if no opp Axie has ATK >= 2000.",
       "params": { "threshold": 2000 }
     }
+  },
+  {
+    "id": "mon_reptile_002",
+    "name": "Terminator Reptile",
+    "type": "Monster",
+    "rarity": "Epic",
+    "attribute": "Reptile",
+    "monsterType": "Reptile",
+    "level": 6,
+    "atk": 2400,
+    "def": 2000,
+    "imageUrl": "https://axie.zone/axies/201/axie/axie-full-transparent.png",
+    "description": "Cybernetic reptilian executioner. Requires 2 tributes. On death by battle, the attacker permanently loses 500 ATK.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_010", "name": "Gecko", "class": "Reptile", "type": "eyes", "stage": 3, "abilities": [] },
+      { "id": "ears_010", "name": "Friendly", "class": "Reptile", "type": "ears", "stage": 3, "abilities": [] },
+      { "id": "mouth_010", "name": "Lam Handsome", "class": "Reptile", "type": "mouth", "stage": 3, "abilities": [] },
+      { "id": "horn_010", "name": "Kestrel", "class": "Reptile", "type": "horn", "stage": 3, "abilities": [] },
+      { "id": "back_010", "name": "Snake Jar", "class": "Reptile", "type": "back", "stage": 3, "abilities": [] },
+      { "id": "tail_010", "name": "Try Hard", "class": "Reptile", "type": "tail", "stage": 3, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeathPermanentDebuff",
+      "spellSpeed": 1,
+      "description": "On death by battle: the attacker permanently loses 500 ATK.",
+      "params": { "atkPenalty": 500 }
+    }
+  },
+  {
+    "id": "mon_beast_004",
+    "name": "Bibo, the Tinybeast",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Beast",
+    "monsterType": "Beast",
+    "level": 3,
+    "atk": 1500,
+    "def": 1100,
+    "imageUrl": "https://axie.zone/axies/40/axie/axie-full-transparent.png",
+    "description": "Origins Beast starter. A small, fluffy hunter. On deploy: restore 200 LP to your hero.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_002", "name": "Lucas", "class": "Beast", "type": "eyes", "stage": 1, "abilities": [] },
+      { "id": "ears_002", "name": "Goldfish", "class": "Beast", "type": "ears", "stage": 1, "abilities": [] },
+      { "id": "mouth_002", "name": "Confident", "class": "Beast", "type": "mouth", "stage": 1, "abilities": [] },
+      { "id": "horn_002", "name": "Little Branch", "class": "Beast", "type": "horn", "stage": 1, "abilities": [] },
+      { "id": "back_002", "name": "Hermit", "class": "Beast", "type": "back", "stage": 1, "abilities": [] },
+      { "id": "tail_002", "name": "Hot Butt", "class": "Beast", "type": "tail", "stage": 1, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeployHeal",
+      "spellSpeed": 1,
+      "description": "On deploy: restore 200 LP to your hero.",
+      "params": { "amount": 200 }
+    }
+  },
+  {
+    "id": "mon_beast_005",
+    "name": "Hope, the Beastsoul",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Beast",
+    "monsterType": "Beast",
+    "level": 3,
+    "atk": 1300,
+    "def": 1300,
+    "imageUrl": "https://axie.zone/axies/41/axie/axie-full-transparent.png",
+    "description": "Origins Beast starter. Balanced rookie warrior. No special abilities — solid mid-game pick.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_002", "name": "Confused", "class": "Beast", "type": "eyes", "stage": 1, "abilities": [] },
+      { "id": "ears_002", "name": "Pocky", "class": "Beast", "type": "ears", "stage": 1, "abilities": [] },
+      { "id": "mouth_002", "name": "Confident", "class": "Beast", "type": "mouth", "stage": 1, "abilities": [] },
+      { "id": "horn_002", "name": "Little Branch", "class": "Beast", "type": "horn", "stage": 1, "abilities": [] },
+      { "id": "back_002", "name": "Ronin", "class": "Beast", "type": "back", "stage": 1, "abilities": [] },
+      { "id": "tail_002", "name": "Hot Butt", "class": "Beast", "type": "tail", "stage": 1, "abilities": [] }
+    ]
+  },
+  {
+    "id": "mon_bird_003",
+    "name": "Momo, the Skydart",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Bird",
+    "monsterType": "Bird",
+    "level": 2,
+    "atk": 1100,
+    "def": 700,
+    "imageUrl": "https://axie.zone/axies/42/axie/axie-full-transparent.png",
+    "description": "Origins Bird starter. Tiny aerial scout. On deploy: draw 1 additional card.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_008", "name": "Lucky", "class": "Bird", "type": "eyes", "stage": 1, "abilities": [] },
+      { "id": "ears_008", "name": "Owl", "class": "Bird", "type": "ears", "stage": 1, "abilities": [] },
+      { "id": "mouth_008", "name": "Tiny Swing", "class": "Bird", "type": "mouth", "stage": 1, "abilities": [] },
+      { "id": "horn_008", "name": "Eggshell", "class": "Bird", "type": "horn", "stage": 1, "abilities": [] },
+      { "id": "back_008", "name": "Tri Feather", "class": "Bird", "type": "back", "stage": 1, "abilities": [] },
+      { "id": "tail_008", "name": "Swallow", "class": "Bird", "type": "tail", "stage": 1, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeployDraw",
+      "spellSpeed": 1,
+      "description": "On deploy: draw 1 additional card.",
+      "params": { "amount": 1 }
+    }
+  },
+  {
+    "id": "mon_bird_004",
+    "name": "Rouge, the Crimsonwing",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Bird",
+    "monsterType": "Bird",
+    "level": 3,
+    "atk": 1500,
+    "def": 900,
+    "imageUrl": "https://axie.zone/axies/43/axie/axie-full-transparent.png",
+    "description": "Origins Bird starter. Crimson hunter — fast and lethal. No special abilities.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_008", "name": "Mavis", "class": "Bird", "type": "eyes", "stage": 1, "abilities": [] },
+      { "id": "ears_008", "name": "Tassels", "class": "Bird", "type": "ears", "stage": 1, "abilities": [] },
+      { "id": "mouth_008", "name": "Cuckoo", "class": "Bird", "type": "mouth", "stage": 1, "abilities": [] },
+      { "id": "horn_008", "name": "Cuckoo", "class": "Bird", "type": "horn", "stage": 1, "abilities": [] },
+      { "id": "back_008", "name": "Pigeon Post", "class": "Bird", "type": "back", "stage": 1, "abilities": [] },
+      { "id": "tail_008", "name": "The Last One", "class": "Bird", "type": "tail", "stage": 1, "abilities": [] }
+    ]
+  },
+  {
+    "id": "mon_aqua_002",
+    "name": "Yumi, the Tideborn",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Aquatic",
+    "monsterType": "Aqua",
+    "level": 3,
+    "atk": 1300,
+    "def": 1500,
+    "imageUrl": "https://axie.zone/axies/44/axie/axie-full-transparent.png",
+    "description": "Origins Aqua starter. Tide-blessed protector. On deploy: restore 200 LP to your hero.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_004", "name": "Sleepless", "class": "Aquatic", "type": "eyes", "stage": 1, "abilities": [] },
+      { "id": "ears_004", "name": "Nimo", "class": "Aquatic", "type": "ears", "stage": 1, "abilities": [] },
+      { "id": "mouth_004", "name": "Risky Fish", "class": "Aquatic", "type": "mouth", "stage": 1, "abilities": [] },
+      { "id": "horn_004", "name": "Anemone", "class": "Aquatic", "type": "horn", "stage": 1, "abilities": [] },
+      { "id": "back_004", "name": "Snail Shell", "class": "Aquatic", "type": "back", "stage": 1, "abilities": [] },
+      { "id": "tail_004", "name": "Shrimp", "class": "Aquatic", "type": "tail", "stage": 1, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeployHeal",
+      "spellSpeed": 1,
+      "description": "On deploy: restore 200 LP to your hero.",
+      "params": { "amount": 200 }
+    }
+  },
+  {
+    "id": "mon_reptile_003",
+    "name": "Venoki, the Coilfang",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Reptile",
+    "monsterType": "Reptile",
+    "level": 3,
+    "atk": 1400,
+    "def": 1400,
+    "imageUrl": "https://axie.zone/axies/45/axie/axie-full-transparent.png",
+    "description": "Origins Reptile starter. Balanced fang-and-shield serpent. No special abilities.",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_010", "name": "Tiny Turtle", "class": "Reptile", "type": "eyes", "stage": 1, "abilities": [] },
+      { "id": "ears_010", "name": "Snake Jar", "class": "Reptile", "type": "ears", "stage": 1, "abilities": [] },
+      { "id": "mouth_010", "name": "Toothless Bite", "class": "Reptile", "type": "mouth", "stage": 1, "abilities": [] },
+      { "id": "horn_010", "name": "Scaly Spear", "class": "Reptile", "type": "horn", "stage": 1, "abilities": [] },
+      { "id": "back_010", "name": "Indian Star", "class": "Reptile", "type": "back", "stage": 1, "abilities": [] },
+      { "id": "tail_010", "name": "Granma's Hair", "class": "Reptile", "type": "tail", "stage": 1, "abilities": [] }
+    ]
+  },
+  {
+    "id": "mon_reptile_004",
+    "name": "Ricky, the Stonescale",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Reptile",
+    "monsterType": "Reptile",
+    "level": 4,
+    "atk": 1700,
+    "def": 1500,
+    "imageUrl": "https://axie.zone/axies/46/axie/axie-full-transparent.png",
+    "description": "Origins Reptile starter. Hardened scale tank. On deploy: gains a 200-point Shield (+200 DEF permanent).",
+    "isNFT": false,
+    "parts": [
+      { "id": "eyes_010", "name": "Gecko", "class": "Reptile", "type": "eyes", "stage": 1, "abilities": [] },
+      { "id": "ears_010", "name": "Friendly", "class": "Reptile", "type": "ears", "stage": 1, "abilities": [] },
+      { "id": "mouth_010", "name": "Lam Handsome", "class": "Reptile", "type": "mouth", "stage": 1, "abilities": [] },
+      { "id": "horn_010", "name": "Kestrel", "class": "Reptile", "type": "horn", "stage": 1, "abilities": [] },
+      { "id": "back_010", "name": "Snake Jar", "class": "Reptile", "type": "back", "stage": 1, "abilities": [] },
+      { "id": "tail_010", "name": "Try Hard", "class": "Reptile", "type": "tail", "stage": 1, "abilities": [] }
+    ],
+    "effect": {
+      "kind": "onDeployShield",
+      "spellSpeed": 1,
+      "description": "On deploy: gains a 200-point Shield (+200 DEF permanent).",
+      "params": { "amount": 200 }
+    }
+  },
+  {
+    "id": "mon_chim_001",
+    "name": "Lesser Chimera (Plant)",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Plant",
+    "monsterType": "Plant",
+    "level": 1,
+    "atk": 500,
+    "def": 500,
+    "imageUrl": "https://axie.zone/axies/501/axie/axie-full-transparent.png",
+    "description": "A weak chimera scout. No abilities — useful only as tribute fodder.",
+    "isNFT": false,
+    "parts": []
+  },
+  {
+    "id": "mon_chim_002",
+    "name": "Lesser Chimera (Beast)",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Beast",
+    "monsterType": "Beast",
+    "level": 1,
+    "atk": 500,
+    "def": 500,
+    "imageUrl": "https://axie.zone/axies/502/axie/axie-full-transparent.png",
+    "description": "A weak chimera scout. No abilities — useful only as tribute fodder.",
+    "isNFT": false,
+    "parts": []
+  },
+  {
+    "id": "mon_chim_003",
+    "name": "Lesser Chimera (Bug)",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Bug",
+    "monsterType": "Insect",
+    "level": 1,
+    "atk": 500,
+    "def": 500,
+    "imageUrl": "https://axie.zone/axies/503/axie/axie-full-transparent.png",
+    "description": "A weak chimera scout. No abilities — useful only as tribute fodder.",
+    "isNFT": false,
+    "parts": []
+  },
+  {
+    "id": "mon_chim_004",
+    "name": "Lesser Chimera (Aqua)",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Aquatic",
+    "monsterType": "Aqua",
+    "level": 2,
+    "atk": 600,
+    "def": 600,
+    "imageUrl": "https://axie.zone/axies/504/axie/axie-full-transparent.png",
+    "description": "A weak chimera scout. No abilities — useful only as tribute fodder.",
+    "isNFT": false,
+    "parts": []
+  },
+  {
+    "id": "mon_chim_005",
+    "name": "Lesser Chimera (Bird)",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Bird",
+    "monsterType": "Bird",
+    "level": 2,
+    "atk": 600,
+    "def": 600,
+    "imageUrl": "https://axie.zone/axies/505/axie/axie-full-transparent.png",
+    "description": "A weak chimera scout. No abilities — useful only as tribute fodder.",
+    "isNFT": false,
+    "parts": []
+  },
+  {
+    "id": "mon_chim_006",
+    "name": "Lesser Chimera (Reptile)",
+    "type": "Monster",
+    "rarity": "Common",
+    "attribute": "Reptile",
+    "monsterType": "Reptile",
+    "level": 2,
+    "atk": 600,
+    "def": 600,
+    "imageUrl": "https://axie.zone/axies/506/axie/axie-full-transparent.png",
+    "description": "A weak chimera scout. No abilities — useful only as tribute fodder.",
+    "isNFT": false,
+    "parts": []
   }
 ]

@@ -68,7 +68,7 @@ export class GameEngine {
     this.deckManager = new DeckManager(this.rng);
     this.validator = new ActionValidator(this.state, this.cards);
     this.summon = new SummonSystem(this.state, this.cards);
-    this.combat = new CombatSystem(this.state, this.cards, this.log, this.auras);
+    this.combat = new CombatSystem(this.state, this.cards, this.log, this.auras, this.events);
     this.effects = new EffectResolver(this.state, this.cards, this.log);
     this.phases = new PhaseManager(this.state, this.deckManager, this.log);
   }
@@ -86,7 +86,8 @@ export class GameEngine {
     for (let i = 0; i < MONSTER_ZONES; i++) p.monsterZones.push(new CardSchema());
     for (let i = 0; i < SPELL_TRAP_ZONES; i++) p.spellTrapZones.push(new CardSchema());
     this.deckManager.shuffleDeck(p);
-    this.deckManager.draw(p, DEFAULT_DUEL_CONFIG.startingHandSize);
+    // Anti-bricking: garantiza ≥1 monster L1-4 en mano inicial.
+    this.deckManager.drawStartingHand(p, DEFAULT_DUEL_CONFIG.startingHandSize, this.cards);
     this.state.players.set(input.id, p);
     return p;
   }
@@ -115,6 +116,30 @@ export class GameEngine {
 
   // ── Acciones públicas (la sala las invoca tras Zod-parsing) ──────────────────
 
+  /**
+   * Recomputa los snapshots `auraAtkBonus` / `auraDefBonus` / `affectedByAura` de TODOS
+   * los monsters en field. Llamado al final de cada handler que pueda cambiar field state
+   * (summon, activate, set, attack, position change, end phase). Permite al cliente
+   * mostrar stats efectivos + indicador visual sin duplicar la lógica de auras.
+   */
+  recomputeAuraSnapshots(): void {
+    for (const player of this.state.players.values()) {
+      for (const card of player.monsterZones) {
+        if (!card.instanceId) continue;
+        const def = this.cards.getById(card.cardId);
+        if (!def || def.type !== 'Monster') continue;
+        const withAuras = this.combat.effectiveStatsWithAuras(def, card, player.id);
+        const baseAtk = Math.max(0, def.atk + card.atkMod);
+        const baseDef = Math.max(0, def.def + card.defMod);
+        card.auraAtkBonus = withAuras.atk - baseAtk;
+        card.auraDefBonus = withAuras.def - baseDef;
+        card.affectedByAura =
+          card.atkMod !== 0 || card.defMod !== 0 ||
+          card.auraAtkBonus !== 0 || card.auraDefBonus !== 0;
+      }
+    }
+  }
+
   handleNormalSummon(playerId: string, raw: unknown): void {
     const input = this.validator.validateNormalSummon(playerId, raw);
     this.summon.normalSummon(playerId, input.cardInstanceId, input.tributes ?? [], input.position);
@@ -128,7 +153,21 @@ export class GameEngine {
     const monster = player?.monsterZones.find((c) => c.instanceId === input.cardInstanceId);
     if (monster) {
       this.events.emit({ type: 'onSummon', ownerId: playerId, monster, method: 'normal' });
+      // Si el monster tiene un triggered/passive effect (onDeployHeal, beastSwarm, antiPlantDebuff,
+      // onDeployDestroySpellTrap, onDeathDirectDamage, onDeathPermanentDebuff), registrarlo ahora.
+      const def = this.cards.getById(monster.cardId);
+      if (def && def.effect) {
+        registerTriggersForCard(def, {
+          state: this.state,
+          source: monster,
+          ownerId: playerId,
+          registry: this.triggers,
+          auras: this.auras,
+          log: this.log,
+        });
+      }
     }
+    this.recomputeAuraSnapshots();
   }
 
   /**
@@ -213,6 +252,8 @@ export class GameEngine {
       defender,
       outcome,
     });
+    // Tras el combate puede haber muertes que cambian field state (auras requireFieldCondition).
+    this.recomputeAuraSnapshots();
 
     return {
       cancelled: false,
@@ -233,15 +274,32 @@ export class GameEngine {
     const input = this.validator.validateActivateEffect(playerId, raw);
     const player = this.state.players.get(playerId);
     if (!player) throw new InvalidActionError('TARGET_INVALID', 'unknown player');
+    const handIdx = player.hand.findIndex((c) => c.instanceId === input.cardInstanceId);
     const card =
-      player.hand.find((c) => c.instanceId === input.cardInstanceId) ??
+      (handIdx !== -1 ? player.hand[handIdx]! : null) ??
       player.monsterZones.find((c) => c.instanceId === input.cardInstanceId) ??
       player.spellTrapZones.find((c) => c.instanceId === input.cardInstanceId);
     if (!card) throw new InvalidActionError('CARD_NOT_IN_HAND', 'card not found');
+    const def = this.cards.getById(card.cardId);
+
+    // Si se activa desde la mano (Quick-Play / Field / Continuous / Equip / Normal Spell),
+    // moverla a una zona Spell/Trap libre face-up ANTES de resolver. Esto refleja la
+    // mecánica YGO: una Spell activada está físicamente en zona, visible.
+    if (handIdx !== -1 && def?.type === 'Spell') {
+      const freeIdx = player.spellTrapZones.findIndex((z) => !z.instanceId);
+      if (freeIdx === -1) {
+        throw new InvalidActionError('NO_FREE_SPELL_ZONE', 'No free Spell/Trap zone to place the card.');
+      }
+      player.hand.splice(handIdx, 1);
+      player.handSize = player.hand.length;
+      player.spellTrapZones[freeIdx] = card;
+    }
+
+    // Voltear la carta boca arriba (Spell/Trap activadas son visibles).
+    card.faceDown = false;
 
     // Si la carta es Spell, emitir onSpellActivated PRIMERO para que counter
     // traps (negateAndDestroy) tengan ventana de cancelar.
-    const def = this.cards.getById(card.cardId);
     if (def?.type === 'Spell') {
       const spellEvent = {
         type: 'onSpellActivated' as const,
@@ -267,9 +325,26 @@ export class GameEngine {
       });
     }
 
+    // Algunos effect kinds son TRIGGERED (persistent/event-based, no immediate).
+    // Lista: negateAttack, atkDebuff, negateAndDestroy, fieldTrigger, continuousAura,
+    // auraDef, trapImmune, lockPosition, duelLock, piercingDirect.
+    // BUG-FIX 2026-05-08 (Mirror Web): si el card ya tenía listeners registrados
+    // (fue SETteado previamente con handleSetCard), NO re-registrar — causaría doble
+    // ejecución del trigger. El listener registrado al SET ya tiene capturada la ref
+    // del CardSchema y, al pasar `card.faceDown = false`, dispara correctamente.
+    const alreadyHadTriggers = this.triggers.countFor(card.instanceId) > 0;
+    const triggerRegistered = alreadyHadTriggers
+      ? true
+      : registerTriggersForCard(def!, {
+          state: this.state,
+          source: card,
+          ownerId: playerId,
+          registry: this.triggers,
+          auras: this.auras,
+          log: this.log,
+        });
+
     this.effects.addToChain(playerId, card, input.targets ?? []);
-    // En Fase 0, resolvemos inmediatamente sin abrir ventana de respuesta.
-    // Fase 1: abrir ventana 15s para el rival vía Room timer.
     const results = this.effects.resolveChain();
     for (const r of results) {
       this.replay.log('EFFECT_RESOLVED', playerId, {
@@ -277,6 +352,40 @@ export class GameEngine {
         message: r.message,
       });
     }
+
+    // Si NINGUN sistema lo manejó (ni triggered ni immediate handler), avisar al cliente
+    // que el efecto no está implementado en lugar de fallar silencioso.
+    const allFailed = !triggerRegistered && results.every((r) => !r.success);
+    if (allFailed) {
+      this.log.warn(
+        { kind: def?.effect?.kind, cardId: card.cardId },
+        'effect activated but no handler matched (triggered nor immediate)',
+      );
+      throw new InvalidActionError(
+        'EFFECT_NOT_IMPLEMENTED',
+        `El efecto "${def?.effect?.kind ?? 'unknown'}" todavía no tiene handler implementado.`,
+      );
+    }
+
+    // Cleanup one-shot Spells/Traps: Normal / Quick-Play / Equip / Counter → graveyard tras resolver.
+    // Las Continuous y Field permanecen en zona (sus triggers/auras siguen activos).
+    //
+    // BUG-FIX 2026-05-08 (Mirror Web): si la carta dejó listeners registrados esperando
+    // un evento futuro (negateAttack escucha onAttackDeclare; atkDebuff idem; negateAndDestroy
+    // escucha onSpellActivated; etc.), DEBE quedar en zona — el handler del trigger se
+    // encarga de moverla al graveyard cuando dispare. Si la mandamos al cementerio acá,
+    // el listener nunca dispara y el efecto se pierde.
+    if (def?.type === 'Spell' || def?.type === 'Trap') {
+      const subtype = def.subtype;
+      const isPersistent = subtype === 'Continuous' || subtype === 'Field';
+      const stillWaitingOnTrigger = this.triggers.countFor(card.instanceId) > 0;
+      if (!isPersistent && !stillWaitingOnTrigger) {
+        moveCardToGraveyard(player, card);
+      }
+    }
+    // Spell activation puede registrar auras (Tide Surge), buffear monsters (Lunacian Blessing),
+    // o sacrificar monsters (Verdant Renewal). Todo cambia el field state.
+    this.recomputeAuraSnapshots();
   }
 
   /** Cambio manual ATK ↔ DEF de un monster propio en MAIN_1/MAIN_2. */
@@ -291,13 +400,25 @@ export class GameEngine {
       cardInstanceId: input.cardInstanceId,
       newPosition: monster.position,
     });
+    // auraDef requiere position=DEF — cambiar pos puede activar/desactivar el aura.
+    this.recomputeAuraSnapshots();
   }
 
   handleEndPhase(playerId: string): void {
     this.validator.validateEndPhase(playerId);
     const prevPhase = this.state.phase;
     const prevTurn = this.state.turnNumber;
+    const activePlayerBefore = this.state.activePlayerId;
     this.phases.advance();
+    // Emitir onPhaseChange para que listeners (poisonDoT) reaccionen.
+    // El activePlayerId del EVENT es el del JUGADOR que estaba en ese turno (al "salir" del prevPhase),
+    // no el nuevo. Esto importa para poisonDoT que dispara al final del turno DEL OPONENTE de Venom.
+    this.events.emit({
+      type: 'onPhaseChange',
+      fromPhase: prevPhase as Phase,
+      toPhase: this.state.phase as Phase,
+      activePlayerId: activePlayerBefore,
+    });
     if (this.state.turnNumber !== prevTurn) {
       this.replay.log('TURN_CHANGED', this.state.activePlayerId, {
         turnNumber: this.state.turnNumber,
@@ -308,6 +429,7 @@ export class GameEngine {
         to: this.state.phase,
       });
     }
+    this.recomputeAuraSnapshots();
   }
 
   /**
@@ -351,6 +473,8 @@ export class GameEngine {
     });
     this.replay.log('SET_CARD', playerId, { cardInstanceId });
     this.log.info({ player: playerId, card: card.cardId, instanceId: card.instanceId }, 'card set');
+    // Continuous traps tipo Webbed Roots o Chimera Roost (continuousAura) cambian el field state.
+    this.recomputeAuraSnapshots();
   }
 }
 

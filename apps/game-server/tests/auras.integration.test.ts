@@ -127,18 +127,40 @@ describe('AuraRegistry — continuousAura (Tide Surge)', () => {
   });
 });
 
-describe('AuraRegistry — auraDef (Verdant Sentinel)', () => {
+describe('AuraRegistry — auraDef (synthetic Verdant Sentinel)', () => {
   it('+200 DEF a otros Plants propios solo si Sentinel está en DEF', () => {
     const { state, engine } = freshEngine();
 
-    // 2 Plants propios. Sentinel (mon_plant_001) en DEF + otro Plant.
-    placeMonster(state, 'p1', 'sentinel', 'mon_plant_001', 'DEF'); // def base 1900
+    // 2 Plants propios. Sentinel (mon_plant_001 / Olek L4 base 1700) en DEF + otro Plant.
+    placeMonster(state, 'p1', 'sentinel', 'mon_plant_001', 'DEF');
     placeMonster(state, 'p1', 'other_plant', 'mon_plant_001', 'DEF');
 
-    // Registrar aura del Sentinel manualmente.
+    // Olek's catalog effect changed to onDeployHeal post-2026-05 lore expansion. We still
+    // want to validate the auraDef factory + aurasApplicableTo integration, so we construct
+    // a synthetic Verdant Sentinel def with the legacy auraDef effect.
     const sentinel = state.players.get('p1')!.monsterZones.find((c) => c.instanceId === 'sentinel')!;
-    const sentinelDef = engine.cards.getById('mon_plant_001')!;
-    registerTriggersForCard(sentinelDef, {
+    const syntheticSentinelDef = {
+      id: 'mon_test_sentinel',
+      name: 'Verdant Sentinel',
+      type: 'Monster' as const,
+      rarity: 'Common' as const,
+      attribute: 'Plant' as const,
+      monsterType: 'Plant' as const,
+      level: 3,
+      atk: 800,
+      def: 1900,
+      imageUrl: '',
+      description: '+200 DEF to other Plants while in DEF.',
+      isNFT: false,
+      parts: [],
+      effect: {
+        kind: 'auraDef',
+        spellSpeed: 1 as const,
+        description: 'While in DEF, your other Plant Axies gain +200 DEF.',
+        params: { defBonus: 200, scope: 'ownPlantsExceptSelf', requirePosition: 'DEF' },
+      },
+    };
+    registerTriggersForCard(syntheticSentinelDef, {
       state,
       source: sentinel,
       ownerId: 'p1',
@@ -147,21 +169,21 @@ describe('AuraRegistry — auraDef (Verdant Sentinel)', () => {
       log,
     });
 
-    // Other Plant: +200 DEF.
+    // Other Plant: +200 DEF over its base def (mon_plant_001 base = 1700, so 1900).
     const plantCard = engine.cards.getById('mon_plant_001')!;
     if (plantCard.type !== 'Monster') throw new Error('not monster');
     const other = state.players.get('p1')!.monsterZones.find((c) => c.instanceId === 'other_plant')!;
     const otherStats = engine.combat.effectiveStatsWithAuras(plantCard, other, 'p1');
-    expect(otherStats.def).toBe(2100); // 1900 + 200
+    expect(otherStats.def).toBe(plantCard.def + 200);
 
     // Sentinel mismo: excludeSelf=true, no aplica.
     const sentinelStats = engine.combat.effectiveStatsWithAuras(plantCard, sentinel, 'p1');
-    expect(sentinelStats.def).toBe(1900);
+    expect(sentinelStats.def).toBe(plantCard.def);
 
     // Si Sentinel cambia a ATK, el aura se desactiva.
     sentinel.position = 'ATK';
     const afterATK = engine.combat.effectiveStatsWithAuras(plantCard, other, 'p1');
-    expect(afterATK.def).toBe(1900); // ya sin bonus
+    expect(afterATK.def).toBe(plantCard.def);
   });
 });
 

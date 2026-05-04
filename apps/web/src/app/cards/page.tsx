@@ -3,6 +3,10 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { apiFetch } from '../../lib/auth';
+import { resolveCardImage, placeholderSvgFor } from '../../lib/cardArt';
+import { BrandedLoadingScreen } from '../../components/BrandedLoadingScreen';
+
+const displayType = (t: string) => t === 'Monster' ? 'AXIE' : t.toUpperCase();
 
 interface Card {
   id: string;
@@ -45,7 +49,7 @@ export default function CardsPage() {
     });
   }, [cards, typeFilter, rarityFilter]);
 
-  if (loading) return <main className="loading-screen">Cargando catálogo…</main>;
+  if (loading) return <BrandedLoadingScreen subtitle="Unrolling the card catalog…" />;
   if (error) return <main className="loading-screen">Error: {error}</main>;
 
   const types: TypeFilter[] = ['all', 'Monster', 'Spell', 'Trap'];
@@ -55,10 +59,10 @@ export default function CardsPage() {
     <main className="cards-page">
       <div className="cards-toolbar">
         <Link href="/dashboard" className="cards-back">
-          ← Volver al dashboard
+          ← Back to dashboard
         </Link>
         <div style={{ fontSize: '0.875rem', opacity: 0.7 }}>
-          {filtered.length} de {cards.length} cartas
+          {filtered.length} of {cards.length} cards
         </div>
       </div>
 
@@ -70,7 +74,7 @@ export default function CardsPage() {
               className={`filter-chip ${typeFilter === t ? 'active' : ''}`}
               onClick={() => setTypeFilter(t)}
             >
-              {t === 'all' ? 'Todos los tipos' : t}
+              {t === 'all' ? 'All types' : displayType(t)}
             </button>
           ))}
         </div>
@@ -81,7 +85,7 @@ export default function CardsPage() {
               className={`filter-chip ${rarityFilter === r ? 'active' : ''}`}
               onClick={() => setRarityFilter(r)}
             >
-              {r === 'all' ? 'Todas las rarezas' : r}
+              {r === 'all' ? 'All rarities' : r}
             </button>
           ))}
         </div>
@@ -91,11 +95,21 @@ export default function CardsPage() {
         {filtered.map((card) => (
           <article key={card.id} className="card-tile" onClick={() => setSelected(card)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={card.imageUrl} alt={card.name} className="card-tile-image" loading="lazy" />
+            <img
+              src={resolveCardImage(card, card.imageUrl)}
+              alt={card.name}
+              className="card-tile-image"
+              loading="lazy"
+              onError={(e) => {
+                const img = e.currentTarget;
+                const fallback = placeholderSvgFor(card);
+                if (img.src !== fallback) img.src = fallback;
+              }}
+            />
             <div className="card-tile-body">
               <div className="card-tile-name">{card.name}</div>
               <div className="card-tile-meta">
-                <span className={`card-tile-type ${card.type}`}>{card.type}</span>
+                <span className={`card-tile-type ${card.type}`}>{displayType(card.type)}</span>
                 <span className={`card-tile-rarity rarity-${card.rarity}`}>{card.rarity}</span>
               </div>
               {card.type === 'Monster' && card.atk !== null && card.def !== null ? (
@@ -126,15 +140,24 @@ function CardModal({ card, onClose }: { card: Card; onClose: () => void }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="Cerrar">
+        <button className="modal-close" onClick={onClose} aria-label="Close">
           ✕
         </button>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={card.imageUrl} alt={card.name} className="modal-image" />
+        <img
+          src={resolveCardImage(card, card.imageUrl)}
+          alt={card.name}
+          className="modal-image"
+          onError={(e) => {
+            const img = e.currentTarget;
+            const fallback = placeholderSvgFor(card);
+            if (img.src !== fallback) img.src = fallback;
+          }}
+        />
         <div className="modal-body">
           <h2 className="modal-title">{card.name}</h2>
           <div className="modal-meta-row">
-            <span className={`card-tile-type ${card.type}`}>{card.type}</span>
+            <span className={`card-tile-type ${card.type}`}>{displayType(card.type)}</span>
             {card.subType ? <span className="filter-chip">{card.subType}</span> : null}
             <span className={`card-tile-rarity rarity-${card.rarity}`}>{card.rarity}</span>
             {card.attribute ? <span className="filter-chip">{card.attribute}</span> : null}
@@ -148,8 +171,8 @@ function CardModal({ card, onClose }: { card: Card; onClose: () => void }) {
               <div>
                 <strong style={{ color: '#6ec8ff' }}>DEF</strong>: {card.def}
               </div>
-              <div>Nivel: ⭐ {card.level}</div>
-              <div>Tributos: {(card.level ?? 0) <= 4 ? 0 : (card.level ?? 0) <= 6 ? 1 : 2}</div>
+              <div>Level: ⭐ {card.level}</div>
+              <div>Burns: {(card.level ?? 0) <= 4 ? 0 : (card.level ?? 0) <= 6 ? 1 : 2}</div>
             </div>
           ) : null}
 
@@ -157,7 +180,7 @@ function CardModal({ card, onClose }: { card: Card; onClose: () => void }) {
 
           {card.effectJson ? (
             <div className="modal-effect">
-              <strong>Efecto: {card.effectJson.kind}</strong>
+              <strong>Effect: {card.effectJson.kind}</strong>
               {card.effectJson.description ?? card.description}
               {card.effectJson.spellSpeed ? (
                 <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', opacity: 0.7 }}>

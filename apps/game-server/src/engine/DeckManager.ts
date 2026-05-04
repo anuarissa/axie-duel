@@ -7,6 +7,7 @@ import { ArraySchema } from '@colyseus/schema';
 import { CardSchema } from '../rooms/schema/CardSchema.js';
 import type { PlayerSchema } from '../rooms/schema/PlayerSchema.js';
 import { SeededRng } from './rng.js';
+import type { CardDatabase } from '../cards/CardDatabase.js';
 
 export class DeckManager {
   constructor(private rng: SeededRng) {}
@@ -29,6 +30,57 @@ export class DeckManager {
       drawn++;
     }
     player.handSize = player.hand.length;
+    return drawn;
+  }
+
+  /**
+   * Garantía anti-bricking: la mano inicial DEBE tener al menos 1 monster
+   * level 1-4 (jugable sin tribute) para que el jugador pueda actuar el primer turno.
+   *
+   * Algoritmo:
+   *  1. Roba `n` cartas normales.
+   *  2. Si la mano resultante NO tiene ningún monster L≤4, busca el primer
+   *     monster L≤4 en el TOP del deck restante y lo intercambia con la última
+   *     carta de la mano.
+   *  3. Si el deck no tiene NINGÚN monster L≤4 (deck patológico), no hay nada
+   *     que hacer — la mano queda como salió.
+   *
+   * Mantiene el shuffle determinista intacto en el resto del deck.
+   */
+  drawStartingHand(player: PlayerSchema, n: number, cards: CardDatabase): number {
+    const drawn = this.draw(player, n);
+    if (drawn === 0) return 0;
+    const hasPlayableMonster = player.hand.some((c) => {
+      const def = cards.getById(c.cardId);
+      if (!def || def.type !== 'Monster') return false;
+      return (def.level ?? 0) <= 4;
+    });
+    if (hasPlayableMonster) return drawn;
+
+    // Buscar el primer monster L≤4 en el deck restante.
+    const swapIdx = player.deck.findIndex((c) => {
+      const def = cards.getById(c.cardId);
+      if (!def || def.type !== 'Monster') return false;
+      return (def.level ?? 0) <= 4;
+    });
+    if (swapIdx === -1) return drawn; // deck no tiene low-level monsters, nada que hacer
+
+    // Intercambio: la última carta de la mano se reinserta DETRÁS de la swap card,
+    // y la swap card pasa al final de la mano.
+    const lastHandIdx = player.hand.length - 1;
+    const handCard = player.hand[lastHandIdx]!;
+    const swapCard = player.deck[swapIdx]!;
+    player.deck.splice(swapIdx, 1);
+    player.hand[lastHandIdx] = swapCard;
+    // Re-insertamos la handCard cerca del fondo del deck (~75% pos) para que no se robe muy pronto.
+    // IMPORTANTE: Colyseus 0.16 ArraySchema NO soporta splice con insertCount > deleteCount
+    // (error "ArraySchema#splice(): insertCount must be equal or lower than deleteCount").
+    // Usamos clear + repush — patrón ya probado en shuffleDeck.
+    const insertPos = Math.min(player.deck.length, Math.floor(player.deck.length * 0.75));
+    const deckArr = [...player.deck];
+    deckArr.splice(insertPos, 0, handCard);
+    player.deck.clear();
+    for (const c of deckArr) player.deck.push(c);
     return drawn;
   }
 

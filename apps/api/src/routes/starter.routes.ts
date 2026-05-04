@@ -15,6 +15,34 @@ router.get('/archetypes', (_req: Request, res: Response) => {
   res.json({ archetypes: starterDeckService.listArchetypes() });
 });
 
+/** Previews de los 3 archetypes en una sola call (1 query a DB + cache 10min).
+ * Optimización para /store: antes el cliente hacía 3 calls separadas + status; ahora 1 call.
+ * Público — no necesita auth. */
+router.get('/previews', async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const previews = await starterDeckService.previewAllArchetypes();
+    res.json({ previews });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** Preview detallado de un archetype: composition enriquecida con datos de cada Card.
+ * Usado por /store y dashboard showcase para mostrar "qué incluye" cada starter sin
+ * comprometer al user. Público (no necesita auth). */
+router.get('/preview/:archetype', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const archetype = req.params.archetype;
+    if (archetype !== 'plant' && archetype !== 'bird' && archetype !== 'beast') {
+      throw new ValidationError('Invalid archetype. Must be plant, bird, or beast.');
+    }
+    const preview = await starterDeckService.previewArchetype(archetype as StarterArchetype);
+    res.json(preview);
+  } catch (err) {
+    next(err);
+  }
+});
+
 /** Estado del usuario: ya pickeó un starter? cuál? id del deck creado? */
 router.get('/status', authRequired, async (req: Request, res: Response, next: NextFunction) => {
   try {

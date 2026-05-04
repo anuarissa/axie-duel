@@ -19,3 +19,5 @@ export function getCardById(id: string): Card | undefined {
 }
 
 export * from './axie-parts-mapping.js';
+export * from './axie-parts-dictionary.js';
+export * from './spells-traps-dictionary.js';

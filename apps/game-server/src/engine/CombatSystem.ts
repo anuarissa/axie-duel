@@ -3,13 +3,23 @@
  * Wrapper sobre `resolveCombat` de @axie-duel/game-rules que muta `DuelStateSchema`.
  */
 
-import { resolveCombat, effectiveStats } from '@axie-duel/game-rules';
+import { resolveCombat, effectiveStats, type AxieClass, type ClassMatchup } from '@axie-duel/game-rules';
 import type { MonsterCard } from '@axie-duel/shared-types';
 import type { DuelStateSchema } from '../rooms/schema/DuelStateSchema.js';
 import type { CardSchema } from '../rooms/schema/CardSchema.js';
 import type { CardDatabase } from '../cards/CardDatabase.js';
 import { aurasApplicableTo, type AuraRegistry } from './AuraRegistry.js';
+import type { EventBus } from './EventBus.js';
 import type { Logger } from 'pino';
+
+const AXIE_CLASSES = new Set<AxieClass>([
+  'Beast', 'Aqua', 'Plant', 'Bird', 'Reptile', 'Bug', 'Mech', 'Dawn', 'Dusk',
+]);
+
+function asAxieClass(s: string | undefined): AxieClass | undefined {
+  if (s && AXIE_CLASSES.has(s as AxieClass)) return s as AxieClass;
+  return undefined;
+}
 
 export interface CombatOutcome {
   attackerDestroyed: boolean;
@@ -17,8 +27,10 @@ export interface CombatOutcome {
   damageToAttackerOwner: number;
   damageToDefenderOwner: number;
   direct: boolean;
-  /** % bonus aplicado al ATK por ventaja de clase (0 = sin ventaja, 15 = +15%). */
+  /** Signed % aplicado: +15 (advantage), -15 (disadvantage), 0 (neutral). */
   advantageBonus: number;
+  /** Matchup label for client VFX color. */
+  matchup: ClassMatchup;
   /** ATK efectivo finalmente usado en el cálculo (post-multiplier). */
   effectiveAtk: number;
   /** Clases involucradas (para mostrar en el toast del cliente). */
@@ -32,6 +44,7 @@ export class CombatSystem {
     private cards: CardDatabase,
     private log: Logger,
     private auras?: AuraRegistry,
+    private events?: EventBus,
   ) {}
 
   /**
@@ -45,7 +58,19 @@ export class CombatSystem {
   ): { atk: number; def: number } {
     const base = effectiveStats(cardDef, { atkMod: instance.atkMod, defMod: instance.defMod } as never);
     if (!this.auras) return base;
-    const auraBonus = aurasApplicableTo(this.auras, this.state, instance, ownerId, cardDef.attribute);
+    const getCardAttribute = (cardId: string): string | undefined => {
+      const c = this.cards.getById(cardId);
+      return c && c.type === 'Monster' ? c.attribute : undefined;
+    };
+    const auraBonus = aurasApplicableTo(
+      this.auras,
+      this.state,
+      instance,
+      ownerId,
+      cardDef.attribute,
+      instance.cardId,
+      getCardAttribute,
+    );
     return {
       atk: Math.max(0, base.atk + auraBonus.atkBonus),
       def: Math.max(0, base.def + auraBonus.defBonus),
@@ -81,6 +106,8 @@ export class CombatSystem {
     const dStats =
       defender && defenderDef ? this.effectiveStatsWithAuras(defenderDef, defender, defenderOwnerId) : null;
 
+    const aClass = asAxieClass(attackerDef.attribute);
+    const dClass = asAxieClass(defenderDef?.attribute);
     const result = resolveCombat(
       { instanceId: attacker.instanceId, position: attacker.position } as never,
       aStats,
@@ -89,8 +116,8 @@ export class CombatSystem {
       dStats,
       defenderOwnerId,
       {
-        ...(attackerDef.attribute ? { attackerClass: attackerDef.attribute as 'Beast' | 'Aqua' | 'Plant' | 'Bird' | 'Reptile' } : {}),
-        ...(defenderDef?.attribute ? { defenderClass: defenderDef.attribute as 'Beast' | 'Aqua' | 'Plant' | 'Bird' | 'Reptile' } : {}),
+        ...(aClass ? { attackerClass: aClass } : {}),
+        ...(dClass ? { defenderClass: dClass } : {}),
       },
     );
 
@@ -102,6 +129,21 @@ export class CombatSystem {
         const idx = owner.monsterZones.findIndex((c) => c.instanceId === instanceId);
         if (idx !== -1) {
           const card = owner.monsterZones[idx]!;
+          // Emit onDeath BEFORE moving to graveyard so listeners (Backdoor Bird onDeathDirectDamage,
+          // Terminator Reptile onDeathPermanentDebuff) can read deceased state and reference killer.
+          if (this.events) {
+            const isAttackerSide = ownerId === attackerOwnerId;
+            const killer = isAttackerSide ? (defender ?? undefined) : attacker;
+            const killerOwnerId = isAttackerSide ? defenderOwnerId : attackerOwnerId;
+            this.events.emit({
+              type: 'onDeath',
+              deceased: card,
+              deceasedOwnerId: ownerId,
+              ...(killer ? { killer } : {}),
+              killerOwnerId,
+              cause: 'battle',
+            });
+          }
           owner.graveyard.push(card);
           // Reemplazar slot con carta vacía (placeholder de zona libre).
           const empty = new (card.constructor as { new (): typeof card })();
@@ -117,6 +159,17 @@ export class CombatSystem {
     for (const [pid, dmg] of Object.entries(result.damage)) {
       const target = this.state.players.get(pid);
       if (target) target.lifePoints = Math.max(0, target.lifePoints - dmg);
+    }
+
+    // Defensive: monsters sobrevivientes en posición DEF_FACEDOWN mantienen faceDown=true.
+    // Override del YGO clásico (donde face-down attacked → flip-up). En este juego, el Set
+    // permanece face-down aunque sobreviva — info oculta del oponente. No-op si ya correcto,
+    // pero documenta la regla y previene regresiones inadvertidas.
+    if (defender && !result.destroyed.includes(defender.instanceId) && defender.position === 'DEF_FACEDOWN') {
+      defender.faceDown = true;
+    }
+    if (attacker && !result.destroyed.includes(attacker.instanceId) && attacker.position === 'DEF_FACEDOWN') {
+      attacker.faceDown = true;
     }
 
     attacker.hasAttacked = true;
@@ -136,6 +189,7 @@ export class CombatSystem {
       damageToDefenderOwner: result.damage[defenderOwnerId] ?? 0,
       direct: result.direct,
       advantageBonus: result.advantageBonus,
+      matchup: result.matchup,
       effectiveAtk: result.effectiveAtk,
       ...(attackerDef.attribute ? { attackerClass: attackerDef.attribute } : {}),
       ...(defenderDef?.attribute ? { defenderClass: defenderDef.attribute } : {}),

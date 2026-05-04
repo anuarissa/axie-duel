@@ -10,6 +10,20 @@ export function getJwt(): string | null {
   return localStorage.getItem(JWT_KEY);
 }
 
+/** Decode JWT payload sin verificar firma. Para sacar userId del lado cliente. */
+export function getJwtUserId(): string | null {
+  const tok = getJwt();
+  if (!tok) return null;
+  try {
+    const payload = tok.split('.')[1];
+    if (!payload) return null;
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/'))) as { userId?: string };
+    return decoded.userId ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function setJwt(token: string): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(JWT_KEY, token);

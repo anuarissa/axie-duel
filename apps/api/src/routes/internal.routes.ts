@@ -19,6 +19,7 @@ import { questService, type QuestKind } from '../services/QuestService.js';
 import { notificationService } from '../services/NotificationService.js';
 import { cardDropService } from '../services/CardDropService.js';
 import { lunacianCoinsService } from '../services/LunacianCoinsService.js';
+import { levelService } from '../services/LevelService.js';
 import { calculateElo, type EloOutcome } from '@axie-duel/game-rules';
 
 const router = Router();
@@ -51,7 +52,25 @@ const RecordMatchBody = z.object({
   replayLog: z.array(z.unknown()).optional(),
   /** Razón de fin: LIFE_POINTS_ZERO | DECK_OUT | SURRENDER | DISCONNECT_TIMEOUT */
   reason: z.string().optional(),
+  /** Solo PvE: dificultad del bot, define multiplier de rewards. */
+  botDifficulty: z.enum(['Easy', 'Normal', 'Hard']).optional(),
 });
+
+/**
+ * Reward tables por difficulty del bot PvE.
+ * Easy=Novato, Normal=Avanzado, Hard=Experto.
+ * PvP usa los defaults (sin multiplier por ahora).
+ */
+const PVE_LC_REWARDS: Record<'Easy' | 'Normal' | 'Hard', { WIN: number; LOSS: number; DRAW: number }> = {
+  Easy:   { WIN: 10,  LOSS: 2,  DRAW: 5   },
+  Normal: { WIN: 50,  LOSS: 10, DRAW: 25  },
+  Hard:   { WIN: 200, LOSS: 20, DRAW: 100 },
+};
+const PVE_XP_REWARDS: Record<'Easy' | 'Normal' | 'Hard', { WIN: number; LOSS: number; DRAW: number }> = {
+  Easy:   { WIN: 50,  LOSS: 5,  DRAW: 20  },
+  Normal: { WIN: 150, LOSS: 15, DRAW: 60  },
+  Hard:   { WIN: 500, LOSS: 30, DRAW: 200 },
+};
 
 router.post('/matches', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -140,25 +159,79 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
         .catch((err) => logger.warn({ err, userId: pid }, 'notification create failed'));
     }
 
-    // Hook Lunacian Coins: cada jugador real recibe LC según outcome.
-    // WIN=50, DRAW=20, LOSS=10. No-fatal si falla (match ya persistido).
-    for (const pid of realPlayerIds) {
-      const outcome = !body.winnerId ? 'DRAW' : body.winnerId === pid ? 'WIN' : 'LOSS';
-      const reward = outcome === 'WIN' ? 50 : outcome === 'DRAW' ? 20 : 10;
-      lunacianCoinsService
-        .earn(pid, reward, 'EARN_MATCH', `match:${match.id}`)
-        .then((ledger) => {
-          notificationService
-            .create(pid, 'COINS_EARNED', `+${reward} Lunacian Coins por tu partida.`, {
-              matchId: match.id,
-              amount: reward,
-              outcome,
-              newBalance: ledger.newBalance,
-            })
-            .catch((err) => logger.warn({ err, userId: pid }, 'COINS_EARNED notification failed'));
-        })
-        .catch((err) => logger.warn({ err, userId: pid }, 'lunacian earn failed'));
-    }
+    // Hook Lunacian Coins + XP: AWAITED para devolver los rewards en la response.
+    // El cliente recibe los datos sin polling (ApiClient → PvERoom → broadcast MATCH_REWARDS).
+    // Notifications de rewards se mandan fire-and-forget (no afectan la UX del game-over).
+    const rewardKey: 'Easy' | 'Normal' | 'Hard' = body.botDifficulty ?? 'Normal';
+    const lcRewardTable = PVE_LC_REWARDS[rewardKey];
+    const xpRewardTable = PVE_XP_REWARDS[rewardKey];
+    const rewardsByUserId: Record<string, {
+      outcome: 'WIN' | 'LOSS' | 'DRAW';
+      dustEarned: number;
+      dustNewBalance: string;
+      xpEarned: number;
+      xpNewTotal: number;
+      oldLevel: number;
+      newLevel: number;
+      leveledUp: boolean;
+    }> = {};
+
+    await Promise.all(realPlayerIds.map(async (pid) => {
+      const outcome: 'WIN' | 'LOSS' | 'DRAW' = !body.winnerId
+        ? 'DRAW'
+        : body.winnerId === pid
+          ? 'WIN'
+          : 'LOSS';
+      const dustReward = lcRewardTable[outcome];
+      const xpAmount = body.mode === 'PvE' ? xpRewardTable[outcome] : undefined;
+
+      const [lcRes, xpRes] = await Promise.all([
+        lunacianCoinsService.earn(pid, dustReward, 'EARN_MATCH', `match:${match.id}`)
+          .catch((err) => {
+            logger.warn({ err, userId: pid }, 'lunacian earn failed');
+            return null;
+          }),
+        levelService.grantMatchXp(pid, outcome, xpAmount)
+          .catch((err) => {
+            logger.warn({ err, userId: pid }, 'grantMatchXp failed');
+            return null;
+          }),
+      ]);
+
+      // Construir el reward summary aunque alguno haya fallado (degraded gracefully).
+      rewardsByUserId[pid] = {
+        outcome,
+        dustEarned: lcRes ? dustReward : 0,
+        dustNewBalance: lcRes?.newBalance ?? '0',
+        xpEarned: xpRes?.delta ?? 0,
+        xpNewTotal: xpRes?.newXp ?? 0,
+        oldLevel: xpRes?.oldLevel ?? 1,
+        newLevel: xpRes?.newLevel ?? 1,
+        leveledUp: xpRes?.leveledUp ?? false,
+      };
+
+      // Notifications fire-and-forget (no bloquean response).
+      if (lcRes) {
+        notificationService
+          .create(pid, 'COINS_EARNED', `+${dustReward} Lunacian Coins por tu partida.`, {
+            matchId: match.id,
+            amount: dustReward,
+            outcome,
+            newBalance: lcRes.newBalance,
+          })
+          .catch((err) => logger.warn({ err, userId: pid }, 'COINS_EARNED notification failed'));
+      }
+      if (xpRes?.leveledUp) {
+        notificationService
+          .create(pid, 'LEVEL_UP', `¡Subiste a Level ${xpRes.newLevel}! 🎉`, {
+            oldLevel: xpRes.oldLevel,
+            newLevel: xpRes.newLevel,
+            totalXp: xpRes.newXp,
+            matchId: match.id,
+          })
+          .catch((err) => logger.warn({ err, userId: pid }, 'LEVEL_UP notification failed'));
+      }
+    }));
 
     // Hook card drops: SOLO al winner si no es BOT (PvE bot no obtiene cartas).
     // Determinístico via matchId — el mismo match siempre da el mismo drop.
@@ -222,7 +295,7 @@ router.post('/matches', async (req: Request, res: Response, next: NextFunction) 
       }
     }
 
-    res.status(201).json({ matchId: match.id, eloDeltas });
+    res.status(201).json({ matchId: match.id, eloDeltas, rewardsByUserId });
   } catch (err) {
     next(err);
   }

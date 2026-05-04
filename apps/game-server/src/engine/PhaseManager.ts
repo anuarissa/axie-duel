@@ -30,13 +30,19 @@ export class PhaseManager {
     this.onLeavePhase(current);
 
     let next = nextPhase(current);
-    if (next === Phase.DRAW) {
+    const isTurnChange = next === Phase.DRAW;
+    if (isTurnChange) {
       // Cambio de turno completo.
       this.swapTurn();
     }
 
     this.state.phase = next;
-    this.state.turnDeadlineMs = Date.now() + TURN_DURATION_MS;
+    // El timer de 60s aplica al TURNO completo (todas las fases). NO resetear
+    // en cada phase advance — solo en cambio de turno. Esto evita que el jugador
+    // extienda su turno indefinidamente avanzando fases manualmente.
+    if (isTurnChange) {
+      this.state.turnDeadlineMs = Date.now() + TURN_DURATION_MS;
+    }
     this.onEnterPhase(next);
     this.log.info({ phase: next, turn: this.state.turnNumber }, 'phase advanced');
     return next;

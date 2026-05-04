@@ -25,6 +25,7 @@ export type NotificationKind =
   | 'WALLET_LINKED'
   | 'NFT_MINTED'
   | 'STARTER_CLAIMED'
+  | 'LEVEL_UP'
   | 'SYSTEM';
 
 export interface ListOptions {

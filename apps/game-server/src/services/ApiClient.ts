@@ -18,12 +18,32 @@ export interface PersistMatchInput {
   duration: number;
   turnsPlayed: number;
   reason?: string;
+  /** Solo PvE — para que api aplique reward multiplier por difficulty. */
+  botDifficulty?: 'Easy' | 'Normal' | 'Hard';
   /** Log determinista de eventos (de ReplayLogger.serialize()). */
   replayLog?: ReadonlyArray<unknown>;
 }
 
+export interface MatchRewardSummary {
+  outcome: 'WIN' | 'LOSS' | 'DRAW';
+  dustEarned: number;
+  dustNewBalance: string;
+  xpEarned: number;
+  xpNewTotal: number;
+  oldLevel: number;
+  newLevel: number;
+  leveledUp: boolean;
+}
+
+export interface PersistMatchResult {
+  matchId: string;
+  eloDeltas?: { player1: number; player2: number } | null;
+  /** Map de userId → reward summary. Vacío para BOT players. */
+  rewardsByUserId?: Record<string, MatchRewardSummary>;
+}
+
 export class ApiClient {
-  async persistMatch(input: PersistMatchInput): Promise<{ matchId: string } | null> {
+  async persistMatch(input: PersistMatchInput): Promise<PersistMatchResult | null> {
     const url = `${config.API_BASE_URL}/internal/matches`;
     try {
       const res = await fetch(url, {
@@ -39,7 +59,7 @@ export class ApiClient {
         logger.warn({ status: res.status, body: text }, 'persistMatch failed (non-2xx)');
         return null;
       }
-      const data = (await res.json()) as { matchId: string };
+      const data = (await res.json()) as PersistMatchResult;
       return data;
     } catch (err) {
       logger.warn({ err }, 'persistMatch failed (network error)');

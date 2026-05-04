@@ -62,13 +62,25 @@ export interface OnSpellActivatedEvent {
   cancelled: boolean;
 }
 
+export interface OnDeathEvent {
+  type: 'onDeath';
+  deceased: CardSchema;
+  deceasedOwnerId: string;
+  /** El monster que mató al deceased (si fue por combat). */
+  killer?: CardSchema;
+  killerOwnerId?: string;
+  /** 'battle' = murió en combate. 'effect' = murió por un efecto de carta. */
+  cause: 'battle' | 'effect';
+}
+
 export type EngineEvent =
   | OnSummonEvent
   | OnAttackDeclareEvent
   | OnBattleResolveEvent
   | OnTurnStartEvent
   | OnPhaseChangeEvent
-  | OnSpellActivatedEvent;
+  | OnSpellActivatedEvent
+  | OnDeathEvent;
 
 export type EngineEventType = EngineEvent['type'];
 

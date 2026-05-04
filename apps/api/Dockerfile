@@ -21,10 +21,11 @@ COPY packages/eslint-config/package.json packages/eslint-config/
 
 RUN pnpm install --no-frozen-lockfile
 
-# Copiar el resto del repo y buildear solo @axie-duel/api con turbo.
+# Copiar el resto del repo. CRÍTICO: prisma generate ANTES de tsc (turbo build),
+# si no, los tipos de @prisma/client no existen y el build falla con TS2305/TS2694.
 COPY . .
+RUN cd apps/api && pnpm exec prisma generate
 RUN pnpm turbo run build --filter=@axie-duel/api
-RUN cd apps/api && pnpm prisma generate
 
 # ── Runtime stage ─────────────────────────────────────────────────────
 FROM node:20-alpine

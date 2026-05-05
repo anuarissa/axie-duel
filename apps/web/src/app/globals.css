@@ -9690,6 +9690,24 @@ pre {
 /* Sidebars mobile (sólo visibles en landscape mobile vía grid). En desktop hidden. */
 .tcg-sidebar { display: none; }
 
+/* ── FORCE LANDSCAPE en /play/pve — si el device es portrait y mobile,
+ * rotamos toda la página 90° para que se vea horizontal aunque el user no rote.
+ * Truco "fake landscape" sin modal. width/height se intercambian. */
+@media (orientation: portrait) and (max-width: 900px) {
+  body:has(.tcg-page) {
+    overflow: hidden;
+  }
+  .tcg-page {
+    transform: rotate(90deg) translateY(-100vw);
+    transform-origin: top left;
+    width: 100vh !important;
+    height: 100vw !important;
+    position: absolute !important;
+    top: 0;
+    left: 0;
+  }
+}
+
 /* ── MOBILE V4: 3-column grid layout (sidebar | field | sidebar | hand) ── */
 @media (max-width: 900px), (max-height: 500px) {
   /* Page grid: toolbar arriba / [leftbar | board | rightbar] / hand abajo. */
@@ -9822,11 +9840,11 @@ pre {
     padding: 0.3rem 0.4rem !important;
   }
   .tcg-zone-row {
-    grid-template-columns: repeat(5, minmax(0, clamp(34px, 7vw, 56px))) !important;
-    gap: clamp(0.15rem, 0.6vw, 0.35rem) !important;
+    grid-template-columns: repeat(5, minmax(0, clamp(26px, 5.5vw, 44px))) !important;
+    gap: clamp(0.1rem, 0.5vw, 0.28rem) !important;
   }
   .tcg-zones {
-    gap: clamp(0.15rem, 0.6vw, 0.35rem) !important;
+    gap: clamp(0.1rem, 0.4vw, 0.26rem) !important;
   }
   .tcg-slot {
     aspect-ratio: 0.72 !important;
@@ -10014,7 +10032,41 @@ pre {
   }
   .tcg-instruction { display: none !important; }
   .tcg-phase-banner { display: none !important; }
+
+  /* Hide TODOS los pop-ups/toasts en mobile — el user pidió pantalla limpia.
+   * El log panel sigue accesible pero colapsado por default. */
+  .tcg-toast-stack { display: none !important; }
+  .tcg-tooltip { display: none !important; }
+  .tcg-log-panel { display: none !important; }
+
+  /* Lupa siempre visible en hand cards mobile. Tap → preview gigante.
+   * El tap en el resto de la card abre el context menu (no preview). */
+  .tcg-hand-card .tcg-hand-lupa {
+    display: flex !important;
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(245, 243, 255, 0.5);
+    color: #fff;
+    font-size: 0.55rem;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 4;
+    pointer-events: auto;
+  }
+  .tcg-hand-card .tcg-hand-lupa:active {
+    background: rgba(20, 195, 244, 0.85);
+    transform: scale(0.92);
+  }
 }
+
+/* Lupa en hand-card: hidden por default (desktop usa hover preview). */
+.tcg-hand-card .tcg-hand-lupa { display: none; }
 
 /* Pulse arrow del rotate hint. */
 .rotate-hint-pulse-arrow {

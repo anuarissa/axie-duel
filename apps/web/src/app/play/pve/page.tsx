@@ -1268,8 +1268,7 @@ function PvePage() {
                             catalog={catalog}
                             faceMini
                             onHoverChange={setHoveredCard}
-                            onShowPreview={!c.faceDown ? () => showCardPreview(c, 350) : undefined}
-                            onHidePreview={!c.faceDown ? () => hideCardPreview() : undefined}
+                            /* Mobile: preview via lupa 🔍, NO touch-and-hold para evitar auto-preview molesto. */
                           />
                           {!c.faceDown ? (
                             <button
@@ -1360,8 +1359,6 @@ function PvePage() {
                             faceMini
                             onHoverChange={setHoveredCard}
                             ownedByMe
-                            onShowPreview={() => showCardPreview(c, 350)}
-                            onHidePreview={() => hideCardPreview()}
                           />
                           <button
                             type="button"
@@ -1399,8 +1396,6 @@ function PvePage() {
                           faceMini
                           onHoverChange={setHoveredCard}
                           ownedByMe
-                          onShowPreview={() => showCardPreview(c, 350)}
-                          onHidePreview={() => hideCardPreview()}
                         />
                         <button
                           type="button"
@@ -1463,6 +1458,14 @@ function PvePage() {
                     }
                   }}
                 >
+                  {/* Lupa siempre visible en mobile — tap para preview gigante.
+                   * Detiene propagación para no abrir el context menu del card. */}
+                  <button
+                    type="button"
+                    className="tcg-hand-lupa"
+                    onClick={(e) => { e.stopPropagation(); showCardPreview(c, 0); }}
+                    aria-label="View card details"
+                  >🔍</button>
                   <div className="tcg-card-type-tag">{def ? displayType(def.type)[0] : '?'}</div>
                   <div className="tcg-card-name">{def?.name ?? c.cardId.slice(0, 8)}</div>
                   {isMonster && def?.level ? (

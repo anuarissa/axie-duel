@@ -3751,17 +3751,79 @@ pre {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
-@media (max-width: 640px) {
+/* Mobile landscape (≤900px or low-height phones): comprehensive compact layout.
+ * Cubre iPhone landscape (~660-844px wide) + Android landscape, donde 640px width
+ * media query NO catchea pero el espacio sigue siendo limitado. */
+@media (max-width: 900px), (max-height: 500px) {
+  /* Toolbar: hide verbose labels, shrink fonts, horizontal scroll if needed. */
+  .tcg-toolbar {
+    padding: 0 0.5rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tcg-toolbar::-webkit-scrollbar { display: none; }
+  .tcg-status {
+    gap: 0.6rem;
+    font-size: 0.62rem;
+    flex-shrink: 0;
+  }
+  /* Hide verbose labels — keep only the values. "Mode PVE" + "Deck XYZ" eat space. */
+  .tcg-status > span:nth-child(1),
+  .tcg-status > span:nth-child(2) {
+    display: none;
+  }
+  .tcg-status strong { font-size: 0.62rem; }
+  .tcg-pill { padding: 0.18rem 0.55rem; font-size: 0.6rem; }
+  .tcg-back { font-size: 0.7rem; }
+  .tcg-toolbar a, .tcg-toolbar button { font-size: 0.7rem; }
+
+  /* Battle log: default collapsed → only header strip visible (40px) — el user lo abre tap. */
+  .tcg-log-panel {
+    width: clamp(220px, 60vw, 300px) !important;
+    max-height: 50vh !important;
+    font-size: 0.7rem;
+    transform: translateX(calc(100% - 36px));
+    top: 56px;
+    right: 0.4rem;
+  }
+  .tcg-log-panel.expanded {
+    transform: translateX(0);
+  }
+
+  /* Footer: stack vertical en landscape mobile también — no más actions a la derecha. */
   .tcg-footer {
     grid-template-columns: 1fr;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    padding: 0.4rem 0.5rem 0.6rem;
   }
-  .tcg-actions { min-width: 0 !important; flex-direction: row !important; flex-wrap: wrap; justify-content: center; }
-  .tcg-actions button { flex: 1 1 calc(50% - 0.4rem); min-height: 44px; }
-  /* Log panel en mobile: oculto colapsado por default + más chico */
-  .tcg-log-panel { width: 220px; max-height: 35vh; font-size: 0.65rem; }
-  /* Tooltip en mobile: full width arriba */
+  .tcg-actions {
+    min-width: 0 !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+  .tcg-actions button {
+    flex: 1 1 calc(50% - 0.4rem);
+    min-height: 44px;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.78rem;
+  }
+
+  /* Tooltip: full-width arriba para no tapar el centro. */
   .tcg-tooltip { width: calc(100% - 1rem); left: 0.5rem; top: 56px; }
+
+  /* HUD chips más compactos para que la zona de cartas tenga más espacio. */
+  .tcg-hud-life { font-size: 1.4rem; }
+  .tcg-hud-name-text { font-size: 0.72rem; }
+}
+
+/* Ultra-compact (very small / <640px) keeps existing tightening on top of the above. */
+@media (max-width: 640px) {
+  .tcg-status { gap: 0.45rem; }
+  .tcg-toolbar { padding: 0 0.35rem; }
 }
 .tcg-hand {
   display: flex;
@@ -4758,8 +4820,8 @@ pre {
   to   { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 
-/* Mobile: preview ocupa casi toda la pantalla — más espacio para leer descripción + efecto. */
-@media (max-width: 640px) {
+/* Mobile portrait: preview ocupa casi toda la pantalla — más espacio para leer descripción. */
+@media (max-width: 640px) and (orientation: portrait) {
   .tcg-preview-card {
     width: 95vw !important;
     max-width: 95vw !important;
@@ -4771,6 +4833,56 @@ pre {
   .tcg-preview-overlay {
     padding: max(1vh, var(--safe-top)) max(0.5rem, var(--safe-left)) max(1vh, var(--safe-bottom)) max(0.5rem, var(--safe-right));
   }
+}
+
+/* Mobile landscape: card en formato horizontal (art izquierda + info derecha)
+ * para que TODO entre sin scroll en alturas chicas (~360-400px). */
+@media (max-height: 500px) and (orientation: landscape) {
+  .tcg-preview-card {
+    flex-direction: row !important;
+    width: 92vw !important;
+    max-width: 92vw !important;
+    height: 90vh !important;
+    min-height: 0 !important;
+    max-height: 90vh !important;
+    overflow: hidden !important;
+    border-radius: 1rem !important;
+    border-width: 3px !important;
+  }
+  .tcg-preview-art {
+    flex: 0 0 38% !important;
+    height: 100% !important;
+    max-height: none !important;
+    border-radius: 1rem 0 0 1rem;
+  }
+  .tcg-preview-art-img {
+    height: 100% !important;
+    object-fit: cover;
+  }
+  .tcg-preview-info {
+    flex: 1 1 auto !important;
+    height: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.7rem 0.9rem 0.9rem;
+    gap: 0.35rem;
+  }
+  .tcg-preview-overlay {
+    padding: max(0.5vh, var(--safe-top)) max(0.5rem, var(--safe-right)) max(0.5vh, var(--safe-bottom)) max(0.5rem, var(--safe-left));
+  }
+  .tcg-preview-header {
+    position: relative;
+    top: auto; left: auto; right: auto;
+    margin-bottom: 0.3rem;
+  }
+  .tcg-preview-close {
+    top: 0.4rem !important;
+    right: 0.4rem !important;
+  }
+  .tcg-preview-name { font-size: 1.05rem !important; }
+  .tcg-preview-statgrid { margin-bottom: 0.3rem; }
 }
 .tcg-preview-header {
   display: flex;

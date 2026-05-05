@@ -9689,6 +9689,68 @@ pre {
 
 /* ── MOBILE V3: Field redesign Master Duel-style ─────────────────────── */
 @media (max-width: 900px), (max-height: 500px) {
+  /* 0. Slots/zones del field MUY CHICAS — estilo Yu-Gi-Oh mobile (~32-50px).
+   *    Tanto el field del bot como el del player deben ser totalmente visibles
+   *    al mismo tiempo. Usamos vh para height-aware (landscape phone ~360px tall). */
+  .tcg-zone-row {
+    grid-template-columns: repeat(5, minmax(0, clamp(28px, 6vw, 48px))) !important;
+    gap: clamp(0.12rem, 0.5vw, 0.3rem) !important;
+  }
+  .tcg-zones {
+    gap: clamp(0.12rem, 0.5vw, 0.3rem) !important;
+  }
+  /* Slot: aspect-ratio default 0.72 → con 40px width = 56px height. 2 rows + gaps
+   * = ~120px → cabe en cada side de ~140px (1fr de 300px - divider 30px). */
+  .tcg-slot {
+    aspect-ratio: 0.72 !important;
+    border-radius: 0.3rem !important;
+  }
+  /* Side: padding mínimo, NO horizontal padding para HUD (el HUD pasa a chip flotante chico). */
+  .tcg-side {
+    padding: 0.2rem 0.3rem !important;
+    align-items: center;
+  }
+  /* HUD chip ULTRA-COMPACTO en corners — solo avatar + LP, no width grande. */
+  .tcg-side .tcg-hud-wrap {
+    width: auto !important;
+    max-width: 100px !important;
+  }
+  .tcg-side.opponent .tcg-hud-wrap {
+    top: max(2px, var(--safe-top)) !important;
+    right: max(2px, var(--safe-right)) !important;
+    z-index: 9 !important;
+  }
+  .tcg-side:not(.opponent) .tcg-hud-wrap {
+    bottom: 4px !important;
+    left: max(2px, var(--safe-left)) !important;
+    z-index: 9 !important;
+  }
+  /* HUD interno: chip horizontal compacto (avatar+LP en una línea) */
+  .tcg-side .tcg-hud-wrap .tcg-hud {
+    padding: 0.25rem 0.45rem !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.35rem !important;
+  }
+  .tcg-side .tcg-hud-wrap .tcg-hud-name {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.3rem !important;
+  }
+  .tcg-side .tcg-hud-wrap .tcg-hud-name-text {
+    max-width: 50px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tcg-side .tcg-hud-wrap .tcg-hud-lp {
+    flex-direction: row !important;
+    gap: 0.2rem !important;
+  }
+  .tcg-side .tcg-hud-wrap .tcg-hud-lp-bar {
+    display: none !important;
+  }
+
   /* 1. Field cards: SOLO arte. Ocultamos toda info textual interna; el overlay
    *    flota encima con stats grandes blancos contorno negro estilo Master Duel. */
   .tcg-zone-row .tcg-card .tcg-card-name,
@@ -9738,15 +9800,15 @@ pre {
   }
   .tcg-card-stat-overlay-stars {
     color: var(--axie-yellow, #ffd23f);
-    font-size: 0.55rem;
+    font-size: clamp(0.42rem, 1.2vw, 0.55rem);
     line-height: 1;
-    letter-spacing: -1px;
+    letter-spacing: -1.5px;
     white-space: nowrap;
   }
   .tcg-card-stat-overlay-stats {
     color: #ffffff;
     font-weight: 900;
-    font-size: 0.7rem;
+    font-size: clamp(0.55rem, 1.6vw, 0.78rem);
     line-height: 1;
     display: flex;
     gap: 1px;

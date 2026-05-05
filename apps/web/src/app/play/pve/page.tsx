@@ -1193,6 +1193,35 @@ function PvePage() {
         </button>
       </header>
 
+      {/* HUDs como children directos del .tcg-page grid → en mobile grid-area
+       * los pone en sidebars; en desktop se ocultan con display:none y los
+       * inline en .tcg-side toman protagonismo. */}
+      {opponent ? (
+        <aside className="tcg-sidebar tcg-sidebar-opponent" aria-label="Opponent info">
+          <PlayerHud
+            player={opponent}
+            variant="opponent"
+            catalog={catalog}
+            onOpenVoid={() => setVoidViewer({ ownerId: opponent.id, ownerName: opponent.username })}
+          />
+        </aside>
+      ) : null}
+      {me ? (
+        <aside className="tcg-sidebar tcg-sidebar-me" aria-label="Your info">
+          <PlayerHud
+            player={me}
+            variant="you"
+            catalog={catalog}
+            profile={meProfile}
+            onHelp={() => setShowHelpModal(true)}
+            onOpenVoid={() => setVoidViewer({ ownerId: me.id, ownerName: me.username })}
+          />
+          <div className="tcg-sidebar-extras">
+            <span className="tcg-sidebar-dust">✨ {Number(lunacianCoins).toLocaleString()} Dust</span>
+          </div>
+        </aside>
+      ) : null}
+
       {/* Tablero */}
       <div className="tcg-board">
         {/* Lado oponente */}
@@ -1583,6 +1612,7 @@ function PvePage() {
           card={handMenuCard}
           catalog={catalog}
           onAction={(action) => performHandAction(handMenuCard, action)}
+          onShowPreview={() => showCardPreview(handMenuCard, 0)}
           onClose={() => {
             setHandMenuCard(null);
             setSelectedHandCard(null);
@@ -2533,11 +2563,13 @@ function HandActionMenu({
   card,
   catalog,
   onAction,
+  onShowPreview,
   onClose,
 }: {
   card: CardSnapshot;
   catalog: CardCatalog;
   onAction: (action: 'summon-atk' | 'summon-def' | 'set' | 'activate') => void;
+  onShowPreview: () => void;
   onClose: () => void;
 }) {
   const def = catalog[card.cardId];
@@ -2555,6 +2587,13 @@ function HandActionMenu({
           <button className="tcg-handmenu-close" onClick={onClose} type="button">✕</button>
         </div>
         <div className="tcg-handmenu-actions">
+          <button
+            type="button"
+            className="tcg-handmenu-btn tcg-handmenu-btn-view"
+            onClick={() => { onShowPreview(); onClose(); }}
+          >
+            🔍 View close-up
+          </button>
           {isMonster ? (
             <>
               <button
@@ -2562,14 +2601,14 @@ function HandActionMenu({
                 className="tcg-handmenu-btn"
                 onClick={() => onAction('summon-atk')}
               >
-                ⚔ Deploy (ATK)
+                ⚔ Normal Summon (ATK mode)
               </button>
               <button
                 type="button"
                 className="tcg-handmenu-btn"
                 onClick={() => onAction('summon-def')}
               >
-                🛡 Deploy (DEF)
+                🛡 Set (DEF mode)
               </button>
               {tooHighLevel ? (
                 <div className="tcg-handmenu-hint">
@@ -2584,7 +2623,7 @@ function HandActionMenu({
                 className="tcg-handmenu-btn"
                 onClick={() => onAction('set')}
               >
-                ⌬ Install (face-down)
+                ⌬ Set S/T (face-down)
               </button>
               {isQuickSpell ? (
                 <button
@@ -2592,7 +2631,7 @@ function HandActionMenu({
                   className="tcg-handmenu-btn"
                   onClick={() => onAction('activate')}
                 >
-                  ✦ Execute now
+                  ✦ Activate now
                 </button>
               ) : null}
             </>

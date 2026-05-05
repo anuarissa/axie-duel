@@ -9687,72 +9687,153 @@ pre {
 /* ── Stat overlay para field cards: hidden por default (desktop), visible en mobile ── */
 .tcg-card-stat-overlay { display: none; }
 
-/* ── MOBILE V3: Field redesign Master Duel-style ─────────────────────── */
+/* Sidebars mobile (sólo visibles en landscape mobile vía grid). En desktop hidden. */
+.tcg-sidebar { display: none; }
+
+/* ── MOBILE V4: 3-column grid layout (sidebar | field | sidebar | hand) ── */
 @media (max-width: 900px), (max-height: 500px) {
-  /* 0. Slots/zones del field MUY CHICAS — estilo Yu-Gi-Oh mobile (~32-50px).
-   *    Tanto el field del bot como el del player deben ser totalmente visibles
-   *    al mismo tiempo. Usamos vh para height-aware (landscape phone ~360px tall). */
-  .tcg-zone-row {
-    grid-template-columns: repeat(5, minmax(0, clamp(28px, 6vw, 48px))) !important;
-    gap: clamp(0.12rem, 0.5vw, 0.3rem) !important;
+  /* Page grid: toolbar arriba / [leftbar | board | rightbar] / hand abajo. */
+  .tcg-page {
+    grid-template-rows: 36px 1fr auto !important;
+    grid-template-columns: clamp(110px, 18vw, 160px) 1fr clamp(110px, 18vw, 160px) !important;
+    grid-template-areas:
+      "toolbar  toolbar  toolbar"
+      "leftbar  board    rightbar"
+      "hand     hand     hand" !important;
   }
-  .tcg-zones {
-    gap: clamp(0.12rem, 0.5vw, 0.3rem) !important;
-  }
-  /* Slot: aspect-ratio default 0.72 → con 40px width = 56px height. 2 rows + gaps
-   * = ~120px → cabe en cada side de ~140px (1fr de 300px - divider 30px). */
-  .tcg-slot {
-    aspect-ratio: 0.72 !important;
-    border-radius: 0.3rem !important;
-  }
-  /* Side: padding mínimo, NO horizontal padding para HUD (el HUD pasa a chip flotante chico). */
+  .tcg-toolbar { grid-area: toolbar; }
+  .tcg-board { grid-area: board; min-width: 0; }
+  .tcg-sidebar-me { grid-area: leftbar; display: flex !important; }
+  .tcg-sidebar-opponent { grid-area: rightbar; display: flex !important; }
+  .tcg-footer { grid-area: hand; }
+
+  /* Hide los inline PlayerHud que están dentro de .tcg-side — los reemplazamos por sidebars. */
+  .tcg-side .tcg-hud-wrap { display: none !important; }
   .tcg-side {
+    grid-template-columns: 1fr !important;
     padding: 0.2rem 0.3rem !important;
-    align-items: center;
+    gap: 0 !important;
   }
-  /* HUD chip ULTRA-COMPACTO en corners — solo avatar + LP, no width grande. */
-  .tcg-side .tcg-hud-wrap {
-    width: auto !important;
-    max-width: 100px !important;
+
+  /* SIDEBARS: column flex con HUD grande arriba + extras abajo. */
+  .tcg-sidebar {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.45rem;
+    padding: 0.4rem 0.35rem;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.6), rgba(2, 6, 23, 0.85));
+    border-left: 1px solid rgba(140, 93, 246, 0.25);
+    border-right: 1px solid rgba(140, 93, 246, 0.25);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-width: 0;
   }
-  .tcg-side.opponent .tcg-hud-wrap {
-    top: max(2px, var(--safe-top)) !important;
-    right: max(2px, var(--safe-right)) !important;
-    z-index: 9 !important;
+  .tcg-sidebar-me {
+    border-left: none;
+    padding-left: max(0.35rem, var(--safe-left));
   }
-  .tcg-side:not(.opponent) .tcg-hud-wrap {
-    bottom: 4px !important;
-    left: max(2px, var(--safe-left)) !important;
-    z-index: 9 !important;
+  .tcg-sidebar-opponent {
+    border-right: none;
+    padding-right: max(0.35rem, var(--safe-right));
   }
-  /* HUD interno: chip horizontal compacto (avatar+LP en una línea) */
-  .tcg-side .tcg-hud-wrap .tcg-hud {
-    padding: 0.25rem 0.45rem !important;
+  /* Sidebar PlayerHud → fully expanded card style (not the chip variant). */
+  .tcg-sidebar .tcg-hud-wrap {
+    display: block !important;
+    width: 100%;
+    position: static !important;
+    flex: 0 0 auto;
+  }
+  .tcg-sidebar .tcg-hud {
+    padding: 0.55rem 0.7rem !important;
+    background: linear-gradient(160deg, rgba(140, 93, 246, 0.14), rgba(2, 6, 23, 0.85)) !important;
+    border: 1.5px solid rgba(192, 132, 252, 0.35) !important;
+    border-radius: 0.7rem !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.4rem !important;
+  }
+  .tcg-sidebar .tcg-hud-name {
     flex-direction: row !important;
-    align-items: center !important;
-    gap: 0.35rem !important;
+    gap: 0.4rem !important;
   }
-  .tcg-side .tcg-hud-wrap .tcg-hud-name {
+  .tcg-sidebar .tcg-hud-name-text {
+    font-size: 0.78rem !important;
+    max-width: none !important;
+    overflow: visible !important;
+  }
+  .tcg-sidebar .tcg-hud-avatar,
+  .tcg-sidebar .tcg-hud-avatar-fallback {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 0.95rem !important;
+  }
+  /* LP grande y prominente. */
+  .tcg-sidebar .tcg-hud-lp {
+    font-size: 1.5rem !important;
+    font-weight: 900 !important;
+    line-height: 1 !important;
     flex-direction: row !important;
-    align-items: center !important;
-    gap: 0.3rem !important;
+    align-items: baseline;
+    gap: 0.25rem !important;
   }
-  .tcg-side .tcg-hud-wrap .tcg-hud-name-text {
-    max-width: 50px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .tcg-sidebar .tcg-hud-lp .lp-suffix { font-size: 0.62rem; opacity: 0.75; }
+  .tcg-sidebar .tcg-hud-bar { display: block !important; height: 3px !important; }
+  .tcg-sidebar .tcg-hud-stats {
+    display: flex !important;
+    gap: 0.3rem;
+    font-size: 0.7rem !important;
   }
-  .tcg-side .tcg-hud-wrap .tcg-hud-lp {
-    flex-direction: row !important;
-    gap: 0.2rem !important;
-  }
-  .tcg-side .tcg-hud-wrap .tcg-hud-lp-bar {
+  .tcg-sidebar .tcg-deckstack,
+  .tcg-sidebar .tcg-voidstack {
     display: none !important;
   }
 
-  /* 1. Field cards: SOLO arte. Ocultamos toda info textual interna; el overlay
-   *    flota encima con stats grandes blancos contorno negro estilo Master Duel. */
+  /* Sidebar extras: Dust chip + (potential other elements). */
+  .tcg-sidebar-extras {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    align-items: stretch;
+  }
+  .tcg-sidebar-dust {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    padding: 0.4rem 0.55rem;
+    background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(192, 132, 252, 0.12));
+    border: 1px solid rgba(251, 191, 36, 0.45);
+    border-radius: 0.55rem;
+    color: var(--axie-yellow);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+  /* Help button (rendered by PlayerHud variant=you → .tcg-help-button) */
+  .tcg-sidebar .tcg-help-button {
+    width: 100% !important;
+    margin-top: 0.3rem !important;
+    min-height: 40px !important;
+  }
+
+  /* FIELD center column: ya no overlap con HUD (sidebars lo manejan). */
+  .tcg-board {
+    position: relative;
+    padding: 0.3rem 0.4rem !important;
+  }
+  .tcg-zone-row {
+    grid-template-columns: repeat(5, minmax(0, clamp(34px, 7vw, 56px))) !important;
+    gap: clamp(0.15rem, 0.6vw, 0.35rem) !important;
+  }
+  .tcg-zones {
+    gap: clamp(0.15rem, 0.6vw, 0.35rem) !important;
+  }
+  .tcg-slot {
+    aspect-ratio: 0.72 !important;
+    border-radius: 0.32rem !important;
+  }
+
+  /* Field cards: SOLO arte (oculta texto interno). Stat overlay flotante. */
   .tcg-zone-row .tcg-card .tcg-card-name,
   .tcg-zone-row .tcg-card .tcg-card-stars,
   .tcg-zone-row .tcg-card .tcg-card-stats,
@@ -9764,7 +9845,7 @@ pre {
   }
   .tcg-zone-row .tcg-card {
     padding: 0 !important;
-    border-radius: 0.4rem !important;
+    border-radius: 0.36rem !important;
     border-width: 1.5px !important;
   }
   .tcg-zone-row .tcg-card .tcg-card-art {
@@ -9780,7 +9861,6 @@ pre {
     object-fit: cover !important;
     border-radius: inherit !important;
   }
-  /* Stat overlay: stars top + ATK/DEF bottom, blanco texto-shadow black estilo Yu-Gi-Oh. */
   .tcg-zone-row .tcg-card .tcg-card-stat-overlay {
     display: flex;
     flex-direction: column;
@@ -9800,7 +9880,7 @@ pre {
   }
   .tcg-card-stat-overlay-stars {
     color: var(--axie-yellow, #ffd23f);
-    font-size: clamp(0.42rem, 1.2vw, 0.55rem);
+    font-size: clamp(0.45rem, 1.3vw, 0.6rem);
     line-height: 1;
     letter-spacing: -1.5px;
     white-space: nowrap;
@@ -9808,157 +9888,130 @@ pre {
   .tcg-card-stat-overlay-stats {
     color: #ffffff;
     font-weight: 900;
-    font-size: clamp(0.55rem, 1.6vw, 0.78rem);
+    font-size: clamp(0.6rem, 1.7vw, 0.82rem);
     line-height: 1;
     display: flex;
     gap: 1px;
     font-variant-numeric: tabular-nums;
   }
   .tcg-card-stat-overlay-stats .sep { opacity: 0.7; padding: 0 1px; }
-  .tcg-card-stat-overlay-stats .atk { color: #fff; }
-  .tcg-card-stat-overlay-stats .def { color: #fff; }
-  /* DEF position: cards rotadas 90° → ajustar overlay rotation también. */
   .tcg-zone-row .tcg-card.def-position .tcg-card-stat-overlay {
     transform: rotate(90deg);
   }
 
-  /* 2. Avatars en corners (position:absolute) — el field gana espacio central. */
-  .tcg-board {
-    position: relative;
-  }
-  .tcg-side {
-    grid-template-columns: 1fr !important; /* HUD desaparece del grid; sólo zones */
-    gap: 0 !important;
-  }
-  .tcg-side .tcg-hud-wrap {
-    position: absolute;
-    z-index: 8;
-    width: clamp(110px, 16vw, 150px);
-    pointer-events: auto;
-  }
-  .tcg-side.opponent .tcg-hud-wrap {
-    top: max(2px, var(--safe-top));
-    right: max(2px, var(--safe-right));
-  }
-  .tcg-side:not(.opponent) .tcg-hud-wrap {
-    bottom: 4px;
-    left: max(2px, var(--safe-left));
-  }
-  /* Compactizar HUD para corner. */
-  .tcg-side .tcg-hud-wrap .tcg-hud {
-    padding: 0.3rem 0.45rem !important;
-    background: rgba(2, 6, 23, 0.78) !important;
-    border: 1.5px solid rgba(245, 243, 255, 0.18) !important;
-    border-radius: 0.6rem !important;
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-  }
-  .tcg-side .tcg-hud-wrap .tcg-hud-life { font-size: 1rem !important; }
-  .tcg-side .tcg-hud-wrap .tcg-hud-name-text { font-size: 0.62rem !important; }
-  .tcg-side .tcg-hud-wrap .tcg-hud-avatar,
-  .tcg-side .tcg-hud-wrap .tcg-hud-avatar-fallback {
-    width: 22px !important;
-    height: 22px !important;
-    font-size: 0.7rem !important;
-  }
-  /* Hide elementos secundarios del HUD que saturan corner. */
-  .tcg-side .tcg-hud-wrap .tcg-deckstack,
-  .tcg-side .tcg-hud-wrap .tcg-voidstack,
-  .tcg-side .tcg-hud-wrap .tcg-hud-stats {
-    display: none !important;
-  }
-
-  /* 3. Hand peek-up + footer fixed full-width.
-   * Footer ya no es un row del grid — pasa a ser un overlay fixed bottom.
-   * Hand-wrap es full-width dentro del footer; actions floating right-bottom. */
+  /* HAND: full visible at bottom, big readable cards. NO peek/translate. */
   .tcg-footer {
-    display: block !important;
-    position: fixed !important;
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    z-index: 7 !important;
-    background: transparent !important;
-    border-top: none !important;
-    padding: 0 !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    gap: 0.4rem !important;
+    padding: 0.3rem 0.5rem max(0.4rem, var(--safe-bottom)) !important;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.85) 100%) !important;
+    border-top: 1px solid rgba(140, 93, 246, 0.3) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 6;
   }
   .tcg-hand-wrap {
-    position: relative;
-    width: 100%;
-    padding: 0.35rem 0.5rem max(0.4rem, var(--safe-bottom));
-    transition: transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2);
-    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.4) 45%, rgba(0, 0, 0, 0.75) 100%);
+    position: static !important;
+    flex: 1 1 auto;
+    transform: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    width: auto;
+    min-width: 0;
   }
-  .tcg-hand-wrap.peek {
-    transform: translateY(45%);
+  .tcg-hand-wrap-handle { display: none !important; }
+  .tcg-hand {
+    height: auto !important;
+    min-height: 0 !important;
+    gap: 0.25rem !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overflow-y: visible;
+    perspective: none !important;
   }
-  .tcg-hand-wrap.expanded {
-    transform: translateY(0);
+  .tcg-hand::-webkit-scrollbar { display: none; }
+  /* Hand cards: bigger so legibles. Default ~62-90px wide, full height visible. */
+  .tcg-hand-card {
+    flex: 0 0 clamp(58px, 10vw, 92px) !important;
+    min-width: 58px !important;
+    border-radius: 0.55rem !important;
+    padding: 0.18rem !important;
+    transform: none !important;
+    transition: filter 0.15s !important;
   }
-  /* Pull-up handle: tap area sobre el wrap, indicador visual con ::before. */
-  .tcg-hand-wrap-handle {
+  .tcg-hand-card:active {
+    filter: brightness(1.25) !important;
+    transform: scale(0.96) !important;
+  }
+  .tcg-hand-card .tcg-card-type-tag {
+    display: flex !important;
+    font-size: 0.45rem !important;
+    padding: 1px 4px !important;
+  }
+  .tcg-hand-card .tcg-card-name {
     display: block !important;
-    position: absolute;
-    top: -18px;
-    left: 0;
-    right: 0;
-    height: 26px;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    z-index: 2;
-    pointer-events: auto;
+    font-size: 0.5rem !important;
+    line-height: 1.05 !important;
+    padding: 0 1px !important;
+    margin: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 0.65rem;
   }
-  .tcg-hand-wrap-handle::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 50px;
-    height: 4px;
-    border-radius: 2px;
-    background: rgba(245, 243, 255, 0.6);
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.55);
-    transition: background 0.15s, width 0.2s;
+  .tcg-hand-card .tcg-card-stars {
+    display: block !important;
+    font-size: 0.45rem !important;
+    line-height: 1 !important;
+    letter-spacing: -1px;
+    color: var(--axie-yellow);
   }
-  .tcg-hand-wrap-handle:active::before {
-    background: rgba(245, 243, 255, 0.95);
-    width: 60px;
-  }
-  .tcg-hand-wrap.expanded .tcg-hand-wrap-handle::before {
-    width: 38px;
-    background: rgba(245, 243, 255, 0.4);
+  .tcg-hand-card .tcg-card-stats {
+    display: flex !important;
+    font-size: 0.45rem !important;
+    gap: 0.15rem !important;
+    padding: 0 !important;
+    margin-top: 1px !important;
   }
 
-  /* Actions: floating right-bottom (fuera del flow del hand) */
+  /* ACTIONS: column compact a la derecha del hand strip. */
   .tcg-actions {
-    position: absolute !important;
-    right: 0.4rem;
-    bottom: 80px; /* arriba del peek-hand */
-    width: auto !important;
+    flex: 0 0 auto !important;
     flex-direction: column !important;
-    gap: 0.3rem !important;
-    z-index: 8;
+    width: auto !important;
+    min-width: 90px !important;
     align-items: stretch !important;
-    min-width: 0 !important;
+    gap: 0.25rem !important;
+    position: static !important;
+    align-self: center;
   }
   .tcg-actions button {
     flex: 0 0 auto !important;
-    min-height: 38px !important;
-    min-width: 78px !important;
-    padding: 0.35rem 0.6rem !important;
+    min-height: 36px !important;
+    padding: 0.3rem 0.55rem !important;
     font-size: 0.65rem !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
   }
+  .tcg-instruction { display: none !important; }
+  .tcg-phase-banner { display: none !important; }
+}
 
-  /* Reservar espacio bottom en my side para que el HUD avatar bottom-left no
-   * choque con la peek-hand y el field tenga padding inferior. */
-  .tcg-side:not(.opponent) {
-    padding-bottom: 56px;
-  }
+/* Pulse arrow del rotate hint. */
+.rotate-hint-pulse-arrow {
+  font-size: 2.2rem;
+  margin-top: 1rem;
+  color: var(--axie-cyan);
+  animation: rotate-hint-arrow-pulse 1.4s ease-in-out infinite;
+}
+@keyframes rotate-hint-arrow-pulse {
+  0%, 100% { transform: rotate(0deg) scale(1); opacity: 0.7; }
+  50%      { transform: rotate(-90deg) scale(1.15); opacity: 1; }
 }
 
 /* ── Roshambo landscape mobile compact ─────────────────────────────── */

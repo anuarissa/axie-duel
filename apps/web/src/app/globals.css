@@ -9860,6 +9860,20 @@ pre {
     height: 100% !important;
     object-fit: cover !important;
     border-radius: inherit !important;
+    /* SVG/PNG crisp en cartas mini — evita blur del scaling. */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+  /* Face-down opp cards: pattern decorativo más limpio en cartas mini. */
+  .tcg-zone-row .tcg-card.face-down {
+    border-width: 2px !important;
+  }
+  .tcg-zone-row .tcg-card.face-down .tcg-card-facedown-brand,
+  .tcg-zone-row .tcg-card.face-down .tcg-card-facedown-tag {
+    font-size: 0.4rem !important;
+    letter-spacing: 0;
   }
   .tcg-zone-row .tcg-card .tcg-card-stat-overlay {
     display: flex;

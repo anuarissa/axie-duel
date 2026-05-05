@@ -1448,8 +1448,20 @@ function PvePage() {
                     selectedHandCard === c.instanceId ? 'selected' : ''
                   } ${disabled ? 'disabled' : ''} ${requiresTribute ? 'needs-tribute' : ''} ${def?.attribute ? `attr-${def.attribute.toLowerCase()}` : ''}`}
                   onClick={() => !disabled && clickHandCard(c)}
-                  onMouseEnter={() => { setHoveredCard(c); showCardPreview(c, 350); }}
-                  onMouseLeave={() => { setHoveredCard((curr) => (curr?.instanceId === c.instanceId ? null : curr)); hideCardPreview(); }}
+                  onMouseEnter={() => {
+                    setHoveredCard(c);
+                    // Solo mostrar preview gigante en hover REAL (mouse), no en touch-emulated
+                    // hover de iOS Safari. En mobile, el preview se abre via "View close-up" del menu.
+                    if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
+                      showCardPreview(c, 350);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredCard((curr) => (curr?.instanceId === c.instanceId ? null : curr));
+                    if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
+                      hideCardPreview();
+                    }
+                  }}
                 >
                   <div className="tcg-card-type-tag">{def ? displayType(def.type)[0] : '?'}</div>
                   <div className="tcg-card-name">{def?.name ?? c.cardId.slice(0, 8)}</div>

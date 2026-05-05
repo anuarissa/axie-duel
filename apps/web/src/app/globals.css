@@ -3817,48 +3817,68 @@ pre {
     white-space: nowrap;
   }
 
-  /* Hand mini: cartas estilo Master Duel (~52-66px wide). El user usa tap-and-hold
-   * o el botón lupa 🔍 para ver la versión grande. */
+  /* Hand mini estilo Master Duel mobile: cards cortas (~38-52px wide), solo se ve
+   * el TOP HALF de cada carta (overflow:visible deja que sobresalgan hacia arriba
+   * pero el contenedor es chico). Tap-and-hold o lupa para preview detallado. */
   .tcg-hand {
     min-height: 0 !important;
-    gap: 0.18rem !important;
-    padding: 0.15rem 0 !important;
-    align-items: center !important;
+    height: 56px !important;
+    gap: 0.15rem !important;
+    padding: 0 !important;
+    align-items: flex-start !important;
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: visible;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
     perspective: none !important;
   }
   .tcg-hand::-webkit-scrollbar { display: none; }
   .tcg-hand-card {
-    flex: 0 0 clamp(48px, 9vw, 66px) !important;
-    min-width: 48px !important;
-    border-radius: 0.45rem !important;
-    padding: 0.12rem !important;
+    flex: 0 0 clamp(40px, 7vw, 52px) !important;
+    min-width: 40px !important;
+    border-radius: 0.4rem !important;
+    padding: 0.1rem !important;
+    /* Override del hover desktop que hacía translateY(-12px) — en mobile no aplica
+     * porque @media (hover: hover) lo guarda, pero algunos browsers lo disparan en touch. */
+    transform: none !important;
+    transition: filter 0.15s !important;
   }
-  /* Hide details que saturan a tamaño mini — solo art + nombre breve quedan. */
+  /* Tap feedback sin sliding — solo brillo. */
+  .tcg-hand-card:active {
+    filter: brightness(1.25) !important;
+    transform: scale(0.96) !important;
+  }
+  /* Hide details que saturan a tamaño mini — solo art queda. Name + stats off. */
   .tcg-hand-card .tcg-card-type-tag { display: none !important; }
   .tcg-hand-card .tcg-card-stars { display: none !important; }
-  .tcg-hand-card .tcg-card-stats {
-    font-size: 0.5rem !important;
-    gap: 0.15rem !important;
-    padding: 0 !important;
-  }
+  .tcg-hand-card .tcg-card-stats { display: none !important; }
   .tcg-hand-card .tcg-card-name {
-    font-size: 0.5rem !important;
-    line-height: 1.05 !important;
+    font-size: 0.45rem !important;
+    line-height: 1 !important;
     padding: 0 !important;
     margin: 0 !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-height: 0.55rem;
   }
 
   /* Hide instruction hint en mobile — el field gana ~30px adicionales. */
   .tcg-instruction {
     display: none !important;
+  }
+
+  /* Hide el banner grande "YOUR TURN / EXTRACTION" en mobile —
+   * la toolbar superior ya muestra TURN + PHASE + YOUR TURN. Es redundante y tapa el campo. */
+  .tcg-phase-banner {
+    display: none !important;
+  }
+
+  /* Footer sin blur ni borde — la "línea borrosa innecesaria" reportada por el user. */
+  .tcg-footer {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border-top: none !important;
+    background: transparent !important;
   }
 
   /* Tooltip: full-width arriba para no tapar el centro. */

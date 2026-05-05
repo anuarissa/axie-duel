@@ -30,7 +30,6 @@ import { getJwt, getJwtUserId, apiFetch } from '../../../lib/auth';
 import { placeholderSvgFor as svgForCard, resolveCardImage } from '../../../lib/cardArt';
 import { SoundControls } from '../../../components/SoundControls';
 import { RockPaperScissorsIntro } from '../../../components/RockPaperScissorsIntro';
-import { RotateDeviceHint } from '../../../components/RotateDeviceHint';
 import { sound } from '../../../lib/sound';
 
 const GAME_SERVER = process.env.NEXT_PUBLIC_GAME_SERVER_URL ?? 'ws://localhost:2567';
@@ -1153,7 +1152,6 @@ function PvePage() {
 
   return (
     <main className="tcg-page">
-      <RotateDeviceHint />
       {/* Toolbar slim */}
       <header className="tcg-toolbar">
         <Link href="/dashboard" className="tcg-back">
@@ -1452,9 +1450,6 @@ function PvePage() {
                   onClick={() => !disabled && clickHandCard(c)}
                   onMouseEnter={() => { setHoveredCard(c); showCardPreview(c, 350); }}
                   onMouseLeave={() => { setHoveredCard((curr) => (curr?.instanceId === c.instanceId ? null : curr)); hideCardPreview(); }}
-                  onTouchStart={() => showCardPreview(c, 400)}
-                  onTouchEnd={() => hideCardPreview()}
-                  onTouchCancel={() => hideCardPreview()}
                 >
                   <div className="tcg-card-type-tag">{def ? displayType(def.type)[0] : '?'}</div>
                   <div className="tcg-card-name">{def?.name ?? c.cardId.slice(0, 8)}</div>

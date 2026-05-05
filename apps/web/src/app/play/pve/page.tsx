@@ -195,6 +195,8 @@ function PvePage() {
     username: 'You', displayName: null, avatarUrl: null,
   });
   const [firstPlayerChoice, setFirstPlayerChoice] = useState<'me' | 'opponent' | null>(null);
+  /** Mobile: hand peek-up state. Default 'peek' (40-45% hidden). Tap handle → expand. */
+  const [handExpanded, setHandExpanded] = useState<boolean>(false);
   const coinsAtMatchStartRef = useRef<string | null>(null);
   const xpAtMatchStartRef = useRef<number | null>(null);
   const levelAtMatchStartRef = useRef<number | null>(null);
@@ -1392,9 +1394,16 @@ function PvePage() {
         ) : null}
       </div>
 
-      {/* Footer: hand + actions */}
+      {/* Footer: hand + actions. En mobile la hand-wrap es fixed-bottom con peek, actions floating. */}
       <footer className="tcg-footer">
-        <div className="tcg-hand">
+        <div className={`tcg-hand-wrap ${handExpanded ? 'expanded' : 'peek'}`}>
+          <button
+            type="button"
+            className="tcg-hand-wrap-handle"
+            onClick={() => setHandExpanded((p) => !p)}
+            aria-label={handExpanded ? 'Hide hand' : 'Show hand'}
+          />
+          <div className="tcg-hand">
           {me && me.hand.length > 0 ? (
             me.hand.map((c) => {
               const def = catalog[c.cardId];
@@ -1457,6 +1466,7 @@ function PvePage() {
           ) : (
             <span className="tcg-hand-empty">(empty cache)</span>
           )}
+          </div>
         </div>
 
         <div className="tcg-actions">
@@ -2070,6 +2080,18 @@ const Card = memo(function CardImpl({
         onTouchEnd={() => onHidePreview?.()}
         onTouchCancel={() => onHidePreview?.()}
       >
+        {isMonster && def ? (
+          <div className="tcg-card-stat-overlay" aria-hidden="true">
+            {def.level ? (
+              <div className="tcg-card-stat-overlay-stars">{'★'.repeat(Math.min(def.level, 8))}</div>
+            ) : null}
+            <div className="tcg-card-stat-overlay-stats">
+              <span className="atk">{(def.atk ?? 0) + card.atkMod + (card.auraAtkBonus ?? 0)}</span>
+              <span className="sep">/</span>
+              <span className="def">{(def.def ?? 0) + card.defMod + (card.auraDefBonus ?? 0)}</span>
+            </div>
+          </div>
+        ) : null}
         <div className="tcg-card-set-stamp">SET</div>
         <div className="tcg-card-type-tag">{def ? displayType(def.type)[0] : '?'}</div>
         <div className="tcg-card-name">{def?.name ?? card.cardId.slice(0, 8)}</div>
@@ -2119,6 +2141,18 @@ const Card = memo(function CardImpl({
       onTouchEnd={() => onHidePreview?.()}
       onTouchCancel={() => onHidePreview?.()}
     >
+      {isMonster && def ? (
+        <div className="tcg-card-stat-overlay" aria-hidden="true">
+          {def.level ? (
+            <div className="tcg-card-stat-overlay-stars">{'★'.repeat(Math.min(def.level, 8))}</div>
+          ) : null}
+          <div className="tcg-card-stat-overlay-stats">
+            <span className="atk">{(def.atk ?? 0) + card.atkMod + (card.auraAtkBonus ?? 0)}</span>
+            <span className="sep">/</span>
+            <span className="def">{(def.def ?? 0) + card.defMod + (card.auraDefBonus ?? 0)}</span>
+          </div>
+        </div>
+      ) : null}
       <div className="tcg-card-type-tag">{def ? displayType(def.type)[0] : '?'}</div>
       {card.position ? <div className="tcg-card-pos">{card.position}</div> : null}
       {isAffected ? (

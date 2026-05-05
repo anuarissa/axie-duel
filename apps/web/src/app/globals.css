@@ -3792,24 +3792,73 @@ pre {
     transform: translateX(0);
   }
 
-  /* Footer: stack vertical en landscape mobile también — no más actions a la derecha. */
+  /* Footer estilo Master Duel mobile: hand mini-strip + acción compacta a la derecha,
+   * el campo domina ~70% del viewport. */
   .tcg-footer {
-    grid-template-columns: 1fr;
-    gap: 0.4rem;
-    padding: 0.4rem 0.5rem 0.6rem;
+    grid-template-columns: 1fr auto !important;
+    gap: 0.35rem !important;
+    padding: 0.25rem 0.4rem !important;
+    align-items: stretch !important;
   }
   .tcg-actions {
     min-width: 0 !important;
-    flex-direction: row !important;
-    flex-wrap: wrap;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
     justify-content: center;
-    gap: 0.35rem;
+    gap: 0.25rem !important;
+    width: auto;
   }
   .tcg-actions button {
-    flex: 1 1 calc(50% - 0.4rem);
-    min-height: 44px;
-    padding: 0.5rem 0.75rem !important;
-    font-size: 0.78rem;
+    flex: 0 0 auto !important;
+    min-width: 70px;
+    min-height: 38px;
+    padding: 0.35rem 0.6rem !important;
+    font-size: 0.65rem !important;
+    white-space: nowrap;
+  }
+
+  /* Hand mini: cartas estilo Master Duel (~52-66px wide). El user usa tap-and-hold
+   * o el botón lupa 🔍 para ver la versión grande. */
+  .tcg-hand {
+    min-height: 0 !important;
+    gap: 0.18rem !important;
+    padding: 0.15rem 0 !important;
+    align-items: center !important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    perspective: none !important;
+  }
+  .tcg-hand::-webkit-scrollbar { display: none; }
+  .tcg-hand-card {
+    flex: 0 0 clamp(48px, 9vw, 66px) !important;
+    min-width: 48px !important;
+    border-radius: 0.45rem !important;
+    padding: 0.12rem !important;
+  }
+  /* Hide details que saturan a tamaño mini — solo art + nombre breve quedan. */
+  .tcg-hand-card .tcg-card-type-tag { display: none !important; }
+  .tcg-hand-card .tcg-card-stars { display: none !important; }
+  .tcg-hand-card .tcg-card-stats {
+    font-size: 0.5rem !important;
+    gap: 0.15rem !important;
+    padding: 0 !important;
+  }
+  .tcg-hand-card .tcg-card-name {
+    font-size: 0.5rem !important;
+    line-height: 1.05 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Hide instruction hint en mobile — el field gana ~30px adicionales. */
+  .tcg-instruction {
+    display: none !important;
   }
 
   /* Tooltip: full-width arriba para no tapar el centro. */

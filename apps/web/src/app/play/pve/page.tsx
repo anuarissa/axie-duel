@@ -30,6 +30,7 @@ import { getJwt, getJwtUserId, apiFetch } from '../../../lib/auth';
 import { placeholderSvgFor as svgForCard, resolveCardImage } from '../../../lib/cardArt';
 import { SoundControls } from '../../../components/SoundControls';
 import { RockPaperScissorsIntro } from '../../../components/RockPaperScissorsIntro';
+import { RotateDeviceHint } from '../../../components/RotateDeviceHint';
 import { sound } from '../../../lib/sound';
 
 const GAME_SERVER = process.env.NEXT_PUBLIC_GAME_SERVER_URL ?? 'ws://localhost:2567';
@@ -1150,6 +1151,7 @@ function PvePage() {
 
   return (
     <main className="tcg-page">
+      <RotateDeviceHint />
       {/* Toolbar slim */}
       <header className="tcg-toolbar">
         <Link href="/dashboard" className="tcg-back">
@@ -1232,7 +1234,14 @@ function PvePage() {
                     >
                       {c.instanceId ? (
                         <>
-                          <Card card={c} catalog={catalog} faceMini onHoverChange={setHoveredCard} />
+                          <Card
+                            card={c}
+                            catalog={catalog}
+                            faceMini
+                            onHoverChange={setHoveredCard}
+                            onShowPreview={!c.faceDown ? () => showCardPreview(c, 350) : undefined}
+                            onHidePreview={!c.faceDown ? () => hideCardPreview() : undefined}
+                          />
                           {!c.faceDown ? (
                             <button
                               type="button"
@@ -1316,7 +1325,15 @@ function PvePage() {
                     >
                       {c.instanceId ? (
                         <>
-                          <Card card={c} catalog={catalog} faceMini onHoverChange={setHoveredCard} ownedByMe />
+                          <Card
+                            card={c}
+                            catalog={catalog}
+                            faceMini
+                            onHoverChange={setHoveredCard}
+                            ownedByMe
+                            onShowPreview={() => showCardPreview(c, 350)}
+                            onHidePreview={() => hideCardPreview()}
+                          />
                           <button
                             type="button"
                             className="tcg-slot-lupa"
@@ -1347,7 +1364,15 @@ function PvePage() {
                   >
                     {c.instanceId ? (
                       <>
-                        <Card card={c} catalog={catalog} faceMini onHoverChange={setHoveredCard} ownedByMe />
+                        <Card
+                          card={c}
+                          catalog={catalog}
+                          faceMini
+                          onHoverChange={setHoveredCard}
+                          ownedByMe
+                          onShowPreview={() => showCardPreview(c, 350)}
+                          onHidePreview={() => hideCardPreview()}
+                        />
                         <button
                           type="button"
                           className="tcg-slot-lupa"
@@ -2001,6 +2026,8 @@ const Card = memo(function CardImpl({
   faceDown,
   faceMini,
   onHoverChange,
+  onShowPreview,
+  onHidePreview,
   ownedByMe,
 }: {
   card: CardSnapshot;
@@ -2008,6 +2035,9 @@ const Card = memo(function CardImpl({
   faceDown?: boolean;
   faceMini?: boolean;
   onHoverChange?: (card: CardSnapshot | null) => void;
+  /** Mobile-friendly: touch start invoca preview big-overlay. Si no se pasa, no hay preview en touch. */
+  onShowPreview?: () => void;
+  onHidePreview?: () => void;
   ownedByMe?: boolean;
 }) {
   const def = catalog[card.cardId];
@@ -2036,6 +2066,9 @@ const Card = memo(function CardImpl({
         className={`tcg-card ${type} ${isDef ? 'def-position' : ''} ${def?.attribute ? `attr-${def.attribute.toLowerCase()}` : ''} mine-set`}
         onMouseEnter={() => onHoverChange?.(card)}
         onMouseLeave={() => onHoverChange?.(null)}
+        onTouchStart={() => onShowPreview?.()}
+        onTouchEnd={() => onHidePreview?.()}
+        onTouchCancel={() => onHidePreview?.()}
       >
         <div className="tcg-card-set-stamp">SET</div>
         <div className="tcg-card-type-tag">{def ? displayType(def.type)[0] : '?'}</div>
@@ -2082,6 +2115,9 @@ const Card = memo(function CardImpl({
       className={`tcg-card ${type} ${attacked ? 'attacked' : ''} ${isDef ? 'def-position' : ''} ${def?.attribute ? `attr-${def.attribute.toLowerCase()}` : ''} ${isAffected ? 'is-affected' : ''}`}
       onMouseEnter={() => onHoverChange?.(card)}
       onMouseLeave={() => onHoverChange?.(null)}
+      onTouchStart={() => onShowPreview?.()}
+      onTouchEnd={() => onHidePreview?.()}
+      onTouchCancel={() => onHidePreview?.()}
     >
       <div className="tcg-card-type-tag">{def ? displayType(def.type)[0] : '?'}</div>
       {card.position ? <div className="tcg-card-pos">{card.position}</div> : null}

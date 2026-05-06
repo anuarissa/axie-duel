@@ -9690,23 +9690,10 @@ pre {
 /* Sidebars mobile (sólo visibles en landscape mobile vía grid). En desktop hidden. */
 .tcg-sidebar { display: none; }
 
-/* ── FORCE LANDSCAPE en /play/pve — si el device es portrait y mobile,
- * rotamos toda la página 90° para que se vea horizontal aunque el user no rote.
- * Truco "fake landscape" sin modal. width/height se intercambian. */
-@media (orientation: portrait) and (max-width: 900px) {
-  body:has(.tcg-page) {
-    overflow: hidden;
-  }
-  .tcg-page {
-    transform: rotate(90deg) translateY(-100vw);
-    transform-origin: top left;
-    width: 100vh !important;
-    height: 100vw !important;
-    position: absolute !important;
-    top: 0;
-    left: 0;
-  }
-}
+/* ── SINGLE LANDSCAPE LAYOUT (no rotation hack) ──────────────────────
+ * El juego se diseña SOLO para landscape mobile. Si el user abre en portrait,
+ * verá el mismo layout cramped — eventualmente rota su celular. NO rotamos
+ * la página por CSS para evitar confusión visual y orientación inconsistente. */
 
 /* ── MOBILE V4: 3-column grid layout (sidebar | field | sidebar | hand) ── */
 @media (max-width: 900px), (max-height: 500px) {
@@ -9906,12 +9893,18 @@ pre {
       rgba(239, 68, 68, 0.06) 100%) !important;
     border: none !important;
   }
-  /* Cards en field NUNCA se salen del slot — overflow estricto. */
-  .tcg-zone-row .tcg-card {
-    max-height: 100% !important;
-    overflow: hidden !important;
-  }
+  /* Cards en field NUNCA se salen del slot — overflow estricto + dimensiones forzadas. */
   .tcg-zone-row .tcg-slot {
+    overflow: hidden !important;
+    position: relative !important;
+  }
+  .tcg-zone-row .tcg-card {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
     overflow: hidden !important;
   }
   /* Zone rows: gap mayor entre S/T row y monster row para separación clara */

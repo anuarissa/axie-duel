@@ -30,6 +30,7 @@ import { getJwt, getJwtUserId, apiFetch } from '../../../lib/auth';
 import { placeholderSvgFor as svgForCard, resolveCardImage } from '../../../lib/cardArt';
 import { SoundControls } from '../../../components/SoundControls';
 import { RockPaperScissorsIntro } from '../../../components/RockPaperScissorsIntro';
+import { CardPreviewOverlay } from '../../../components/CardPreviewOverlay';
 import { sound } from '../../../lib/sound';
 
 const GAME_SERVER = process.env.NEXT_PUBLIC_GAME_SERVER_URL ?? 'ws://localhost:2567';
@@ -62,6 +63,7 @@ interface PlayerSnapshot {
   spellTrapZones: CardSnapshot[];
   graveyard: CardSnapshot[];
   hasNormalSummonedThisTurn: boolean;
+  pendingHandLimitDiscard: number;
 }
 interface DuelStateSnapshot {
   matchId: string;
@@ -194,6 +196,8 @@ function PvePage() {
     username: 'You', displayName: null, avatarUrl: null,
   });
   const [firstPlayerChoice, setFirstPlayerChoice] = useState<'me' | 'opponent' | null>(null);
+  /** Modal forzado de discard cuando hand > 6 al fin del turno. count = cuántas debés descartar. */
+  const [handLimitDiscard, setHandLimitDiscard] = useState<{ count: number; selected: Set<string> } | null>(null);
   /** Mobile: hand peek-up state. Default 'peek' (40-45% hidden). Tap handle → expand. */
   const [handExpanded, setHandExpanded] = useState<boolean>(false);
   /** Banner de fase: visible solo 2s después de cada cambio de turno/fase. Auto-dismiss. */
@@ -206,6 +210,17 @@ function PvePage() {
     const t = setTimeout(() => setPhaseBannerVisible(false), 2000);
     return () => clearTimeout(t);
   }, [state?.turnNumber, state?.phase, state?.activePlayerId]);
+  /** Cleanup defensivo: si la fase deja de ser END (turno cambió o juego terminó),
+   * cerramos el modal de hand-limit discard para evitar que quede stale. El server
+   * también limpia pendingHandLimitDiscard al resolver, pero esto es seguro client-side. */
+  useEffect(() => {
+    if (state && state.phase !== 'END') {
+      setHandLimitDiscard(null);
+    }
+    if (state && state.status === 'GAME_OVER') {
+      setHandLimitDiscard(null);
+    }
+  }, [state?.phase, state?.status, state?.turnNumber]);
   const coinsAtMatchStartRef = useRef<string | null>(null);
   const xpAtMatchStartRef = useRef<number | null>(null);
   const levelAtMatchStartRef = useRef<number | null>(null);
@@ -372,6 +387,20 @@ function PvePage() {
           log('error', `[${data.code}] ${data.message}`);
           // Mostrar toast visible (no solo en log lateral).
           pushToast('error', friendlyErrorTitle(data.code), data.message);
+        });
+
+        /** Hand-limit discard: server detectó hand > 6 en END phase. Mostrar modal forzado. */
+        joinedRoom.onMessage('HAND_LIMIT_DISCARD_REQUIRED', (data: { count: number; handLimit: number }) => {
+          setHandLimitDiscard({ count: data.count, selected: new Set() });
+          pushToast('info', '⚠ Hand limit', `Discard ${data.count} card(s) — max ${data.handLimit} in hand at end of turn.`);
+          sound.play('phaseAdvance');
+        });
+        joinedRoom.onMessage('HAND_LIMIT_DISCARD_RESOLVED', (data: { ownerId: string; count: number }) => {
+          if (data.ownerId === joinedRoom.sessionId) {
+            setHandLimitDiscard(null);
+          } else {
+            log('info', `Opponent discarded ${data.count} card(s) (hand limit).`);
+          }
         });
 
         joinedRoom.onMessage('COMBAT_RESULT', (data: {
@@ -1164,6 +1193,25 @@ function PvePage() {
 
   return (
     <main className="tcg-page">
+      {/* Decoración lateral — solo desktop ≥1280px (display:none mobile via @media).
+          pointer-events:none + aria-hidden para no interceptar clicks ni leakear al
+          screen reader. Reusa keyframes float/particle. */}
+      <div className="tcg-side-decor tcg-side-decor-left" aria-hidden="true">
+        <div className="tcg-decor-axie" data-class="plant" />
+        <div className="tcg-decor-axie" data-class="aqua" />
+        <div className="tcg-decor-axie" data-class="bird" />
+        <div className="tcg-decor-particle" />
+        <div className="tcg-decor-particle" />
+        <div className="tcg-decor-particle" />
+      </div>
+      <div className="tcg-side-decor tcg-side-decor-right" aria-hidden="true">
+        <div className="tcg-decor-axie" data-class="beast" />
+        <div className="tcg-decor-axie" data-class="reptile" />
+        <div className="tcg-decor-axie" data-class="bug" />
+        <div className="tcg-decor-particle" />
+        <div className="tcg-decor-particle" />
+        <div className="tcg-decor-particle" />
+      </div>
       {/* Toolbar slim */}
       <header className="tcg-toolbar">
         <Link href="/dashboard" className="tcg-back">
@@ -1512,11 +1560,15 @@ function PvePage() {
 
         <div className="tcg-actions">
           <button
-            className="tcg-btn-primary"
+            type="button"
+            className="tcg-phase-wheel"
             onClick={endPhase}
             disabled={!isMyTurn || isGameOver}
+            aria-label={isMyTurn ? `Advance from ${phaseLabel}` : 'Waiting opponent'}
+            title={isMyTurn ? `Advance Phase (${phaseLabel} →)` : 'Waiting opponent…'}
           >
-            {isMyTurn ? `Advance Phase (${phaseLabel} →)` : 'Waiting opponent…'}
+            <span className="tcg-phase-wheel-icon" aria-hidden>▶</span>
+            <span className="tcg-phase-wheel-label">{phaseLabel}</span>
           </button>
           {/* Direct attack: only visible if opponent has no monsters and an attacker is selected */}
           {selectedAttacker && phase === 'BATTLE' && opponentMonsterCount === 0 ? (
@@ -1667,8 +1719,18 @@ function PvePage() {
 
       {/* Massive card preview — overlay full-screen al hover/tap-hold.
           Se cierra cuando el mouse sale de la hand-card (onMouseLeave → hideCardPreview). */}
-      {previewCard ? (
-        <CardPreviewOverlay card={previewCard} catalog={catalog} onClose={hideCardPreview} />
+      {previewCard && catalog[previewCard.cardId] ? (
+        <CardPreviewOverlay
+          def={catalog[previewCard.cardId]!}
+          cardId={previewCard.cardId}
+          mods={{
+            atkMod: previewCard.atkMod,
+            defMod: previewCard.defMod,
+            auraAtkBonus: previewCard.auraAtkBonus,
+            auraDefBonus: previewCard.auraDefBonus,
+          }}
+          onClose={hideCardPreview}
+        />
       ) : null}
 
       {showHelpModal ? <ClassTriangleHelp onClose={() => setShowHelpModal(false)} /> : null}
@@ -1680,6 +1742,29 @@ function PvePage() {
           catalog={catalog}
           onClose={() => setVoidViewer(null)}
           onCardClick={(c) => { setVoidViewer(null); showCardPreview(c, 0); }}
+        />
+      ) : null}
+
+      {handLimitDiscard && me && room ? (
+        <HandLimitDiscardModal
+          count={handLimitDiscard.count}
+          hand={me.hand}
+          catalog={catalog}
+          selected={handLimitDiscard.selected}
+          onToggle={(id) => setHandLimitDiscard((prev) => {
+            if (!prev) return null;
+            const next = new Set(prev.selected);
+            if (next.has(id)) next.delete(id);
+            else if (next.size < prev.count) next.add(id);
+            return { ...prev, selected: next };
+          })}
+          onConfirm={() => {
+            if (!handLimitDiscard || !room) return;
+            const ids = Array.from(handLimitDiscard.selected);
+            if (ids.length !== handLimitDiscard.count) return;
+            room.send('HAND_LIMIT_DISCARD', { cardInstanceIds: ids });
+            sound.play('click');
+          }}
         />
       ) : null}
 
@@ -2443,85 +2528,7 @@ function TargetingArrow({
  * Overlay full-screen con la carta en gigante. Para hover/tap-and-hold sobre cartas en mano.
  * Position fixed top-left con backdrop blur. Carta centrada ocupando ~70vh.
  */
-function CardPreviewOverlay({ card, catalog, onClose }: { card: CardSnapshot; catalog: CardCatalog; onClose: () => void }) {
-  const def = catalog[card.cardId];
-  // Close on Escape key.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-  if (!def) return null;
-  const isMonster = def.type === 'Monster';
-  const tributesNeeded = isMonster ? ((def.level ?? 0) <= 4 ? 0 : (def.level ?? 0) <= 6 ? 1 : 2) : 0;
-  const type = def.type.toLowerCase();
-  const attrClass = def.attribute ? `attr-${def.attribute.toLowerCase()}` : '';
-  return (
-    <div className="tcg-preview-overlay" onClick={onClose}>
-      <button
-        type="button"
-        className="tcg-preview-close"
-        onClick={(e) => { e.stopPropagation(); onClose(); }}
-        title="Close (Esc)"
-        aria-label="Close preview"
-      >
-        ✕
-      </button>
-      <div className={`tcg-preview-card tcg-card ${type} ${attrClass}`} onClick={(e) => e.stopPropagation()}>
-        <div className="tcg-preview-header">
-          <span className={`tcg-preview-rarity rarity-${def.rarity?.toLowerCase() ?? 'common'}`}>
-            {def.rarity ?? 'Common'}
-          </span>
-          <span className="tcg-preview-typetag">{displayType(def.type)}{def.subType ? ` · ${def.subType}` : ''}</span>
-        </div>
-        <div className="tcg-preview-art">
-          {def ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={resolveCardImage({ ...def, id: card.cardId }, def.imageUrl)}
-              alt={def.name}
-              className="tcg-preview-art-img"
-              onError={(e) => {
-                const img = e.currentTarget;
-                const fallback = svgForCard({ ...def, id: card.cardId });
-                if (img.src !== fallback) img.src = fallback;
-              }}
-            />
-          ) : (
-            <span className="tcg-preview-art-emoji">?</span>
-          )}
-        </div>
-        <div className="tcg-preview-info">
-          <h2 className="tcg-preview-name">{def.name}</h2>
-          {isMonster && def.level ? (
-            <div className="tcg-preview-stars">
-              {'★'.repeat(Math.min(def.level, 8))} <span className="tcg-preview-level">L{def.level}</span>
-            </div>
-          ) : null}
-          {def.attribute ? <div className="tcg-preview-attr">{def.attribute}</div> : null}
-          {isMonster ? (
-            <div className="tcg-preview-statgrid">
-              <div><span>ATK</span><strong>{(def.atk ?? 0) + card.atkMod + (card.auraAtkBonus ?? 0)}</strong></div>
-              <div><span>DEF</span><strong>{(def.def ?? 0) + card.defMod + (card.auraDefBonus ?? 0)}</strong></div>
-              <div><span>Burns</span><strong>{tributesNeeded}</strong></div>
-            </div>
-          ) : null}
-          {def.spellSpeed ? (
-            <div className="tcg-preview-row">
-              <span>Spell Speed</span><strong>{def.spellSpeed}</strong>
-            </div>
-          ) : null}
-          {def.description ? <p className="tcg-preview-desc">{def.description}</p> : null}
-          {def.effectDescription && def.effectDescription !== def.description ? (
-            <div className="tcg-preview-effect">
-              <strong>Effect ({def.effectKind ?? '—'}):</strong> {def.effectDescription}
-            </div>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  );
-}
+/* CardPreviewOverlay was extracted to apps/web/src/components/CardPreviewOverlay.tsx for reuse in /decks/builder. */
 
 /* Tooltip rich con todos los stats — panel fijo arriba-izquierda. */
 function CardTooltip({ card, catalog }: { card: CardSnapshot; catalog: CardCatalog }) {
@@ -2874,6 +2881,74 @@ function VoidContentsModal({
   );
 }
 
+/* HandLimitDiscardModal — modal forzado al fin del turno cuando hand > 6.
+ * El user DEBE elegir N cartas para descartar. No tiene botón de cierre/skip:
+ * solo se cierra al confirmar el discard exacto. Backdrop click NO cierra. */
+function HandLimitDiscardModal({
+  count,
+  hand,
+  catalog,
+  selected,
+  onToggle,
+  onConfirm,
+}: {
+  count: number;
+  hand: CardSnapshot[];
+  catalog: CardCatalog;
+  selected: Set<string>;
+  onToggle: (instanceId: string) => void;
+  onConfirm: () => void;
+}) {
+  const remaining = count - selected.size;
+  const ready = remaining === 0;
+  return (
+    <div className="tcg-handlimit-backdrop" role="dialog" aria-modal="true">
+      <div className="tcg-handlimit-modal">
+        <h2 className="tcg-handlimit-title">⚠ Hand Limit Reached</h2>
+        <p className="tcg-handlimit-sub">
+          You have <strong>{hand.length}</strong> cards in hand — max is <strong>6</strong> at end of turn.
+        </p>
+        <p className="tcg-handlimit-instruction">
+          Pick <strong>{count}</strong> card{count === 1 ? '' : 's'} to send to The Void.
+          {ready ? ' Ready!' : ` (${remaining} left to choose)`}
+        </p>
+        <div className="tcg-handlimit-grid">
+          {hand.map((c) => {
+            const def = catalog[c.cardId];
+            if (!def) return null;
+            const img = svgForCard({ ...def, id: c.cardId });
+            const isSel = selected.has(c.instanceId);
+            return (
+              <button
+                key={c.instanceId}
+                type="button"
+                className={`tcg-handlimit-card ${isSel ? 'selected' : ''}`}
+                onClick={() => onToggle(c.instanceId)}
+                aria-pressed={isSel}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img} alt={def.name} />
+                <span className="tcg-handlimit-card-name">{def.name}</span>
+                {isSel ? <span className="tcg-handlimit-card-mark">✓</span> : null}
+              </button>
+            );
+          })}
+        </div>
+        <div className="tcg-handlimit-footer">
+          <button
+            type="button"
+            className="tcg-btn-primary"
+            disabled={!ready}
+            onClick={onConfirm}
+          >
+            🪦 Discard {count} card{count === 1 ? '' : 's'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ClassTriangleHelp({ onClose }: { onClose: () => void }) {
   return (
     <div className="tcg-help-backdrop" onClick={onClose}>
@@ -2954,6 +3029,7 @@ function toSnapshot(s: any): DuelStateSnapshot {
         spellTrapZones: arrayOf(p.spellTrapZones),
         graveyard: arrayOf(p.graveyard),
         hasNormalSummonedThisTurn: p.hasNormalSummonedThisTurn,
+        pendingHandLimitDiscard: p.pendingHandLimitDiscard ?? 0,
       };
     });
   }

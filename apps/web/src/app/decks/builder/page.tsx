@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch, ApiError, getJwt } from '../../../lib/auth';
 import { resolveCardImage, placeholderSvgFor } from '../../../lib/cardArt';
 import { BrandedLoadingScreen } from '../../../components/BrandedLoadingScreen';
+import { CardPreviewOverlay } from '../../../components/CardPreviewOverlay';
 
 // useSearchParams() requires a Suspense boundary in Next.js 14 app router.
 export default function DeckBuilderPageWrapper() {
@@ -33,7 +34,9 @@ interface Card {
 
 type DeckCardEntry = { cardId: string; quantity: number };
 
-const DECK_SIZE = 40;
+/** Yu-Gi-Oh-style deck rules: 40-60 main deck, max 3 copies por carta. */
+const DECK_MIN = 40;
+const DECK_MAX = 60;
 const MAX_COPIES = 3;
 const LOCAL_STORAGE_KEY = 'user_active_deck';
 
@@ -75,6 +78,7 @@ function DeckBuilderPage() {
   const [deckPickerOpen, setDeckPickerOpen] = useState(false);
   /** Debounced search input — evita re-render por keystroke. */
   const [searchInput, setSearchInput] = useState('');
+  const [previewCard, setPreviewCard] = useState<Card | null>(null);
 
   useEffect(() => {
     if (!getJwt()) {
@@ -236,7 +240,8 @@ function DeckBuilderPage() {
     const c = cardsById.get(e.cardId);
     return c?.type === 'Trap' ? sum + e.quantity : sum;
   }, 0);
-  const isValid = mainCount === DECK_SIZE;
+  /** Yu-Gi-Oh rule: main deck size 40-60 (inclusive). */
+  const isValid = mainCount >= DECK_MIN && mainCount <= DECK_MAX;
 
   const filtered = useMemo(() => {
     return cards.filter((c) => {
@@ -287,7 +292,7 @@ function DeckBuilderPage() {
   function addCard(cardId: string) {
     setDeckMain((curr) => {
       const total = curr.reduce((s, e) => s + e.quantity, 0);
-      if (total >= DECK_SIZE) return curr;
+      if (total >= DECK_MAX) return curr;
       const existing = curr.find((e) => e.cardId === cardId);
       if (existing) {
         if (existing.quantity >= MAX_COPIES) return curr;
@@ -326,7 +331,11 @@ function DeckBuilderPage() {
 
   async function save() {
     if (!isValid) {
-      setErrMsg(`Main deck must have exactly ${DECK_SIZE} cards.`);
+      setErrMsg(
+        mainCount < DECK_MIN
+          ? `Main deck must have at least ${DECK_MIN} cards (currently ${mainCount}).`
+          : `Main deck cannot exceed ${DECK_MAX} cards (currently ${mainCount}).`,
+      );
       return;
     }
     setSaving(true);
@@ -368,7 +377,16 @@ function DeckBuilderPage() {
       {/* Top bar */}
       <header className="builder3-topbar">
         <Link href="/dashboard" className="builder3-back" title="Back to dashboard">←</Link>
-        <div className="builder3-deck-picker">
+        <div className={`builder3-deck-picker ${deckPickerOpen ? 'open' : ''}`}>
+          {/* Backdrop para cerrar el bottom-sheet en mobile (solo aparece via CSS @media). */}
+          {deckPickerOpen ? (
+            <button
+              type="button"
+              className="builder3-deck-picker-backdrop-btn"
+              aria-label="Close deck picker"
+              onClick={() => setDeckPickerOpen(false)}
+            />
+          ) : null}
           <button
             type="button"
             className="builder3-deck-picker-btn"
@@ -421,8 +439,8 @@ function DeckBuilderPage() {
           placeholder="Deck name"
           maxLength={60}
         />
-        <div className={`builder3-counter ${isValid ? 'ok' : mainCount > DECK_SIZE ? 'over' : 'warn'}`}>
-          <strong>{mainCount}</strong> / {DECK_SIZE}
+        <div className={`builder3-counter ${isValid ? 'ok' : mainCount > DECK_MAX ? 'over' : 'warn'}`}>
+          <strong>{mainCount}</strong> <span className="builder3-counter-range">/ {DECK_MIN}-{DECK_MAX}</span>
         </div>
         <div className="builder3-counter-sub">
           <span title="Axies">🐾 {monsterCount}</span>
@@ -443,9 +461,12 @@ function DeckBuilderPage() {
           className={`builder3-save ${isValid ? 'ready' : ''}`}
           onClick={save}
           disabled={saving || !isValid}
-          title={isValid ? 'Save and set active deck' : `Need exactly ${DECK_SIZE} cards`}
+          title={isValid ? 'Save and set active deck' : mainCount < DECK_MIN ? `Need at least ${DECK_MIN} cards` : `Maximum ${DECK_MAX} reached`}
         >
-          {saving ? '⏳ Saving…' : isValid ? (currentDeckId ? '💾 UPDATE' : '💾 SAVE') : `⚠ ${DECK_SIZE - mainCount > 0 ? 'Need ' + (DECK_SIZE - mainCount) : 'Over by ' + (mainCount - DECK_SIZE)}`}
+          {saving ? '⏳ Saving…'
+            : isValid ? (currentDeckId ? '💾 UPDATE' : '💾 SAVE')
+            : mainCount < DECK_MIN ? `⚠ Need ${DECK_MIN - mainCount} more`
+            : `⚠ Over by ${mainCount - DECK_MAX}`}
         </button>
       </header>
 
@@ -535,52 +556,62 @@ function DeckBuilderPage() {
             {filtered.map((c) => {
               const qty = quantityOf(c.id);
               const maxed = qty >= MAX_COPIES;
-              const full = mainCount >= DECK_SIZE;
+              const full = mainCount >= DECK_MAX;
               return (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={`builder3-card type-${c.type.toLowerCase()} rarity-${c.rarity} ${maxed || full ? 'unavailable' : ''}`}
-                  onClick={() => { if (!maxed && !full) addCard(c.id); }}
-                  onMouseEnter={() => onHoverCard(c.id)}
-                  onMouseLeave={() => onHoverCard(null)}
-                  title={maxed ? `Already ${MAX_COPIES} copies` : full ? 'Deck is full (40)' : `Add ${c.name}`}
-                >
-                  {/* Class chip top-left */}
-                  <span
-                    className="builder3-card-class-chip"
-                    style={{ background: classColorOf(c) }}
+                <div key={c.id} className="builder3-card-wrap">
+                  <button
+                    type="button"
+                    className={`builder3-card type-${c.type.toLowerCase()} rarity-${c.rarity} ${maxed || full ? 'unavailable' : ''}`}
+                    onClick={() => { if (!maxed && !full) addCard(c.id); }}
+                    onMouseEnter={() => onHoverCard(c.id)}
+                    onMouseLeave={() => onHoverCard(null)}
+                    title={maxed ? `Already ${MAX_COPIES} copies` : full ? `Deck is full (${DECK_MAX})` : `Add ${c.name}`}
+                    disabled={maxed || full}
                   >
-                    {c.type === 'Monster' ? c.attribute : c.type}
-                  </span>
-                  {/* Stars top-right */}
-                  {c.level !== null ? (
-                    <span className="builder3-card-stars" title={`Level ${c.level}`}>
-                      ⭐{c.level}
+                    {/* Class chip top-left */}
+                    <span
+                      className="builder3-card-class-chip"
+                      style={{ background: classColorOf(c) }}
+                    >
+                      {c.type === 'Monster' ? c.attribute : c.type}
                     </span>
-                  ) : null}
-                  {/* Image */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={resolveCardImage(c, c.imageUrl)}
-                    alt={c.name}
-                    loading="lazy"
-                    onError={(e) => {
-                      const img = e.currentTarget;
-                      const fallback = placeholderSvgFor(c);
-                      if (img.src !== fallback) img.src = fallback;
-                    }}
-                  />
-                  {/* Name + ATK/DEF */}
-                  <div className="builder3-card-info">
-                    <div className="builder3-card-name">{c.name}</div>
-                    {c.type === 'Monster' && c.atk !== null ? (
-                      <div className="builder3-card-stats">{c.atk}/{c.def}</div>
+                    {/* Stars top-right */}
+                    {c.level !== null ? (
+                      <span className="builder3-card-stars" title={`Level ${c.level}`}>
+                        ⭐{c.level}
+                      </span>
                     ) : null}
-                  </div>
-                  {/* Quantity badge */}
-                  {qty > 0 ? <span className="builder3-card-qty">×{qty}</span> : null}
-                </button>
+                    {/* Image */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={resolveCardImage(c, c.imageUrl)}
+                      alt={c.name}
+                      loading="lazy"
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        const fallback = placeholderSvgFor(c);
+                        if (img.src !== fallback) img.src = fallback;
+                      }}
+                    />
+                    {/* Name + ATK/DEF */}
+                    <div className="builder3-card-info">
+                      <div className="builder3-card-name">{c.name}</div>
+                      {c.type === 'Monster' && c.atk !== null ? (
+                        <div className="builder3-card-stats">{c.atk}/{c.def}</div>
+                      ) : null}
+                    </div>
+                    {/* Quantity badge */}
+                    {qty > 0 ? <span className="builder3-card-qty">×{qty}</span> : null}
+                  </button>
+                  {/* Lupa SIBLING (no anidada en el button — HTML válido). */}
+                  <button
+                    type="button"
+                    className="builder3-card-lupa"
+                    onClick={() => setPreviewCard(c)}
+                    aria-label={`View ${c.name} details`}
+                    title="View details"
+                  >🔍</button>
+                </div>
               );
             })}
             {filtered.length === 0 ? (
@@ -598,13 +629,19 @@ function DeckBuilderPage() {
           <div className="builder3-deck-header">
             <span className="builder3-deck-label">🃏 Active Deck</span>
             <span className={`builder3-deck-progress ${isValid ? 'ok' : ''}`}>
-              {mainCount} / {DECK_SIZE}
+              {mainCount} <span className="builder3-deck-progress-range">/ {DECK_MIN}-{DECK_MAX}</span>
             </span>
           </div>
           <div className="builder3-deck-bar">
             <div
-              className={`builder3-deck-bar-fill ${isValid ? 'ok' : mainCount > DECK_SIZE ? 'over' : 'warn'}`}
-              style={{ width: `${Math.min(100, (mainCount / DECK_SIZE) * 100)}%` }}
+              className={`builder3-deck-bar-fill ${isValid ? 'ok' : mainCount > DECK_MAX ? 'over' : 'warn'}`}
+              style={{ width: `${Math.min(100, (mainCount / DECK_MAX) * 100)}%` }}
+            />
+            {/* Marker visual del mínimo (40) sobre la barra */}
+            <div
+              className="builder3-deck-bar-min-marker"
+              style={{ left: `${(DECK_MIN / DECK_MAX) * 100}%` }}
+              title={`Minimum ${DECK_MIN} cards`}
             />
           </div>
           <div className="builder3-deck-grid">
@@ -612,43 +649,52 @@ function DeckBuilderPage() {
               <div className="builder3-deck-empty">
                 <div className="builder3-deck-empty-icon">🃏</div>
                 <p>Click cards from your collection to add them.</p>
-                <p className="builder3-deck-empty-hint">You need exactly {DECK_SIZE} cards.</p>
+                <p className="builder3-deck-empty-hint">Build between {DECK_MIN} and {DECK_MAX} cards.</p>
               </div>
             ) : (
               deckSlots.map((slot, idx) => {
                 const card = cardsById.get(slot.cardId);
                 if (!card) return null;
                 return (
-                  <button
-                    key={`${slot.cardId}-${slot.copyIndex}-${idx}`}
-                    type="button"
-                    className={`builder3-deck-slot type-${card.type.toLowerCase()} rarity-${card.rarity}`}
-                    onClick={() => removeCardOne(card.id)}
-                    onMouseEnter={() => onHoverCard(card.id)}
-                    onMouseLeave={() => onHoverCard(null)}
-                    title={`${card.name} — click to remove`}
-                  >
-                    <span
-                      className="builder3-deck-slot-class-chip"
-                      style={{ background: classColorOf(card) }}
+                  <div key={`${slot.cardId}-${slot.copyIndex}-${idx}`} className="builder3-deck-slot-wrap">
+                    <button
+                      type="button"
+                      className={`builder3-deck-slot type-${card.type.toLowerCase()} rarity-${card.rarity}`}
+                      onClick={() => removeCardOne(card.id)}
+                      onMouseEnter={() => onHoverCard(card.id)}
+                      onMouseLeave={() => onHoverCard(null)}
+                      title={`${card.name} — click to remove`}
                     >
-                      {card.type === 'Monster' ? (card.attribute?.[0] ?? '?') : card.type[0]}
-                    </span>
-                    {card.level !== null ? (
-                      <span className="builder3-deck-slot-stars">⭐{card.level}</span>
-                    ) : null}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={resolveCardImage(card, card.imageUrl)}
-                      alt={card.name}
-                      loading="lazy"
-                      onError={(e) => {
-                        const img = e.currentTarget;
-                        const fallback = placeholderSvgFor(card);
-                        if (img.src !== fallback) img.src = fallback;
-                      }}
-                    />
-                  </button>
+                      <span
+                        className="builder3-deck-slot-class-chip"
+                        style={{ background: classColorOf(card) }}
+                      >
+                        {card.type === 'Monster' ? (card.attribute?.[0] ?? '?') : card.type[0]}
+                      </span>
+                      {card.level !== null ? (
+                        <span className="builder3-deck-slot-stars">⭐{card.level}</span>
+                      ) : null}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={resolveCardImage(card, card.imageUrl)}
+                        alt={card.name}
+                        loading="lazy"
+                        onError={(e) => {
+                          const img = e.currentTarget;
+                          const fallback = placeholderSvgFor(card);
+                          if (img.src !== fallback) img.src = fallback;
+                        }}
+                      />
+                    </button>
+                    {/* Lupa SIBLING — tap to preview without removing. */}
+                    <button
+                      type="button"
+                      className="builder3-card-lupa builder3-deck-slot-lupa"
+                      onClick={() => setPreviewCard(card)}
+                      aria-label={`View ${card.name} details`}
+                      title="View details"
+                    >🔍</button>
+                  </div>
                 );
               })
             )}
@@ -695,6 +741,25 @@ function DeckBuilderPage() {
             </div>
           </div>
         </div>
+      ) : null}
+
+      {/* Mobile/touch preview overlay (lupa 🔍 → tap). Reusa el mismo componente que /play/pve. */}
+      {previewCard ? (
+        <CardPreviewOverlay
+          def={{
+            name: previewCard.name,
+            type: previewCard.type,
+            rarity: previewCard.rarity,
+            attribute: previewCard.attribute,
+            level: previewCard.level,
+            atk: previewCard.atk,
+            def: previewCard.def,
+            description: previewCard.description,
+            imageUrl: previewCard.imageUrl,
+          }}
+          cardId={previewCard.id}
+          onClose={() => setPreviewCard(null)}
+        />
       ) : null}
     </main>
     </div>

@@ -3111,8 +3111,12 @@ pre {
 
 /* Main board: 2 sides + center divider, fits in viewport, fully responsive */
 .tcg-board {
-  display: grid;
-  grid-template-rows: 1fr auto 1fr;
+  /* FIX: flex column space-between (mismo fix que mobile V14).
+   * Grid 1fr auto 1fr causaba overflow cuando los cells eran chicos
+   * y los cards de opp/mine se solapaban en el centro. */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   gap: 0;
   padding: clamp(0.4rem, 1.5vw, 1rem);
   min-height: 0;
@@ -3120,6 +3124,21 @@ pre {
   max-width: 1200px;
   margin: 0 auto;
   width: 100%;
+}
+.tcg-board > .tcg-side {
+  flex: 0 0 auto; /* content-based, no overflow possible */
+}
+/* Divider con el banner: position absolute centered, no afecta el space-between */
+.tcg-board > .tcg-divider {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  pointer-events: none;
+}
+.tcg-board > .tcg-divider .tcg-phase-banner {
+  pointer-events: auto;
 }
 
 .tcg-side {

@@ -202,6 +202,8 @@ function PvePage() {
   const [firstPlayerChoice, setFirstPlayerChoice] = useState<'me' | 'opponent' | null>(null);
   /** Mobile: hand peek-up state. Default 'peek' (40-45% hidden). Tap handle → expand. */
   const [handExpanded, setHandExpanded] = useState<boolean>(false);
+  /** Banner de fase: visible solo 2s después de cada cambio de turno/fase. Auto-dismiss. */
+  const [phaseBannerVisible, setPhaseBannerVisible] = useState<boolean>(true);
   const coinsAtMatchStartRef = useRef<string | null>(null);
   const xpAtMatchStartRef = useRef<number | null>(null);
   const levelAtMatchStartRef = useRef<number | null>(null);
@@ -1153,6 +1155,14 @@ function PvePage() {
   };
   const phaseLabel = phaseLabels[phase] ?? phase;
 
+  /** Auto-dismiss del phase banner: aparece 2s en cada cambio de fase/turno y se oculta. */
+  const turnPhaseKey = `${state?.turnNumber ?? 0}-${phase}-${state?.activePlayerId ?? ''}`;
+  useEffect(() => {
+    setPhaseBannerVisible(true);
+    const t = setTimeout(() => setPhaseBannerVisible(false), 2000);
+    return () => clearTimeout(t);
+  }, [turnPhaseKey]);
+
   const isGameOver = state?.status === 'GAME_OVER';
   const won = state?.winnerId === mySessionId;
 
@@ -1309,19 +1319,21 @@ function PvePage() {
           <section className="tcg-side opponent"><p style={{ opacity: 0.5 }}>Waiting for opponent…</p></section>
         )}
 
-        {/* Banner central de turno + fase. key={phase + turn} fuerza re-mount → CSS animation
-            slide-in dispara cada vez que cambia. Color-coded: jugador=cyan/oro, bot=magenta. */}
+        {/* Banner central de turno + fase. Visible 2s después de cada cambio (auto-dismiss).
+            key={phase + turn} fuerza re-mount → CSS animation slide-in cada vez. */}
         <div className="tcg-divider">
-          <div
-            key={`${state?.turnNumber ?? 0}-${phase}-${state?.activePlayerId ?? ''}`}
-            className={`tcg-phase-banner ${isMyTurn ? 'is-mine' : 'is-opp'}`}
-          >
-            <div className="tcg-phase-banner-turn">
-              {isMyTurn ? '⚡ YOUR TURN' : '🤖 OPPONENT TURN'}
+          {phaseBannerVisible ? (
+            <div
+              key={turnPhaseKey}
+              className={`tcg-phase-banner ${isMyTurn ? 'is-mine' : 'is-opp'}`}
+            >
+              <div className="tcg-phase-banner-turn">
+                {isMyTurn ? '⚡ YOUR TURN' : '🤖 OPPONENT TURN'}
+              </div>
+              <div className="tcg-phase-banner-name">{phaseLabel}</div>
+              <div className="tcg-phase-banner-hint">{phaseHints[phase] ?? '—'}</div>
             </div>
-            <div className="tcg-phase-banner-name">{phaseLabel}</div>
-            <div className="tcg-phase-banner-hint">{phaseHints[phase] ?? '—'}</div>
-          </div>
+          ) : null}
         </div>
 
         {/* Lado tuyo */}

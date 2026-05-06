@@ -3111,13 +3111,15 @@ pre {
 
 /* Main board: 2 sides + center divider, fits in viewport, fully responsive */
 .tcg-board {
-  /* FIX: flex column space-between (mismo fix que mobile V14).
-   * Grid 1fr auto 1fr causaba overflow cuando los cells eran chicos
-   * y los cards de opp/mine se solapaban en el centro. */
+  /* Flex column center con gap controlado.
+   * Antes: space-between dejaba gap gigante entre opp y mine en monitores altos.
+   * Ahora: center → opp y mine cerca en el medio del board, gap fijo de ~2rem
+   * entre ellos. El espacio sobrante queda arriba (debajo del toolbar) y abajo
+   * (arriba del hand strip), no en el medio del field. */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 0;
+  justify-content: center;
+  gap: clamp(0.8rem, 2vw, 2rem);
   padding: clamp(0.4rem, 1.5vw, 1rem);
   min-height: 0;
   position: relative;

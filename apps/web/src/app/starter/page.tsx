@@ -226,9 +226,13 @@ export default function StarterPage() {
       </div>
 
       <footer className="starter-v2-footer">
-        <Link href="/dashboard" className="starter-v2-skip">
-          ← Back to dashboard
-        </Link>
+        {/* Solo permitir back al dashboard si YA tiene starter — los nuevos users
+         * están forzados a elegir uno antes de acceder al juego. */}
+        {status?.starterPicked ? (
+          <Link href="/dashboard" className="starter-v2-skip">
+            ← Back to dashboard
+          </Link>
+        ) : null}
         <p className="starter-v2-disclaimer">
           The choice is permanent. The other two starters can be unlocked later from the Tienda for 5 AXS each.
         </p>

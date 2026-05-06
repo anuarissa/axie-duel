@@ -137,6 +137,11 @@ export default function DashboardPage() {
         errors.push(`/users/me: ${err instanceof Error ? err.message : String(err)}`);
       } else {
         setMe(meR.value);
+        // FORCE starter pick: nuevos users van directo a /starter, sin opción a dashboard.
+        if (!meR.value.starterPicked) {
+          router.replace('/starter');
+          return;
+        }
       }
 
       if (decksR.status === 'fulfilled') setDecks(decksR.value.decks);

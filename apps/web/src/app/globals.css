@@ -3784,15 +3784,33 @@ pre {
  * Cubre iPhone landscape (~660-844px wide) + Android landscape, donde 640px width
  * media query NO catchea pero el espacio sigue siendo limitado. */
 @media (max-width: 900px), (max-height: 500px) {
-  /* Toolbar: hide verbose labels, shrink fonts, horizontal scroll if needed. */
+  /* Toolbar: hide verbose labels, shrink fonts, horizontal scroll if needed.
+   * Surrender + SoundControls anchored a la derecha SIEMPRE visibles
+   * (sticky right) aunque el resto del toolbar overflowee. */
   .tcg-toolbar {
     padding: 0 0.5rem;
+    padding-right: 96px !important; /* reserva espacio para los sticky right buttons */
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: visible;
+    position: relative;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
   }
   .tcg-toolbar::-webkit-scrollbar { display: none; }
+  /* Sound + Surrender: SIEMPRE visibles en la derecha del toolbar. */
+  .tcg-toolbar .sound-controls,
+  .tcg-toolbar .tcg-surrender {
+    position: sticky;
+    right: 0;
+    z-index: 11;
+    background: rgba(10, 1, 23, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    flex-shrink: 0;
+  }
+  .tcg-toolbar .tcg-surrender {
+    right: 4px; /* extra offset para no pegarse al borde */
+  }
   .tcg-status {
     gap: 0.6rem;
     font-size: 0.62rem;
@@ -9946,16 +9964,61 @@ pre {
     flex-direction: column !important;
     flex: 0 0 auto !important;
   }
+  /* Lane separators con DUAL-COLOR shimmer animado estilo "energy boundary" Yu-Gi-Oh.
+   * Opp lane: yellow + cyan shimmer (warm vs cool clash visual).
+   * My lane: PINK brand (var --axie-pink) + purple shimmer (no más rojo crudo).
+   * Box-shadow glow PULSANTE durante batalla. */
   .tcg-side.opponent {
-    border-bottom: 4px solid #fbbf24 !important; /* AMARILLA — campo enemigo arriba */
-    box-shadow: 0 4px 18px rgba(251, 191, 36, 0.4);
+    border-bottom: none !important;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(251, 191, 36, 0.95) 15%,
+      rgba(20, 195, 244, 0.85) 50%,
+      rgba(251, 191, 36, 0.95) 85%,
+      transparent 100%
+    ) !important;
+    background-size: 200% 4px;
+    background-position: 0% 100%;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 22px rgba(251, 191, 36, 0.45), 0 8px 36px rgba(20, 195, 244, 0.2);
+    animation: lane-shimmer-opp 4s linear infinite;
     padding-bottom: 0.5rem !important;
   }
   .tcg-side:not(.opponent) {
-    border-top: 4px solid #ef4444 !important; /* ROJA — mi campo abajo */
-    box-shadow: 0 -4px 18px rgba(239, 68, 68, 0.4);
+    border-top: none !important;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 107, 157, 0.95) 15%,
+      rgba(140, 93, 246, 0.85) 50%,
+      rgba(255, 107, 157, 0.95) 85%,
+      transparent 100%
+    ) !important;
+    background-size: 200% 4px;
+    background-position: 100% 0;
+    background-repeat: no-repeat;
+    box-shadow: 0 -4px 22px rgba(255, 107, 157, 0.45), 0 -8px 36px rgba(140, 93, 246, 0.2);
+    animation: lane-shimmer-mine 4s linear infinite;
     padding-top: 0.5rem !important;
   }
+}
+@keyframes lane-shimmer-opp {
+  0%   { background-position: 0% 100%; }
+  100% { background-position: 200% 100%; }
+}
+@keyframes lane-shimmer-mine {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+/* Pulse del glow durante BATTLE phase (clase agregada por JS o estado). */
+@media (max-width: 900px), (max-height: 500px) {
+  .tcg-page[data-phase="BATTLE"] .tcg-side.opponent,
+  .tcg-page[data-phase="BATTLE"] .tcg-side:not(.opponent) {
+    animation-duration: 2s; /* shimmer más rápido en batalla */
+  }
+  .tcg-page[data-phase="BATTLE"] .tcg-side.opponent { box-shadow: 0 4px 32px rgba(251, 191, 36, 0.7), 0 8px 50px rgba(20, 195, 244, 0.35); }
+  .tcg-page[data-phase="BATTLE"] .tcg-side:not(.opponent) { box-shadow: 0 -4px 32px rgba(255, 107, 157, 0.7), 0 -8px 50px rgba(140, 93, 246, 0.35); }
   /* Zones siguen siendo flex column con sus 2 rows (S/T + Monster) */
   .tcg-side .tcg-zones {
     flex: 0 0 auto !important;

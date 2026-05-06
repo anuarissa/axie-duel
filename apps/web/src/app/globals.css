@@ -3773,12 +3773,11 @@ pre {
   grid-template-columns: 1fr auto;
   gap: clamp(0.5rem, 1.5vw, 1rem);
   padding: clamp(0.5rem, 1.5vw, 0.85rem) clamp(0.5rem, 1.5vw, 1rem) clamp(0.6rem, 2vw, 1rem);
-  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.45) 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent; /* user pidió quitar el rectángulo difuminado */
+  border-top: none;
   align-items: end;
   z-index: 5;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  /* No backdrop-filter — hand cards visibles directo sobre el fondo del board */
 }
 /* Mobile landscape (≤900px or low-height phones): comprehensive compact layout.
  * Cubre iPhone landscape (~660-844px wide) + Android landscape, donde 640px width
@@ -7130,9 +7129,26 @@ pre {
   transform: scale(1.06);
 }
 .sound-controls-btn.muted {
-  background: rgba(239, 68, 68, 0.16);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.7);
   color: #fca5a5;
+  position: relative;
+  overflow: visible;
+}
+/* Cruz roja diagonal tachando el icono cuando muted — clear visual signal. */
+.sound-controls-btn.muted::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 8%;
+  right: 8%;
+  height: 3px;
+  background: #ef4444;
+  border-radius: 2px;
+  transform: translateY(-50%) rotate(-30deg);
+  box-shadow: 0 0 6px rgba(239, 68, 68, 0.85), 0 0 0 1px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  z-index: 2;
 }
 .sound-controls-btn:focus-visible {
   outline: 2px solid var(--axie-yellow);
@@ -9986,19 +10002,21 @@ pre {
     padding-bottom: 0.5rem !important;
   }
   .tcg-side:not(.opponent) {
+    /* User pidió cambiar la lane roja/pink a CYAN + GREEN — combinación menos
+     * distractora visualmente, mantiene paleta brand (cyan #14C3F4 + green #34D399). */
     border-top: none !important;
     background-image: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(255, 107, 157, 0.95) 15%,
-      rgba(140, 93, 246, 0.85) 50%,
-      rgba(255, 107, 157, 0.95) 85%,
+      rgba(20, 195, 244, 0.95) 15%,    /* cyan brand */
+      rgba(52, 211, 153, 0.85) 50%,    /* green Plant class */
+      rgba(20, 195, 244, 0.95) 85%,    /* cyan brand */
       transparent 100%
     ) !important;
     background-size: 200% 4px;
     background-position: 100% 0;
     background-repeat: no-repeat;
-    box-shadow: 0 -4px 22px rgba(255, 107, 157, 0.45), 0 -8px 36px rgba(140, 93, 246, 0.2);
+    box-shadow: 0 -4px 22px rgba(20, 195, 244, 0.45), 0 -8px 36px rgba(52, 211, 153, 0.2);
     animation: lane-shimmer-mine 4s linear infinite;
     padding-top: 0.5rem !important;
   }
@@ -10018,7 +10036,7 @@ pre {
     animation-duration: 2s; /* shimmer más rápido en batalla */
   }
   .tcg-page[data-phase="BATTLE"] .tcg-side.opponent { box-shadow: 0 4px 32px rgba(251, 191, 36, 0.7), 0 8px 50px rgba(20, 195, 244, 0.35); }
-  .tcg-page[data-phase="BATTLE"] .tcg-side:not(.opponent) { box-shadow: 0 -4px 32px rgba(255, 107, 157, 0.7), 0 -8px 50px rgba(140, 93, 246, 0.35); }
+  .tcg-page[data-phase="BATTLE"] .tcg-side:not(.opponent) { box-shadow: 0 -4px 32px rgba(20, 195, 244, 0.7), 0 -8px 50px rgba(52, 211, 153, 0.35); }
   /* Zones siguen siendo flex column con sus 2 rows (S/T + Monster) */
   .tcg-side .tcg-zones {
     flex: 0 0 auto !important;

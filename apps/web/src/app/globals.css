@@ -9891,48 +9891,40 @@ pre {
     min-height: 40px !important;
   }
 
-  /* FIELD: separación FÍSICA clara opp/my con gap GRANDE entre lanes.
-   * AMARILLA arriba (border-bottom de opp = enemigo encima) + ROJA abajo
-   * (border-top de mine = mi campo abajo). Gap central vacío para que las
-   * cards de opp y mine NUNCA se toquen ni se solapen. */
+  /* FIX V14: ROOT CAUSE — grid 1fr cells overflow porque content > cell size.
+   * Cambio a flex column space-between: opp arriba, mine abajo, gap auto vacío
+   * en el medio. NO hay cells fixed que puedan overflow → cards NO se mezclan. */
   .tcg-board {
-    position: relative;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important; /* opp top, mine bottom, gap auto */
+    gap: 0 !important;
     padding: 0.5rem 0.4rem 0.5rem !important;
-    grid-template-rows: 1fr auto 1fr !important;
-    gap: 2rem !important; /* gap MÁS grande aún para separación física */
   }
-  /* Sides STRETCH para ocupar todo su grid cell + flex-column con
-   * zones forzadas al borde correcto.
-   * Opp: zones al TOP (cerca del toolbar). Mío: zones al BOTTOM (cerca del hand). */
+  /* Hide divider: el espacio entre opp y mine se maneja por space-between */
+  .tcg-divider {
+    display: none !important;
+  }
+  /* Sides flex 0 0 auto: tamaño content-based, NO shrink, NO grow.
+   * Cada side ocupa solo lo que necesita su contenido + padding/border. */
   .tcg-side {
     display: flex !important;
     flex-direction: column !important;
-  }
-  .tcg-side.opponent {
-    align-self: stretch !important;
-    justify-content: flex-start !important; /* zones top → gap abajo cerca de la lane amarilla */
-    border-bottom: 4px solid #fbbf24 !important;
-    box-shadow: 0 4px 18px rgba(251, 191, 36, 0.4);
-    padding-bottom: 0.6rem !important;
-    margin-bottom: 0.6rem;
-  }
-  .tcg-side:not(.opponent) {
-    align-self: stretch !important;
-    justify-content: flex-end !important; /* zones BOTTOM → cerca del hand, no se entrelazan con opp */
-    border-top: 4px solid #ef4444 !important;
-    box-shadow: 0 -4px 18px rgba(239, 68, 68, 0.4);
-    padding-top: 0.6rem !important;
-    margin-top: 0.6rem;
-  }
-  /* Zones flex container: no estira, mantiene su altura content-based */
-  .tcg-side .tcg-zones {
     flex: 0 0 auto !important;
   }
-  /* Divider central VACÍO: gap físico entre las dos zonas. */
-  .tcg-divider {
-    height: 24px !important;
-    background: transparent !important;
-    border: none !important;
+  .tcg-side.opponent {
+    border-bottom: 4px solid #fbbf24 !important; /* AMARILLA — campo enemigo arriba */
+    box-shadow: 0 4px 18px rgba(251, 191, 36, 0.4);
+    padding-bottom: 0.5rem !important;
+  }
+  .tcg-side:not(.opponent) {
+    border-top: 4px solid #ef4444 !important; /* ROJA — mi campo abajo */
+    box-shadow: 0 -4px 18px rgba(239, 68, 68, 0.4);
+    padding-top: 0.5rem !important;
+  }
+  /* Zones siguen siendo flex column con sus 2 rows (S/T + Monster) */
+  .tcg-side .tcg-zones {
+    flex: 0 0 auto !important;
   }
   /* Cards en field NUNCA se salen del slot — overflow estricto + dimensiones forzadas. */
   .tcg-zone-row .tcg-slot {

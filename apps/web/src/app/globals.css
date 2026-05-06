@@ -21,6 +21,35 @@ body {
   -webkit-overflow-scrolling: touch;
 }
 
+/* PERF: backdrop-filter blur es expensive en GPU mobile (especialmente Android low-end).
+ * Removemos en mobile para mantener 60 FPS — el contraste de los modals/HUDs ya está
+ * cubierto por el background opaque. */
+@media (max-width: 900px) {
+  .tcg-page,
+  .tcg-footer,
+  .tcg-toolbar,
+  .tcg-preview-overlay,
+  .tcg-handmenu,
+  .tcg-menu-backdrop,
+  .tcg-help-modal,
+  .tcg-help-backdrop,
+  .tcg-void-modal,
+  .tcg-void-backdrop,
+  .builder3-page,
+  .builder3-collection,
+  .builder3-deck,
+  .builder3-hover-preview,
+  .coming-soon-backdrop,
+  .coming-soon-modal,
+  .rotate-hint-backdrop,
+  .rotate-hint-modal,
+  .profile-edit-modal-backdrop,
+  .profile-edit-modal {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
 /* Defensive: previene scroll horizontal global en mobile. */
 @media (max-width: 768px) {
   html, body {
@@ -9577,32 +9606,37 @@ pre {
 .builder3-hover-actions { display: flex; justify-content: space-between; padding-top: 0.4rem; border-top: 1px solid rgba(192, 132, 252, 0.2); }
 .builder3-hover-qty { font-size: 0.75rem; color: rgba(245, 243, 255, 0.7); font-weight: 600; }
 
-@media (max-width: 900px) {
-  .builder3-grid { grid-template-columns: 1fr; }
-  .builder3-deck { max-height: 50vh; }
-  .builder3-hover-preview { display: none; }
+/* Builder master container: en desktop sin transform, en mobile escala el
+ * layout COMPLETO 1:1 al desktop via --builder-scale (calculado por JS).
+ * NO se reorganiza nada — el desktop layout queda intacto, solo scaled down. */
+.builder3-master {
+  width: 100%;
+  min-height: 100vh;
 }
-
-/* Mobile (≤768px): scroll vertical fluido + collection 2-3 cards por fila para legibilidad. */
-@media (max-width: 768px) {
-  .builder3-collection-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.55rem;
+@media (max-width: 900px), (max-height: 600px) {
+  body:has(.builder3-master) {
+    overflow: hidden;
   }
-  .builder3-deck { max-height: 45vh; }
-  .builder3-deck-picker-label { max-width: 110px; }
-  .builder3-name { flex-basis: 100%; }
-  /* Card filters más compactos en mobile */
-  .builder3-filter-chip {
-    padding: 0.3rem 0.55rem;
-    font-size: 0.72rem;
+  .builder3-master {
+    width: 1280px !important;
+    height: 720px !important;
+    transform: scale(var(--builder-scale, 1));
+    transform-origin: top left;
+    position: fixed;
+    top: 0;
+    left: 0;
+    /* Centrado: el JS no centra, la transform-origin top-left + viewport handling lo hace */
   }
-}
-
-/* Small mobile (≤480px): collection 2 cards (no 3) — cards más grandes para tap precision. */
-@media (max-width: 480px) {
-  .builder3-collection-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+  /* El builder3-page interno mantiene EXACTAMENTE el layout desktop — no override. */
+  .builder3-page {
+    width: 1280px !important;
+    height: 720px !important;
+    min-height: 0 !important;
+    max-height: 720px;
+  }
+  /* Hide hover preview en mobile (se mantiene de la versión anterior) */
+  .builder3-hover-preview {
+    display: none !important;
   }
 }
 

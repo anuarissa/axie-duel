@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { apiFetch, ApiError, getJwt } from '../../../lib/auth';
@@ -73,6 +73,8 @@ function DeckBuilderPage() {
   const [currentDeckId, setCurrentDeckId] = useState<string | null>(editingId);
   const [dirty, setDirty] = useState(false);
   const [deckPickerOpen, setDeckPickerOpen] = useState(false);
+  /** Debounced search input — evita re-render por keystroke. */
+  const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
     if (!getJwt()) {
@@ -81,6 +83,52 @@ function DeckBuilderPage() {
     }
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Debounce 250ms del search input → searchQuery (usado por filtered useMemo). */
+  useEffect(() => {
+    const t = setTimeout(() => setSearchQuery(searchInput), 250);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  /** RAF-throttled hover handler — evita repaints excesivos al pasar el mouse rápido
+   * sobre las cards de la collection. Solo el último evento por frame se aplica. */
+  const hoverRafRef = useRef<number | null>(null);
+  const onHoverCard = useCallback((id: string | null) => {
+    if (hoverRafRef.current) cancelAnimationFrame(hoverRafRef.current);
+    hoverRafRef.current = requestAnimationFrame(() => {
+      setHoverCardId(id);
+      hoverRafRef.current = null;
+    });
+  }, []);
+
+  /** Mobile master scale: el desktop layout 1280×720 se escala vía CSS var
+   * --builder-scale calculado por viewport. NO afecta desktop (>900px). */
+  useEffect(() => {
+    const calcScale = () => {
+      if (typeof window === 'undefined') return;
+      const viewportW = window.innerWidth;
+      const viewportH = window.innerHeight;
+      // Solo aplicar scale si el viewport es mobile-size (<900px o landscape compacto)
+      if (viewportW >= 900 && viewportH >= 600) {
+        document.documentElement.style.setProperty('--builder-scale', '1');
+        return;
+      }
+      // Pad ~16px de safe-area lateral y ~32px vertical
+      const targetW = 1280;
+      const targetH = 720;
+      const scaleW = (viewportW - 16) / targetW;
+      const scaleH = (viewportH - 16) / targetH;
+      const scale = Math.max(0.4, Math.min(scaleW, scaleH));
+      document.documentElement.style.setProperty('--builder-scale', String(scale));
+    };
+    calcScale();
+    window.addEventListener('resize', calcScale);
+    window.addEventListener('orientationchange', calcScale);
+    return () => {
+      window.removeEventListener('resize', calcScale);
+      window.removeEventListener('orientationchange', calcScale);
+    };
   }, []);
 
   async function load() {
@@ -315,6 +363,7 @@ function DeckBuilderPage() {
   const hoverCard = hoverCardId ? cardsById.get(hoverCardId) : null;
 
   return (
+    <div className="builder3-master">
     <main className="builder3-page">
       {/* Top bar */}
       <header className="builder3-topbar">
@@ -410,8 +459,8 @@ function DeckBuilderPage() {
             <span className="builder3-collection-label">📚 Collection ({filtered.length}/{cards.length})</span>
             <input
               type="search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               placeholder="🔍 Search by name…"
               className="builder3-search"
             />
@@ -493,8 +542,8 @@ function DeckBuilderPage() {
                   type="button"
                   className={`builder3-card type-${c.type.toLowerCase()} rarity-${c.rarity} ${maxed || full ? 'unavailable' : ''}`}
                   onClick={() => { if (!maxed && !full) addCard(c.id); }}
-                  onMouseEnter={() => setHoverCardId(c.id)}
-                  onMouseLeave={() => setHoverCardId(null)}
+                  onMouseEnter={() => onHoverCard(c.id)}
+                  onMouseLeave={() => onHoverCard(null)}
                   title={maxed ? `Already ${MAX_COPIES} copies` : full ? 'Deck is full (40)' : `Add ${c.name}`}
                 >
                   {/* Class chip top-left */}
@@ -575,8 +624,8 @@ function DeckBuilderPage() {
                     type="button"
                     className={`builder3-deck-slot type-${card.type.toLowerCase()} rarity-${card.rarity}`}
                     onClick={() => removeCardOne(card.id)}
-                    onMouseEnter={() => setHoverCardId(card.id)}
-                    onMouseLeave={() => setHoverCardId(null)}
+                    onMouseEnter={() => onHoverCard(card.id)}
+                    onMouseLeave={() => onHoverCard(null)}
                     title={`${card.name} — click to remove`}
                   >
                     <span
@@ -648,5 +697,6 @@ function DeckBuilderPage() {
         </div>
       ) : null}
     </main>
+    </div>
   );
 }

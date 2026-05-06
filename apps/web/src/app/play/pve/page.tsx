@@ -1983,7 +1983,11 @@ function PlayerHud({ player, variant, catalog, profile, onHelp, onOpenVoid }: { 
           <div className={`tcg-hud-bar-fill ${low ? 'low' : ''}`} style={{ width: `${lpPct}%` }} />
         </div>
         <div className="tcg-hud-stats">
-          <div className="tcg-hud-stat">
+          <div className="tcg-hud-stat" title="Cards in deck">
+            <span className="tcg-hud-stat-value">{player.deckSize}</span>
+            <span className="tcg-hud-stat-label">Deck</span>
+          </div>
+          <div className="tcg-hud-stat" title="Cards in hand">
             <span className="tcg-hud-stat-value">{player.handSize}</span>
             <span className="tcg-hud-stat-label">Cache</span>
           </div>

@@ -9772,12 +9772,19 @@ pre {
   }
   .tcg-sidebar .tcg-hud-name {
     flex-direction: row !important;
-    gap: 0.4rem !important;
+    flex-wrap: wrap !important;
+    gap: 0.35rem !important;
+    align-items: center !important;
+    min-width: 0 !important;
   }
   .tcg-sidebar .tcg-hud-name-text {
-    font-size: 0.78rem !important;
+    font-size: 0.7rem !important;
     max-width: none !important;
     overflow: visible !important;
+    white-space: normal !important;
+    line-height: 1.05 !important;
+    word-break: break-word;
+    flex: 1 1 auto;
   }
   .tcg-sidebar .tcg-hud-avatar,
   .tcg-sidebar .tcg-hud-avatar-fallback {
@@ -9796,11 +9803,45 @@ pre {
   }
   .tcg-sidebar .tcg-hud-lp .lp-suffix { font-size: 0.62rem; opacity: 0.75; }
   .tcg-sidebar .tcg-hud-bar { display: block !important; height: 3px !important; }
+  /* Counters: iconos + número grande, sin label texto truncado. */
   .tcg-sidebar .tcg-hud-stats {
     display: flex !important;
-    gap: 0.3rem;
-    font-size: 0.7rem !important;
+    flex-direction: row !important;
+    gap: 0.5rem;
+    font-size: 0.85rem !important;
+    align-items: center;
+    justify-content: space-around;
+    margin-top: 0.3rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 0.4rem;
+    padding: 0.25rem 0.4rem;
   }
+  .tcg-sidebar .tcg-hud-stat {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    gap: 0.2rem !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    min-width: 0 !important;
+  }
+  .tcg-sidebar .tcg-hud-stat-label {
+    display: none !important;
+  }
+  .tcg-sidebar .tcg-hud-stat-value {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    color: #f5f3ff !important;
+    line-height: 1 !important;
+  }
+  .tcg-sidebar .tcg-hud-stat::before {
+    font-size: 0.85rem;
+    line-height: 1;
+  }
+  .tcg-sidebar .tcg-hud-stat:nth-child(1)::before { content: '📚'; } /* Deck */
+  .tcg-sidebar .tcg-hud-stat:nth-child(2)::before { content: '🃏'; } /* Cache (hand) */
+  .tcg-sidebar .tcg-hud-stat:nth-child(3)::before { content: '🪦'; } /* Void */
   .tcg-sidebar .tcg-deckstack,
   .tcg-sidebar .tcg-voidstack {
     display: none !important;
@@ -9843,13 +9884,17 @@ pre {
   .tcg-side {
     align-self: center;
   }
+  /* Lane separators: VERDE opp side / ROJO my side — claro quién es quién */
   .tcg-side.opponent {
-    border-bottom: 1px solid rgba(192, 132, 252, 0.25) !important;
+    border-bottom: 3px solid rgba(34, 197, 94, 0.75) !important;
+    box-shadow: 0 2px 14px rgba(34, 197, 94, 0.28);
     padding-bottom: 0.3rem !important;
   }
   .tcg-side:not(.opponent) {
-    border-top: 1px solid rgba(140, 93, 246, 0.25) !important;
+    border-top: 3px solid rgba(239, 68, 68, 0.75) !important;
+    box-shadow: 0 -2px 14px rgba(239, 68, 68, 0.28);
     padding-top: 0.3rem !important;
+    padding-bottom: 6px !important;
   }
   /* Divider visible más prominente */
   .tcg-divider {
@@ -9868,8 +9913,8 @@ pre {
     gap: 0.35rem !important;
   }
   .tcg-zone-row {
-    grid-template-columns: repeat(5, minmax(0, clamp(28px, 6vw, 48px))) !important;
-    gap: clamp(0.15rem, 0.6vw, 0.32rem) !important;
+    grid-template-columns: repeat(5, minmax(0, clamp(24px, 5vw, 40px))) !important;
+    gap: clamp(0.1rem, 0.5vw, 0.26rem) !important;
   }
   .tcg-slot {
     aspect-ratio: 0.72 !important;
@@ -9956,23 +10001,25 @@ pre {
     transform: rotate(90deg);
   }
 
-  /* HAND: anchored al absolute bottom como Master Duel. El field arriba
-   * tiene padding-bottom para no quedar tapado. */
+  /* HAND: alineada izquierda (debajo del sidebar-left), corte parcial al fondo
+   * estilo Yu-Gi-Oh mobile. Actions floating right (no en flow del hand). */
   .tcg-footer {
     position: fixed !important;
-    bottom: 0 !important;
+    bottom: -10px !important; /* corte sutil abajo */
     left: 0 !important;
     right: 0 !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: stretch !important;
-    justify-content: center !important;
-    gap: 0.4rem !important;
-    padding: 0.25rem 0.5rem max(0.3rem, var(--safe-bottom)) !important;
-    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.55) 40%, rgba(0, 0, 0, 0.92) 100%) !important;
+    justify-content: flex-start !important;
+    gap: 0.35rem !important;
+    padding: 0.2rem clamp(96px, 14vw, 140px) max(0.15rem, var(--safe-bottom)) clamp(96px, 14vw, 140px) !important;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.5) 40%, rgba(0, 0, 0, 0.9) 100%) !important;
     border-top: 1px solid rgba(140, 93, 246, 0.4) !important;
     z-index: 6;
+    pointer-events: none;
   }
+  .tcg-footer > * { pointer-events: auto; }
   /* Field tiene espacio reservado al fondo para el hand fijado. */
   .tcg-page {
     grid-template-rows: 36px 1fr !important;
@@ -10018,16 +10065,24 @@ pre {
     perspective: none !important;
   }
   .tcg-hand::-webkit-scrollbar { display: none; }
-  /* Hand cards: legibles pero compactas. Aspect-ratio default 0.72 → max 60px tall. */
+  /* Hand cards: compactas, alineadas izquierda, partial overlap permitido. */
   .tcg-hand-card {
-    flex: 0 0 clamp(48px, 8vw, 70px) !important;
-    min-width: 48px !important;
-    max-height: 84px;
+    flex: 0 0 clamp(46px, 7.5vw, 64px) !important;
+    min-width: 46px !important;
+    max-height: 78px;
+    margin-right: -10px; /* overlap parcial entre cards */
     border-radius: 0.5rem !important;
     padding: 0.15rem !important;
     transform: none !important;
-    transition: filter 0.15s !important;
+    transition: filter 0.15s, margin-right 0.2s, transform 0.2s !important;
   }
+  .tcg-hand-card:active {
+    margin-right: 0 !important;
+    transform: translateY(-6px) scale(1.05) !important;
+    z-index: 3;
+    filter: brightness(1.2) !important;
+  }
+  .tcg-hand-card:last-child { margin-right: 0; }
   .tcg-hand-card:active {
     filter: brightness(1.25) !important;
     transform: scale(0.96) !important;

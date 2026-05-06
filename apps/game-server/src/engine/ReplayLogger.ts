@@ -32,6 +32,7 @@ export interface ReplayEntry {
     | 'EFFECT_TRIGGERED'
     | 'EFFECT_RESOLVED'
     | 'CARD_DESTROYED'
+    | 'HAND_LIMIT_DISCARD'
     | 'GAME_OVER'
     | 'TRUNCATED';
   /** ID del jugador que originó el evento (sessionId o 'BOT'). */

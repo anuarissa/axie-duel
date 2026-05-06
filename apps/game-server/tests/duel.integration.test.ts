@@ -93,3 +93,122 @@ describe('Duel integration', () => {
     ).toThrow();
   });
 });
+
+describe('Hand limit (max 6 at end of turn)', () => {
+  it('does NOT block END phase when hand <= 6', () => {
+    const { state, engine } = setupGame();
+    // p1 starts with 5 cards. Avanza a END.
+    engine.handleEndPhase('p1'); // STANDBY
+    engine.handleEndPhase('p1'); // MAIN_1
+    engine.handleEndPhase('p1'); // BATTLE
+    engine.handleEndPhase('p1'); // MAIN_2
+    engine.handleEndPhase('p1'); // END
+    expect(state.phase).toBe(Phase.END);
+    const p1 = state.players.get('p1');
+    expect(p1?.pendingHandLimitDiscard).toBe(0);
+    // Avanzar a siguiente turno funciona sin discard.
+    engine.handleEndPhase('p1');
+    expect(state.activePlayerId).toBe('p2');
+  });
+
+  it('sets pendingHandLimitDiscard when hand > 6 in END phase', () => {
+    const { state, engine } = setupGame();
+    const p1 = state.players.get('p1')!;
+    // Forzar mano de 8 cartas (manualmente, simulando draws extras).
+    // Movemos 3 cartas del deck a la mano.
+    for (let i = 0; i < 3; i++) {
+      const card = p1.deck.shift();
+      if (card) p1.hand.push(card);
+    }
+    p1.handSize = p1.hand.length;
+    expect(p1.hand.length).toBe(8);
+    // Avanzar p1 hasta END phase.
+    engine.handleEndPhase('p1'); // STANDBY
+    engine.handleEndPhase('p1'); // MAIN_1
+    engine.handleEndPhase('p1'); // BATTLE
+    engine.handleEndPhase('p1'); // MAIN_2
+    engine.handleEndPhase('p1'); // END (entra y trigger pending = 8 - 6 = 2)
+    expect(state.phase).toBe(Phase.END);
+    expect(p1.pendingHandLimitDiscard).toBe(2);
+  });
+
+  it('blocks END phase advance until discard resolved', () => {
+    const { state, engine } = setupGame();
+    const p1 = state.players.get('p1')!;
+    for (let i = 0; i < 3; i++) {
+      const card = p1.deck.shift();
+      if (card) p1.hand.push(card);
+    }
+    p1.handSize = p1.hand.length;
+    // Avanzar a END.
+    engine.handleEndPhase('p1');
+    engine.handleEndPhase('p1');
+    engine.handleEndPhase('p1');
+    engine.handleEndPhase('p1');
+    engine.handleEndPhase('p1');
+    expect(state.phase).toBe(Phase.END);
+    expect(p1.pendingHandLimitDiscard).toBe(2);
+    // Intentar END_PHASE de nuevo sin discard → tira MUST_DISCARD.
+    expect(() => engine.handleEndPhase('p1')).toThrow(/discard/i);
+    expect(state.phase).toBe(Phase.END); // sigue en END
+    expect(state.activePlayerId).toBe('p1'); // turno NO cambió
+  });
+
+  it('handleHandLimitDiscard moves cards to graveyard and clears pending', () => {
+    const { state, engine } = setupGame();
+    const p1 = state.players.get('p1')!;
+    for (let i = 0; i < 3; i++) {
+      const card = p1.deck.shift();
+      if (card) p1.hand.push(card);
+    }
+    p1.handSize = p1.hand.length;
+    // Avanzar a END.
+    for (let i = 0; i < 5; i++) engine.handleEndPhase('p1');
+    expect(p1.pendingHandLimitDiscard).toBe(2);
+    expect(p1.graveyard.length).toBe(0);
+    // Elegir 2 cartas a descartar.
+    const ids = [p1.hand[0]!.instanceId, p1.hand[1]!.instanceId];
+    engine.handleHandLimitDiscard('p1', ids);
+    expect(p1.pendingHandLimitDiscard).toBe(0);
+    expect(p1.hand.length).toBe(6);
+    expect(p1.graveyard.length).toBe(2);
+    // Ahora SÍ puede avanzar de turno.
+    engine.handleEndPhase('p1');
+    expect(state.activePlayerId).toBe('p2');
+  });
+
+  it('rejects discard with wrong card count', () => {
+    const { state, engine } = setupGame();
+    const p1 = state.players.get('p1')!;
+    for (let i = 0; i < 3; i++) {
+      const card = p1.deck.shift();
+      if (card) p1.hand.push(card);
+    }
+    p1.handSize = p1.hand.length;
+    for (let i = 0; i < 5; i++) engine.handleEndPhase('p1');
+    expect(p1.pendingHandLimitDiscard).toBe(2);
+    // Solo 1 id cuando required = 2.
+    expect(() =>
+      engine.handleHandLimitDiscard('p1', [p1.hand[0]!.instanceId]),
+    ).toThrow(/exactamente|exactly|2/i);
+    expect(p1.pendingHandLimitDiscard).toBe(2); // sigue pendiente
+    expect(state.phase).toBe(Phase.END);
+  });
+
+  it('rejects discard with cards not in hand', () => {
+    const { state, engine } = setupGame();
+    const p1 = state.players.get('p1')!;
+    for (let i = 0; i < 3; i++) {
+      const card = p1.deck.shift();
+      if (card) p1.hand.push(card);
+    }
+    p1.handSize = p1.hand.length;
+    for (let i = 0; i < 5; i++) engine.handleEndPhase('p1');
+    expect(() =>
+      engine.handleHandLimitDiscard('p1', ['fake_1', 'fake_2']),
+    ).toThrow(/CARD_NOT_IN_HAND|mano/i);
+    // Estado intacto.
+    expect(p1.pendingHandLimitDiscard).toBe(2);
+    expect(state.phase).toBe(Phase.END);
+  });
+});

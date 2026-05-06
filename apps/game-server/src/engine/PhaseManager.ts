@@ -78,14 +78,11 @@ export class PhaseManager {
           MAX_HAND_SIZE,
         );
         if (overflow > 0) {
-          // Auto-descarte de las primeras N cartas por simplicidad. Podríamos pedirle
-          // al jugador qué descartar — TODO en Fase 1.
-          for (let i = 0; i < overflow; i++) {
-            const card = active.hand.shift();
-            if (card) active.graveyard.push(card);
-          }
-          active.handSize = active.hand.length;
-          this.log.info({ player: active.id, overflow }, 'forced discard at end phase');
+          // El jugador debe ELEGIR qué descartar. PvERoom/DuelRoom bloquean el siguiente
+          // END_PHASE hasta que envíen HAND_LIMIT_DISCARD con instanceIds. Una vez resuelto,
+          // GameEngine.handleHandLimitDiscard pone pendingHandLimitDiscard = 0.
+          active.pendingHandLimitDiscard = overflow;
+          this.log.info({ player: active.id, overflow }, 'pending hand limit discard');
         }
         // Reset flags por turno.
         active.hasNormalSummonedThisTurn = false;

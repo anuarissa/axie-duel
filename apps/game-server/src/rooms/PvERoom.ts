@@ -291,8 +291,28 @@ export class PvERoom extends Room {
           toPhase: this.state.phase,
         });
       }
+      // Si tras avanzar quedó END phase + el jugador activo tiene discard pendiente,
+      // notificar al cliente para que muestre el modal de discard.
+      const active = this.state.players.get(this.state.activePlayerId);
+      if (active && this.state.phase === 'END' && active.pendingHandLimitDiscard > 0) {
+        client.send('HAND_LIMIT_DISCARD_REQUIRED', {
+          count: active.pendingHandLimitDiscard,
+          handLimit: 6,
+        });
+      }
       this.maybeRunBot();
     });
+    this.onMessage('HAND_LIMIT_DISCARD', (client, raw: unknown) => this.safeAction(client, () => {
+      const ids = (raw as { cardInstanceIds?: string[] })?.cardInstanceIds;
+      if (!Array.isArray(ids)) {
+        throw new InvalidActionError('TARGET_INVALID', 'cardInstanceIds[] required');
+      }
+      this.engine.handleHandLimitDiscard(client.sessionId, ids);
+      this.broadcast('HAND_LIMIT_DISCARD_RESOLVED', {
+        ownerId: client.sessionId,
+        count: ids.length,
+      });
+    }));
     this.onMessage('SURRENDER', () => {
       this.state.status = 'GAME_OVER';
       this.state.winnerId = 'BOT';

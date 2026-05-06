@@ -8,7 +8,9 @@ import type { DuelConfig } from '@axie-duel/shared-types';
 export const LIFE_POINTS_INITIAL = 8000;
 
 export const STARTING_HAND_SIZE = 5;
-export const MAX_HAND_SIZE = 7;
+/** Yu-Gi-Oh / Axie Duel rule: máximo 6 cartas en mano al final del turno.
+ * Si excede, el jugador debe elegir cuáles descartar (no auto-discard). */
+export const MAX_HAND_SIZE = 6;
 
 export const DECK_MIN = 40;
 export const DECK_MAX = 60;

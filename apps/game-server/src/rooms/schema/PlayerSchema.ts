@@ -24,4 +24,7 @@ export class PlayerSchema extends Schema {
   @type('boolean') hasNormalSummonedThisTurn = false;
   @type('boolean') awaitingChainResponse = false;
   @type('boolean') isFirstPlayer = false;
+  /** Cantidad de cartas que el jugador debe descartar antes de avanzar de END phase.
+   * 0 = sin discard pendiente. >0 = bloqueado hasta que envíe HAND_LIMIT_DISCARD. */
+  @type('int32') pendingHandLimitDiscard = 0;
 }

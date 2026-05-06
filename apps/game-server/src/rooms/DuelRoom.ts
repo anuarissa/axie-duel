@@ -47,6 +47,13 @@ export class DuelRoom extends Room {
       this.engine.handleSetCard(client.sessionId, id);
     }));
     this.onMessage('END_PHASE', (client) => this.safeAction(client, () => this.engine.handleEndPhase(client.sessionId)));
+    this.onMessage('HAND_LIMIT_DISCARD', (client, raw: unknown) => this.safeAction(client, () => {
+      const ids = (raw as { cardInstanceIds?: string[] })?.cardInstanceIds;
+      if (!Array.isArray(ids)) {
+        throw new InvalidActionError('TARGET_INVALID', 'cardInstanceIds[] required');
+      }
+      this.engine.handleHandLimitDiscard(client.sessionId, ids);
+    }));
     this.onMessage('SURRENDER', (client) => {
       const winner = [...this.state.players.keys()].find((id) => id !== client.sessionId);
       this.state.status = 'GAME_OVER';

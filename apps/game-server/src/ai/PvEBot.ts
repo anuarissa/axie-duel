@@ -73,6 +73,12 @@ export class PvEBot {
       }
 
       if (!acted) {
+        // Antes de avanzar de END phase, si el bot tiene discard pendiente por hand limit,
+        // resolver eligiendo las cartas de menor valor estratégico.
+        const me = state.players.get(this.playerId);
+        if (me && state.phase === Phase.END && me.pendingHandLimitDiscard > 0) {
+          this.autoDiscardForHandLimit(me.pendingHandLimitDiscard);
+        }
         try {
           this.engine.handleEndPhase(this.playerId);
         } catch {
@@ -84,6 +90,36 @@ export class PvEBot {
       if (this.actionDelayMs > 0) {
         await sleep(this.actionDelayMs);
       }
+    }
+  }
+
+  /**
+   * Discard automático del bot cuando hand > 6 al fin del turno.
+   * Heurística: descartar las cartas de menor valor estratégico:
+   *   1) Spells/Traps duplicados (preferimos quedarnos con uno solo de cada efecto)
+   *   2) Monsters de menor ATK (mantenemos los hitters)
+   *   3) Si todo es igual, las primeras (orden de mano).
+   */
+  private autoDiscardForHandLimit(count: number): void {
+    const player = this.getPlayer();
+    if (!player) return;
+    const scored = player.hand.map((card) => {
+      const def = this.engine.cards.getById(card.cardId);
+      let score = 100;
+      if (def?.type === 'Monster') {
+        score = (def.atk ?? 0) + (def.def ?? 0); // hitters tienen score alto → se conservan
+      } else if (def?.type === 'Spell' || def?.type === 'Trap') {
+        score = 1500; // valor base intermedio: spells/traps son útiles pero replaceables
+      }
+      return { instanceId: card.instanceId, score };
+    });
+    // Sort ascending → primeros = peores → descartar
+    scored.sort((a, b) => a.score - b.score);
+    const ids = scored.slice(0, count).map((s) => s.instanceId);
+    try {
+      this.engine.handleHandLimitDiscard(this.playerId, ids);
+    } catch {
+      // Si falla, no hacemos nada; handleEndPhase tirará MUST_DISCARD y el bot se cortará.
     }
   }
 

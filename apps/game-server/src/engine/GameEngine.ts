@@ -404,8 +404,70 @@ export class GameEngine {
     this.recomputeAuraSnapshots();
   }
 
+  /**
+   * Resuelve el discard pendiente por hand limit. El jugador (o el bot) elige las
+   * cartas exactas a descartar. Una vez resuelto, pendingHandLimitDiscard = 0 y
+   * el jugador puede avanzar de END phase libremente.
+   */
+  handleHandLimitDiscard(playerId: string, cardInstanceIds: string[]): void {
+    const player = this.state.players.get(playerId);
+    if (!player) throw new InvalidActionError('TARGET_INVALID', 'unknown player');
+    if (this.state.activePlayerId !== playerId) {
+      throw new InvalidActionError('NOT_YOUR_TURN', 'Solo el jugador activo descarta.');
+    }
+    if (this.state.phase !== Phase.END) {
+      throw new InvalidActionError('WRONG_PHASE', 'Hand-limit discard solo en End Phase.');
+    }
+    const required = player.pendingHandLimitDiscard;
+    if (required <= 0) {
+      throw new InvalidActionError('CONDITION_NOT_MET', 'No tenés discard pendiente.');
+    }
+    if (cardInstanceIds.length !== required) {
+      throw new InvalidActionError(
+        'TARGET_INVALID',
+        `Debés elegir exactamente ${required} carta(s) — recibí ${cardInstanceIds.length}.`,
+      );
+    }
+    // Validar que TODAS las cartas estén en la mano (sin duplicados).
+    const ids = new Set(cardInstanceIds);
+    if (ids.size !== cardInstanceIds.length) {
+      throw new InvalidActionError('TARGET_INVALID', 'IDs duplicados en discard.');
+    }
+    for (const id of cardInstanceIds) {
+      const inHand = player.hand.some((c) => c.instanceId === id);
+      if (!inHand) {
+        throw new InvalidActionError('CARD_NOT_IN_HAND', `Carta ${id} no está en mano.`);
+      }
+    }
+    // Mover cada carta al graveyard.
+    for (const id of cardInstanceIds) {
+      const idx = player.hand.findIndex((c) => c.instanceId === id);
+      if (idx === -1) continue;
+      const card = player.hand[idx]!;
+      player.hand.splice(idx, 1);
+      player.graveyard.push(card);
+      this.replay.log('HAND_LIMIT_DISCARD', playerId, { cardInstanceId: id, cardId: card.cardId });
+    }
+    player.handSize = player.hand.length;
+    player.pendingHandLimitDiscard = 0;
+    this.log.info({ player: playerId, discarded: cardInstanceIds }, 'hand-limit discard resolved');
+  }
+
   handleEndPhase(playerId: string): void {
     this.validator.validateEndPhase(playerId);
+    // Si el jugador activo está en END phase con cartas pendientes de descartar,
+    // bloquear hasta que las descarte vía HAND_LIMIT_DISCARD.
+    const activePlayer = this.state.players.get(this.state.activePlayerId);
+    if (
+      activePlayer &&
+      this.state.phase === Phase.END &&
+      activePlayer.pendingHandLimitDiscard > 0
+    ) {
+      throw new InvalidActionError(
+        'MUST_DISCARD',
+        `You must discard ${activePlayer.pendingHandLimitDiscard} card(s) before ending your turn.`,
+      );
+    }
     const prevPhase = this.state.phase;
     const prevTurn = this.state.turnNumber;
     const activePlayerBefore = this.state.activePlayerId;

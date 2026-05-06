@@ -198,6 +198,14 @@ function PvePage() {
   const [handExpanded, setHandExpanded] = useState<boolean>(false);
   /** Banner de fase: visible solo 2s después de cada cambio de turno/fase. Auto-dismiss. */
   const [phaseBannerVisible, setPhaseBannerVisible] = useState<boolean>(true);
+  /** Auto-dismiss del phase banner: aparece 2s en cada cambio de fase/turno y se oculta.
+   * IMPORTANT: este useEffect debe estar ANTES de cualquier early return para no violar
+   * Rules of Hooks (hook count mismatch entre renders). */
+  useEffect(() => {
+    setPhaseBannerVisible(true);
+    const t = setTimeout(() => setPhaseBannerVisible(false), 2000);
+    return () => clearTimeout(t);
+  }, [state?.turnNumber, state?.phase, state?.activePlayerId]);
   const coinsAtMatchStartRef = useRef<string | null>(null);
   const xpAtMatchStartRef = useRef<number | null>(null);
   const levelAtMatchStartRef = useRef<number | null>(null);
@@ -1148,14 +1156,8 @@ function PvePage() {
     END: 'End of turn',
   };
   const phaseLabel = phaseLabels[phase] ?? phase;
-
-  /** Auto-dismiss del phase banner: aparece 2s en cada cambio de fase/turno y se oculta. */
+  /** Key del banner para forzar re-mount + animation slide-in en cada cambio. */
   const turnPhaseKey = `${state?.turnNumber ?? 0}-${phase}-${state?.activePlayerId ?? ''}`;
-  useEffect(() => {
-    setPhaseBannerVisible(true);
-    const t = setTimeout(() => setPhaseBannerVisible(false), 2000);
-    return () => clearTimeout(t);
-  }, [turnPhaseKey]);
 
   const isGameOver = state?.status === 'GAME_OVER';
   const won = state?.winnerId === mySessionId;

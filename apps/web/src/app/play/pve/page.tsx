@@ -1443,20 +1443,8 @@ function PvePage() {
                     selectedHandCard === c.instanceId ? 'selected' : ''
                   } ${disabled ? 'disabled' : ''} ${requiresTribute ? 'needs-tribute' : ''} ${def?.attribute ? `attr-${def.attribute.toLowerCase()}` : ''}`}
                   onClick={() => !disabled && clickHandCard(c)}
-                  onMouseEnter={() => {
-                    setHoveredCard(c);
-                    // Solo mostrar preview gigante en hover REAL (mouse), no en touch-emulated
-                    // hover de iOS Safari. En mobile, el preview se abre via "View close-up" del menu.
-                    if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
-                      showCardPreview(c, 350);
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    setHoveredCard((curr) => (curr?.instanceId === c.instanceId ? null : curr));
-                    if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
-                      hideCardPreview();
-                    }
-                  }}
+                  onMouseEnter={() => setHoveredCard(c)}
+                  onMouseLeave={() => setHoveredCard((curr) => (curr?.instanceId === c.instanceId ? null : curr))}
                 >
                   {/* Lupa siempre visible en mobile — tap para preview gigante.
                    * Detiene propagación para no abrir el context menu del card. */}

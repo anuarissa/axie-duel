@@ -9690,10 +9690,40 @@ pre {
 /* Sidebars mobile (sólo visibles en landscape mobile vía grid). En desktop hidden. */
 .tcg-sidebar { display: none; }
 
-/* ── SINGLE LANDSCAPE LAYOUT (no rotation hack) ──────────────────────
- * El juego se diseña SOLO para landscape mobile. Si el user abre en portrait,
- * verá el mismo layout cramped — eventualmente rota su celular. NO rotamos
- * la página por CSS para evitar confusión visual y orientación inconsistente. */
+/* ── PORTRAIT BLOCKER: el juego SÓLO funciona en landscape mobile.
+ * En portrait, hide .tcg-page completo y muestra overlay "GIRA TU MÓVIL". */
+@media (orientation: portrait) and (max-width: 900px) {
+  .tcg-page {
+    display: none !important;
+  }
+  body::before {
+    content: '📱  GIRA TU MÓVIL PARA JUGAR';
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    background:
+      radial-gradient(ellipse at center, rgba(140, 93, 246, 0.25), transparent 70%),
+      linear-gradient(180deg, #0a0117 0%, #1a0d4a 50%, #0a0117 100%);
+    color: #f5f3ff;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: clamp(1.1rem, 5vw, 1.6rem);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    text-shadow: 0 2px 8px rgba(140, 93, 246, 0.5);
+    animation: portrait-blocker-pulse 2.4s ease-in-out infinite;
+  }
+}
+@keyframes portrait-blocker-pulse {
+  0%, 100% { opacity: 0.92; }
+  50%      { opacity: 1; }
+}
 
 /* ── MOBILE V4: 3-column grid layout (sidebar | field | sidebar | hand) ── */
 @media (max-width: 900px), (max-height: 500px) {
@@ -9861,36 +9891,35 @@ pre {
     min-height: 40px !important;
   }
 
-  /* FIELD: separación CLARA opp/my con gap visible entre lanes. */
+  /* FIELD: separación FÍSICA clara opp/my con gap GRANDE entre lanes.
+   * AMARILLA arriba (border-bottom de opp = enemigo encima) + ROJA abajo
+   * (border-top de mine = mi campo abajo). Gap central vacío para que las
+   * cards de opp y mine NUNCA se toquen ni se solapen. */
   .tcg-board {
     position: relative;
     padding: 0.5rem 0.4rem 0.5rem !important;
     grid-template-rows: 1fr auto 1fr !important;
-    gap: 1.4rem !important; /* gap GRANDE para que las lane lines NO se toquen y los cards no las crucen */
+    gap: 2rem !important; /* gap MÁS grande aún para separación física */
   }
-  /* Sides ALIGN-START/END para que los cards estén pegados al borde correcto y NO invadan las lanes. */
+  /* Sides ALIGN-START/END: cards pegadas al borde lejano de las lanes. */
   .tcg-side.opponent {
     align-self: start !important;
-    border-bottom: 3px solid rgba(34, 197, 94, 0.85) !important;
-    box-shadow: 0 4px 18px rgba(34, 197, 94, 0.35);
-    padding-bottom: 0.5rem !important;
-    margin-bottom: 0.4rem;
+    border-bottom: 4px solid #fbbf24 !important; /* AMARILLA — todo arriba es enemigo */
+    box-shadow: 0 4px 18px rgba(251, 191, 36, 0.4);
+    padding-bottom: 0.6rem !important;
+    margin-bottom: 0.6rem;
   }
   .tcg-side:not(.opponent) {
     align-self: end !important;
-    border-top: 3px solid rgba(239, 68, 68, 0.85) !important;
-    box-shadow: 0 -4px 18px rgba(239, 68, 68, 0.35);
-    padding-top: 0.5rem !important;
-    margin-top: 0.4rem;
+    border-top: 4px solid #ef4444 !important; /* ROJA — todo abajo es mío */
+    box-shadow: 0 -4px 18px rgba(239, 68, 68, 0.4);
+    padding-top: 0.6rem !important;
+    margin-top: 0.6rem;
   }
-  /* Divider con altura definida para gap visible entre las dos lanes. */
+  /* Divider central VACÍO: gap físico entre las dos zonas. */
   .tcg-divider {
-    height: 18px !important;
-    background: linear-gradient(180deg,
-      rgba(34, 197, 94, 0.06) 0%,
-      transparent 25%,
-      transparent 75%,
-      rgba(239, 68, 68, 0.06) 100%) !important;
+    height: 24px !important;
+    background: transparent !important;
     border: none !important;
   }
   /* Cards en field NUNCA se salen del slot — overflow estricto + dimensiones forzadas. */
@@ -10027,13 +10056,13 @@ pre {
       "leftbar  board    rightbar" !important;
   }
   .tcg-board {
-    padding-bottom: 96px !important; /* deja espacio al hand fixed-bottom */
+    padding-bottom: 110px !important; /* extra room para que hand+actions no tapen el field */
     max-width: 100vw;
     overflow: hidden;
   }
   .tcg-sidebar-me,
   .tcg-sidebar-opponent {
-    padding-bottom: 96px !important;
+    padding-bottom: 110px !important;
   }
   /* Field max-width cap: en landscape muy ancho (>700px), centra el field
    * y evita el "vacío horizontal" del que se queja el user. */

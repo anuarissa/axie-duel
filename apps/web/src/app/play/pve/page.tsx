@@ -24,19 +24,13 @@
 
 import { Suspense, memo, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Client, type Room } from 'colyseus.js';
 import { getJwt, getJwtUserId, apiFetch } from '../../../lib/auth';
 import { placeholderSvgFor as svgForCard, resolveCardImage } from '../../../lib/cardArt';
 import { SoundControls } from '../../../components/SoundControls';
+import { RockPaperScissorsIntro } from '../../../components/RockPaperScissorsIntro';
 import { sound } from '../../../lib/sound';
-
-/** RockPaperScissorsIntro: solo aparece pre-match. Dynamic import shaves ~25KB del initial bundle. */
-const RockPaperScissorsIntro = dynamic(
-  () => import('../../../components/RockPaperScissorsIntro').then((m) => ({ default: m.RockPaperScissorsIntro })),
-  { ssr: false },
-);
 
 const GAME_SERVER = process.env.NEXT_PUBLIC_GAME_SERVER_URL ?? 'ws://localhost:2567';
 

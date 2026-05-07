@@ -18,22 +18,11 @@ import { sound } from '../lib/sound';
 export function SoundControls({ variant = 'compact' }: { variant?: 'compact' | 'expanded' | 'full' }) {
   const [open, setOpen] = useState(false);
   const [, force] = useState(0);
-  // Detectamos touch-only post-mount para evitar hydration mismatch.
-  const [isTouchOnly, setIsTouchOnly] = useState(false);
 
   // Subscribe to engine state changes (so all instances stay in sync).
   useEffect(() => {
     const unsub = sound.subscribe(() => force((n) => n + 1));
     return unsub;
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const mq = window.matchMedia('(hover: none) and (pointer: coarse)');
-    const update = () => setIsTouchOnly(mq.matches);
-    update();
-    mq.addEventListener('change', update);
-    return () => mq.removeEventListener('change', update);
   }, []);
 
   const muted = sound.muted;
@@ -46,18 +35,19 @@ export function SoundControls({ variant = 'compact' }: { variant?: 'compact' | '
       type="button"
       className={`sound-controls-btn ${muted ? 'muted' : ''}`}
       onClick={() => {
-        if (variant === 'compact' && !isTouchOnly) setOpen((v) => !v);
-        else sound.toggleMute();
+        // Click SIEMPRE togglea mute (compact + expanded). Comportamiento unificado.
+        // Para abrir popover de sliders → long-press / right-click.
+        sound.toggleMute();
       }}
       onContextMenu={(e) => {
-        // Long-press / right-click en mobile abre el popover de volúmenes.
-        if (variant === 'compact' && isTouchOnly) {
+        // Long-press en mobile / right-click en desktop abre el popover de volúmenes.
+        if (variant === 'compact') {
           e.preventDefault();
           setOpen((v) => !v);
         }
       }}
-      title={muted ? 'Unmute (M)' : isTouchOnly ? 'Tap to mute · long-press for volume' : 'Sound options'}
-      aria-label={muted ? 'Unmute' : isTouchOnly ? 'Mute' : 'Sound options'}
+      title={muted ? 'Unmute (tap)' : 'Mute (tap) · long-press for volume'}
+      aria-label={muted ? 'Unmute' : 'Mute'}
     >
       {icon}
     </button>

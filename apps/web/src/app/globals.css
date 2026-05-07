@@ -11722,22 +11722,48 @@ pre {
   font-style: italic;
 }
 @media (max-width: 640px) {
+  /* FIX-9 — modal mobile reducido 25% más sobre la versión previa.
+   * Overlay padding 1rem → 0.5rem (más respiración). Modal max-width 92vw
+   * para asegurar que NO sale del margen. Fonts/padding/icon todos ~25% menos. */
+  .tutorial-welcome-overlay { padding: 0.5rem !important; }
   .tutorial-welcome-modal {
-    padding: 1.2rem 1.1rem 1rem !important;
-    max-height: 88vh !important;
+    padding: 0.9rem 0.85rem 0.8rem !important;
+    max-width: 92vw !important;
+    max-height: 84vh !important;
   }
-  .tutorial-welcome-icon { font-size: 2.4rem !important; }
-  .tutorial-welcome-title { font-size: 1.15rem !important; margin-bottom: 0.45rem !important; }
-  .tutorial-welcome-body { font-size: 0.78rem !important; margin-bottom: 0.7rem !important; }
+  .tutorial-welcome-progress {
+    margin-bottom: 0.7rem !important;
+    gap: 0.3rem !important;
+  }
+  .tutorial-welcome-dot { width: 6px !important; height: 6px !important; }
+  .tutorial-welcome-icon {
+    font-size: 1.7rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+  .tutorial-welcome-title {
+    font-size: 0.95rem !important;
+    margin-bottom: 0.35rem !important;
+  }
+  .tutorial-welcome-body {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.5rem !important;
+    line-height: 1.4 !important;
+  }
   .tutorial-welcome-bullets {
-    font-size: 0.7rem !important;
-    padding-left: 1rem !important;
-    margin-bottom: 0.85rem !important;
+    font-size: 0.6rem !important;
+    padding-left: 0.85rem !important;
+    margin-bottom: 0.7rem !important;
+    line-height: 1.4 !important;
   }
-  .tutorial-welcome-bullets li { margin-bottom: 0.25rem !important; }
+  .tutorial-welcome-bullets li { margin-bottom: 0.18rem !important; }
+  .tutorial-welcome-actions { gap: 0.45rem !important; margin-top: 0.5rem !important; }
   .tutorial-welcome-btn {
-    padding: 0.55rem 0.95rem !important;
-    font-size: 0.72rem !important;
+    padding: 0.45rem 0.8rem !important;
+    font-size: 0.62rem !important;
+  }
+  .tutorial-welcome-replay-hint {
+    font-size: 0.58rem !important;
+    margin-top: 0.5rem !important;
   }
 }
 

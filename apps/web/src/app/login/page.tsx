@@ -22,7 +22,7 @@ const FEATURES: FeatureCard[] = [
   {
     icon: '⚔',
     title: 'Tactical TCG',
-    body: 'Yu-Gi-Oh-style mechanics with summons, traps, spells & combat phases. Class triangle for ±15% damage shifts.',
+    body: 'Classic TCG mechanics with summons, traps, spells & combat phases. Class triangle for ±15% damage shifts.',
     accent: '#fbbf24',
   },
   {

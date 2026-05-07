@@ -17,7 +17,7 @@ const SLIDES = [
   {
     icon: '⚔',
     title: 'Welcome to Axie Duel!',
-    body: 'A tactical TCG inspired by Yu-Gi-Oh and Axie Infinity. Reduce your opponent\'s Life Points (LP) from 8000 to 0 to win.',
+    body: 'A tactical card game blending the depth of classic TCGs with Axie\'s iconic universe and Web3 digital ownership. Reduce your opponent\'s Life Points (LP) from 8000 to 0 to win.',
     bullets: [
       'You start with 5 cards in hand and 8000 LP',
       '5 monster zones + 5 spell/trap zones per side',

@@ -4,7 +4,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Axie Duel',
-  description: 'TCG Web3 estilo Yu-Gi-Oh! ambientado en Axie Infinity, sobre Ronin.',
+  description: 'Tactical card game blending classic TCG depth with Axie\'s universe and Web3 digital ownership.',
 };
 
 export const viewport: Viewport = {

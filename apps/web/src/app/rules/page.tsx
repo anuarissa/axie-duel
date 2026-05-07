@@ -27,9 +27,9 @@ export default function RulesPage() {
       <section className="rules-section">
         <h2>1. Overview</h2>
         <p>
-          Axie Duel is a tactical TCG inspired by Yu-Gi-Oh and Axie Infinity. Two players face off, each with
-          their own deck of <strong>40 to 60 cards</strong>. Reduce the opponent&apos;s Life Points (LP) from
-          8000 to 0 to win.
+          Axie Duel is a tactical card game blending the depth of classic TCGs with Axie&apos;s iconic universe
+          and Web3 digital ownership. Two players face off, each with their own deck of
+          <strong> 40 to 60 cards</strong>. Reduce the opponent&apos;s Life Points (LP) from 8000 to 0 to win.
         </p>
         <ul>
           <li><strong>Starting hand:</strong> 5 cards</li>
@@ -133,7 +133,7 @@ export default function RulesPage() {
       <section className="rules-section">
         <h2>6. Deck Rules</h2>
         <ul>
-          <li><strong>Main deck:</strong> 40 to 60 cards (Yu-Gi-Oh standard)</li>
+          <li><strong>Main deck:</strong> 40 to 60 cards (classic TCG sizing)</li>
           <li><strong>Maximum 3 copies</strong> of any single card across all zones</li>
           <li><strong>Hand limit:</strong> 6 cards at end of turn. If you have more, you choose which to discard</li>
           <li>Build your deck from <Link href="/decks/builder" className="rules-link">/decks/builder</Link>; choose your active deck before each match</li>

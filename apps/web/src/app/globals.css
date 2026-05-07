@@ -11329,35 +11329,86 @@ pre {
   background: linear-gradient(90deg, #ffd966, #ff8a00) !important;
 }
 
-/* (C v2) Mobile-specific override — defensivo contra rendering anómalo en
- * algunos Android browsers donde las bars salen rojas. Usa hex DIRECTO sin CSS
- * vars + background-color fallback + background-image gradient + sin box-shadow
- * (que podría causar bleed visual con las bars 9px alto) + sin shimmer ::after. */
+/* Help "?" button mobile (NUEVO FIX-8): aparece encima del phase wheel.
+ * Hidden por default (desktop usa el .tcg-help-button del PlayerHud lateral).
+ * Mostrado en mobile @media abajo. */
+.tcg-help-mobile-btn {
+  display: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(20, 195, 244, 0.55);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.18), transparent 55%),
+    rgba(20, 195, 244, 0.18);
+  color: var(--axie-cyan);
+  font-size: 1.4rem;
+  font-weight: 900;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 0;
+  transition: transform 0.15s, box-shadow 0.18s, border-color 0.15s;
+  box-shadow: 0 4px 14px rgba(20, 195, 244, 0.3);
+  line-height: 1;
+}
+.tcg-help-mobile-btn:hover {
+  transform: scale(1.06);
+  border-color: var(--axie-cyan);
+  box-shadow: 0 6px 20px rgba(20, 195, 244, 0.55);
+}
+.tcg-help-mobile-btn:active { transform: scale(0.94); }
+.tcg-help-mobile-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 900px), (max-height: 500px) {
+  /* Mostrar el help button mobile dedicado (encima del phase wheel). */
+  .tcg-help-mobile-btn { display: inline-flex !important; }
+
+  /* Stack vertical: ? arriba, phase wheel abajo, ambos alineados a la derecha. */
+  .tcg-actions {
+    flex-direction: column !important;
+    align-items: flex-end !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Ocultar el botón "?" del PlayerHud lateral en mobile (ahora el dedicated en
+   * footer toma el rol). Evita duplicación + tap targets confusos. */
+  .tcg-help-button {
+    display: none !important;
+  }
+}
+
+/* (C v3) Mobile bars: SOLID color, NO gradient. Defensa final contra
+ * cualquier rendering anómalo (gradient interpolation issues en Android low-end
+ * cuando la bar es muy delgada — 9-12px height — pueden aparecer rojizos).
+ * Imposible que aparezca rojo si el color es literalmente solid #FFD23F (gold)
+ * o solid #ff8a00 (orange). */
 @media (max-width: 900px) {
   .dashboard-hero-lvl-fill {
-    background: #FFD23F !important;
-    background-image: linear-gradient(90deg, #14C3F4 0%, #FFD23F 60%, #fb923c 100%) !important;
+    background: #FFD23F !important;        /* solid gold */
+    background-image: none !important;     /* sin gradient */
     box-shadow: none !important;
     filter: none !important;
   }
   .dashboard-hero-lvl-fill::after {
-    display: none !important;
+    display: none !important;              /* shimmer off (también puede causar artifact) */
   }
   .quest-progress-fill {
-    background: #00d2ff !important;
-    background-image: linear-gradient(90deg, #6b8eff, #00d2ff) !important;
+    background: #00d2ff !important;        /* solid cyan (pending) */
+    background-image: none !important;
     box-shadow: none !important;
     filter: none !important;
   }
   .quest-progress-fill.completed {
-    background: #ff8a00 !important;
-    background-image: linear-gradient(90deg, #ffd966, #ff8a00) !important;
+    background: #ff8a00 !important;        /* solid orange (completed) */
+    background-image: none !important;
     box-shadow: none !important;
     filter: none !important;
   }
-  /* Si las bars siguen rojas con esto, el dispositivo tiene un color filter
-   * activo a nivel sistema (iOS Display Accommodations / Android color
-   * correction). En ese caso CSS no puede arreglarlo. */
 }
 
 /* (B) Game Over modal mobile: REDUCCIÓN ~50% extra (mitad del previo).

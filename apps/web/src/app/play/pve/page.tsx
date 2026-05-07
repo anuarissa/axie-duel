@@ -1618,6 +1618,18 @@ function PvePage() {
         </div>
 
         <div className="tcg-actions">
+          {/* Help "?" mobile-only: aparece encima del phase wheel via @media.
+           * En desktop sigue funcionando el botón "?" del PlayerHud (oculto en mobile).
+           * Reusa el mismo handler setShowHelpModal(true). */}
+          <button
+            type="button"
+            className="tcg-help-mobile-btn"
+            onClick={() => setShowHelpModal(true)}
+            aria-label="Class advantages help"
+            title="Class advantages"
+          >
+            ?
+          </button>
           <button
             type="button"
             className="tcg-phase-wheel"

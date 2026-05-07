@@ -10870,71 +10870,145 @@ pre {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   MOBILE FIX-5 2026-05-07 — 5 issues celular post-Bloque 2
-   A) Dashboard zoom-out
-   C) Game Over modal reducir 50%
-   D) Phase wheel 84px ▶ arriba + label DENTRO
-   E) Side decor 💧 también en mobile
+   MOBILE FIX-5 v2 2026-05-07 — 3 issues iteration:
+   A) Dashboard MORE compact (pve-tier cards, h2, card-section)
+   B) Game Over modal reducir otro 50% + breakpoint 768px
+   C) Side decor: emojis Axie en zona INTERNA del board (no edges)
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* (A) Dashboard mobile zoom-out: reducir tamaño de elementos en celulares chicos.
-   Limitado a <700px para no afectar tablets. !important porque hay clamp() activos. */
-@media (max-width: 700px) {
-  .dashboard-page { padding: 0.75rem !important; }
+/* (A) Dashboard mobile zoom-out — más agresivo. Incluye .pve-tier cards + h2 +
+       .card-section padding + chips. <768px para cubrir más celulares. */
+@media (max-width: 768px) {
+  .dashboard-page { padding: 0.6rem !important; }
   .dashboard-header {
-    padding: 0.75rem 0.85rem !important;
-    gap: 0.55rem !important;
+    padding: 0.55rem 0.7rem !important;
+    gap: 0.5rem !important;
     flex-wrap: wrap;
   }
-  .dashboard-avatar { width: 44px !important; height: 44px !important; }
-  .dashboard-avatar-fallback { width: 44px !important; height: 44px !important; font-size: 1.2rem !important; }
-  .dashboard-userinfo strong { font-size: 1rem !important; }
-  .dashboard-userinfo span { font-size: 0.7rem !important; }
-  .dashboard-stat strong { font-size: 1.05rem !important; }
-  .dashboard-stat span { font-size: 0.6rem !important; }
-  .dashboard-hero-lvl-number { font-size: 1.6rem !important; }
+  .dashboard-avatar { width: 38px !important; height: 38px !important; }
+  .dashboard-avatar-fallback {
+    width: 38px !important; height: 38px !important;
+    font-size: 1.05rem !important;
+  }
+  .dashboard-userinfo strong { font-size: 0.92rem !important; }
+  .dashboard-userinfo span { font-size: 0.65rem !important; }
+  .dashboard-stat strong { font-size: 0.95rem !important; }
+  .dashboard-stat span { font-size: 0.55rem !important; }
+  .dashboard-hero-lvl-number { font-size: 1.4rem !important; }
   .dashboard-grid {
     grid-template-columns: 1fr !important;
-    gap: 0.75rem !important;
+    gap: 0.6rem !important;
   }
-  .dashboard-card { padding: 0.85rem !important; }
-  .dashboard-card-title { font-size: 0.95rem !important; }
-  .dashboard-deck-card { padding: 0.6rem !important; }
-  .dashboard-deck-card-name { font-size: 0.85rem !important; }
-  .dashboard-cta { padding: 0.6rem 0.8rem !important; font-size: 0.8rem !important; }
+  .dashboard-card { padding: 0.7rem !important; }
+  .dashboard-card-title { font-size: 0.85rem !important; }
+  .dashboard-deck-card { padding: 0.5rem !important; }
+  .dashboard-deck-card-name { font-size: 0.78rem !important; }
+  .dashboard-cta { padding: 0.5rem 0.65rem !important; font-size: 0.72rem !important; }
+
+  /* Section card padding: card-section es el wrapper de "Play vs Bot" + otros. */
+  .card-section { padding: 0.7rem 0.85rem !important; margin-bottom: 0.6rem !important; }
+  .card-section h2 {
+    font-size: 0.95rem !important;
+    margin-bottom: 0.55rem !important;
+    letter-spacing: 0.02em !important;
+  }
+
+  /* PvE ladder: cards de Novato/Avanzado/Experto reducidas ~40%. */
+  .pve-ladder {
+    grid-template-columns: 1fr !important;
+    gap: 0.55rem !important;
+    margin-bottom: 0.6rem !important;
+  }
+  .pve-tier {
+    padding: 0.65rem 0.75rem 0.6rem !important;
+    gap: 0.25rem !important;
+    border-radius: 0.65rem !important;
+  }
+  .pve-tier-badge {
+    font-size: 0.5rem !important;
+    padding: 0.1rem 0.35rem !important;
+  }
+  .pve-tier-icon {
+    font-size: 1.6rem !important;
+    margin-top: 0.05rem !important;
+  }
+  .pve-tier-name {
+    font-size: 0.95rem !important;
+  }
+  .pve-tier-desc {
+    font-size: 0.65rem !important;
+    line-height: 1.3 !important;
+    min-height: 0 !important;
+  }
+  .pve-tier-rewards {
+    gap: 0.35rem !important;
+    margin-top: 0.25rem !important;
+  }
+  .pve-tier-rewards span {
+    font-size: 0.58rem !important;
+    padding: 0.15rem 0.4rem !important;
+  }
+
+  /* Action buttons row (Find casual / View catalog / etc). */
+  .action-buttons {
+    flex-direction: column !important;
+    gap: 0.4rem !important;
+  }
+  .btn-primary, .btn-secondary {
+    padding: 0.5rem 0.7rem !important;
+    font-size: 0.75rem !important;
+  }
+  .btn-store {
+    padding: 0.6rem 0.75rem !important;
+    gap: 0.55rem !important;
+  }
 }
 
-/* (C) Game Over modal mobile: reducir ~50% padding y font-sizes para que entre en pantalla. */
-@media (max-width: 640px) {
+/* (B) Game Over modal mobile: REDUCCIÓN ~50% extra (mitad del previo).
+       Breakpoint subido a 768px para cubrir más celulares (algunos no matcheaban 640px). */
+@media (max-width: 768px) {
   .tcg-gameover-card {
-    padding: 1rem 1.1rem !important;
+    padding: 0.65rem 0.8rem !important;
     min-width: 0 !important;
-    max-width: 92vw !important;
-    max-height: 88vh !important;
+    max-width: 78vw !important;
+    max-height: 78vh !important;
     overflow-y: auto;
+    border-radius: 0.85rem !important;
   }
   .tcg-gameover-emoji {
-    font-size: 2.2rem !important;
-    margin-bottom: 0.25rem !important;
+    font-size: 1.5rem !important;
+    margin-bottom: 0.15rem !important;
   }
   .tcg-gameover-title {
-    font-size: 1.45rem !important;
-    margin-bottom: 0.4rem !important;
+    font-size: 1rem !important;
+    margin-bottom: 0.25rem !important;
+    letter-spacing: 0.01em !important;
   }
   .tcg-gameover-sub {
-    font-size: 0.78rem !important;
-    margin-bottom: 0.4rem !important;
+    font-size: 0.6rem !important;
+    margin-bottom: 0.25rem !important;
+    line-height: 1.25 !important;
   }
-  .tcg-gameover-reason { font-size: 0.7rem !important; }
-  .tcg-gameover-reward-value { font-size: 1.15rem !important; }
-  .tcg-gameover-reward-label { font-size: 0.55rem !important; }
-  .tcg-gameover-reward-card { padding: 0.5rem 0.6rem !important; }
+  .tcg-gameover-reason {
+    font-size: 0.55rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  .tcg-gameover-reward-card {
+    padding: 0.35rem 0.45rem !important;
+    border-radius: 0.5rem !important;
+  }
+  .tcg-gameover-reward-value { font-size: 0.85rem !important; }
+  .tcg-gameover-reward-label { font-size: 0.45rem !important; letter-spacing: 0.04em !important; }
+  .tcg-gameover-rewards {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 0.35rem !important;
+  }
   .tcg-gameover-cta {
-    padding: 0.55rem 0.85rem !important;
-    font-size: 0.85rem !important;
-    margin-top: 0.5rem !important;
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.7rem !important;
+    margin-top: 0.4rem !important;
+    border-radius: 0.5rem !important;
   }
-  .tcg-gameover-rewards { gap: 0.5rem !important; }
 }
 
 /* (D) Phase wheel mobile: 84px con ▶ arriba + label "TACTICAL PHASE 1" abajo, ambos
@@ -10981,55 +11055,65 @@ pre {
   }
 }
 
-/* (E) Side decor en celulares: gotas de agua 💧 en franja delgada al borde.
-       <1280px enable + override emoji + reposicionar al strip lateral. */
+/* (C) Side decor mobile: emojis Axie (NO water drops) en los espacios INTERNOS
+       del board, entre las HUD sidebars y la columna de zones. Anuar marcó esos
+       rectángulos en su screenshot — son zonas verdes vacías visibles dentro del
+       board, no los edges del viewport. La HUD sidebar mobile ocupa clamp(88-132px)
+       a cada lado, así que posicionamos el decor a partir de left: ~14vw / right: ~14vw. */
 @media (max-width: 1279px) {
   .tcg-side-decor {
     display: block !important;
-    width: clamp(20px, 6vw, 60px) !important;
+    /* Strip que cubre el espacio entre HUD sidebar y la primera columna de field.
+       Aprox: 14vw (donde termina la sidebar) hasta 26vw (antes de los slots S/T). */
+    top: clamp(50px, 8vh, 80px) !important;       /* debajo de la toolbar */
+    bottom: clamp(110px, 16vh, 160px) !important; /* arriba del hand strip */
+    width: clamp(40px, 12vw, 110px) !important;
     max-width: none !important;
     pointer-events: none;
     z-index: 1 !important;
   }
-  .tcg-side-decor-left  { left: 0 !important; }
-  .tcg-side-decor-right { right: 0 !important; }
-
-  /* Override emojis a gota de agua para todo viewport <1280px. */
-  .tcg-side-decor .tcg-decor-axie::before {
-    content: '💧' !important;
+  .tcg-side-decor-left {
+    left: clamp(90px, 14vw, 138px) !important;  /* después de la HUD sidebar izquierda */
+    right: auto !important;
   }
+  .tcg-side-decor-right {
+    right: clamp(90px, 14vw, 138px) !important; /* antes de la HUD sidebar derecha */
+    left: auto !important;
+  }
+
+  /* Mantener emojis Axie originales (NO water drops). Solo subir visibilidad. */
   .tcg-side-decor .tcg-decor-axie {
-    font-size: clamp(20px, 4vw, 32px) !important;
-    opacity: 0.22 !important;
-    filter: blur(0.3px) drop-shadow(0 2px 8px rgba(20, 195, 244, 0.55)) !important;
+    font-size: clamp(22px, 4.5vw, 36px) !important;
+    opacity: 0.28 !important;
+    filter: blur(0.3px) drop-shadow(0 2px 10px rgba(140, 93, 246, 0.5)) !important;
   }
 
-  /* Reposicionar al centro del strip lateral (no diagonal como desktop). */
+  /* Reposicionar verticalmente distribuidos en el strip interno. */
   .tcg-side-decor .tcg-decor-axie:nth-child(1) {
     top: 8% !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
+    left: 30% !important;
+    transform: none !important;
     animation-duration: 14s !important;
   }
   .tcg-side-decor .tcg-decor-axie:nth-child(2) {
-    top: 48% !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
+    top: 45% !important;
+    left: 60% !important;
+    transform: none !important;
     animation-duration: 18s !important;
-    animation-delay: -4s !important;
+    animation-delay: -5s !important;
   }
   .tcg-side-decor .tcg-decor-axie:nth-child(3) {
-    top: 82% !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
+    top: 78% !important;
+    left: 35% !important;
+    transform: none !important;
     animation-duration: 16s !important;
     animation-delay: -9s !important;
   }
 
-  /* Partículas más chicas. */
+  /* Partículas: mantener pero más chicas para no saturar. */
   .tcg-side-decor .tcg-decor-particle {
     width: 4px !important;
     height: 4px !important;
-    opacity: 0.4 !important;
+    opacity: 0.45 !important;
   }
 }

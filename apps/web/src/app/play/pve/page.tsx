@@ -129,6 +129,8 @@ function PvePage() {
   const [catalog, setCatalog] = useState<CardCatalog>({});
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
   const [isPaused, setIsPaused] = useState(false);
+  /** Modal "Are you sure you want to surrender?" disparado por Exit / Surrender / Browser back. */
+  const [showSurrenderConfirm, setShowSurrenderConfirm] = useState(false);
   const [mySessionId, setMySessionId] = useState<string>('');
   const [selectedHandCard, setSelectedHandCard] = useState<string | null>(null);
   const [selectedAttacker, setSelectedAttacker] = useState<string | null>(null);
@@ -222,6 +224,25 @@ function PvePage() {
       setHandLimitDiscard(null);
     }
   }, [state?.phase, state?.status, state?.turnNumber]);
+
+  /** Interceptor del browser back button: si match IN_PROGRESS, en lugar de
+   * navegar atrás, abrir el modal de surrender. Pushea un fake history state
+   * al montar y re-pushea en cada popstate para mantener el interceptor. */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const inMatch = state?.status === 'IN_PROGRESS' && !state?.winnerId;
+    if (!inMatch) return;
+    // Push fake state para interceptar el back inicial.
+    window.history.pushState({ axieDuelGuard: true }, '', window.location.href);
+    const onPop = () => {
+      // Re-pushear para mantener el guard activo (next back también intercepta).
+      window.history.pushState({ axieDuelGuard: true }, '', window.location.href);
+      // Mostrar modal de surrender.
+      setShowSurrenderConfirm(true);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [state?.status, state?.winnerId]);
   const coinsAtMatchStartRef = useRef<string | null>(null);
   const xpAtMatchStartRef = useRef<number | null>(null);
   const levelAtMatchStartRef = useRef<number | null>(null);
@@ -899,7 +920,10 @@ function PvePage() {
   }
 
   function endPhase() { send('END_PHASE'); }
-  function surrender() { if (confirm('¿Rendirte?')) send('SURRENDER'); }
+  /** Surrender ahora abre el modal in-app (no usa native confirm).
+   * El modal se confirma desde la UI styled. Yes → SURRENDER → game over.
+   * No → cierra modal, sigue jugando. */
+  function surrender() { setShowSurrenderConfirm(true); }
 
   function clickHandCard(card: CardSnapshot) {
     if (!isMyTurn) return;
@@ -1228,11 +1252,11 @@ function PvePage() {
           type="button"
           className="tcg-back"
           onClick={() => {
-            // Confirmación si la partida sigue en progreso — evita pérdidas accidentales.
+            // Si match en progreso → mismo modal "Are you sure you want to surrender?".
+            // Si game over → exit directo al dashboard.
             if (state?.status === 'IN_PROGRESS' && !isGameOver) {
-              if (!confirm('¿Salir de la partida? La partida actual se abandonará sin recompensas (no cuenta como derrota).')) {
-                return;
-              }
+              setShowSurrenderConfirm(true);
+              return;
             }
             router.push('/dashboard');
           }}
@@ -1276,10 +1300,10 @@ function PvePage() {
             room.send(isPaused ? 'RESUME' : 'PAUSE');
           }}
           disabled={isGameOver}
-          title={isPaused ? 'Resume' : 'Pause'}
+          title={isPaused ? 'Resume match' : 'Pause match'}
           aria-label={isPaused ? 'Resume' : 'Pause'}
         >
-          {isPaused ? '▶' : '⏸'}
+          {isPaused ? '▶ Resume' : '⏸ Pause'}
         </button>
         <button type="button" className="tcg-surrender" onClick={surrender} disabled={isGameOver}>
           Surrender
@@ -1964,6 +1988,36 @@ function PvePage() {
             >
               ▶ Resume
             </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Surrender confirm modal — disparado por Exit / Surrender / Browser back. */}
+      {showSurrenderConfirm && !isGameOver ? (
+        <div className="tcg-surrender-confirm-overlay" role="dialog" aria-label="Surrender confirmation">
+          <div className="tcg-surrender-confirm-modal">
+            <div className="tcg-surrender-confirm-icon">⚠</div>
+            <h2 className="tcg-surrender-confirm-title">Surrender Match?</h2>
+            <p className="tcg-surrender-confirm-sub">Are you sure you want to surrender? This counts as a defeat.</p>
+            <div className="tcg-surrender-confirm-actions">
+              <button
+                type="button"
+                className="tcg-surrender-confirm-btn no"
+                onClick={() => setShowSurrenderConfirm(false)}
+              >
+                ← No, keep playing
+              </button>
+              <button
+                type="button"
+                className="tcg-surrender-confirm-btn yes"
+                onClick={() => {
+                  setShowSurrenderConfirm(false);
+                  send('SURRENDER');
+                }}
+              >
+                ✕ Yes, surrender
+              </button>
+            </div>
           </div>
         </div>
       ) : null}

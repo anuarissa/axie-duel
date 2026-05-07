@@ -3225,29 +3225,31 @@ pre {
     box-shadow: 0 0 30px rgba(239, 68, 68, 0.95);
   }
 }
-/* Pause button — toolbar, similar al .tcg-surrender pero amarillo. */
+/* Pause button — pill matching Surrender size (mismo padding/min-height/radius/font).
+ * Color amarillo cuando playing, verde cuando paused. */
 .tcg-pause-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  background: rgba(251, 191, 36, 0.12);
+  gap: 0.35rem;
+  background: rgba(251, 191, 36, 0.1);
   border: 1px solid rgba(251, 191, 36, 0.4);
-  border-radius: 50%;
   color: #fbbf24;
+  min-height: 44px;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: 800;
-  transition: background 0.15s, border-color 0.15s, transform 0.12s, color 0.15s;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.15s;
 }
-.tcg-pause-btn:hover:not(:disabled) {
-  background: rgba(251, 191, 36, 0.22);
-  border-color: var(--axie-yellow);
-  transform: scale(1.06);
+@media (hover: hover) {
+  .tcg-pause-btn:hover:not(:disabled) {
+    background: rgba(251, 191, 36, 0.22);
+    border-color: var(--axie-yellow);
+  }
 }
-.tcg-pause-btn:active:not(:disabled) { transform: scale(0.94); }
+.tcg-pause-btn:active:not(:disabled) { transform: scale(0.96); background: rgba(251, 191, 36, 0.28); }
 .tcg-pause-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .tcg-pause-btn.paused {
   background: rgba(34, 197, 94, 0.18);
@@ -3338,7 +3340,109 @@ pre {
   .tcg-pause-title { font-size: 1.2rem !important; }
   .tcg-pause-sub { font-size: 0.72rem !important; margin-bottom: 0.85rem !important; }
   .tcg-pause-resume-btn { padding: 0.6rem 1.2rem !important; font-size: 0.85rem !important; }
-  .tcg-pause-btn { width: 32px !important; height: 32px !important; font-size: 0.85rem !important; }
+  /* Pause button mobile: matchea el Surrender mobile (más compacto). */
+  .tcg-pause-btn {
+    min-height: 38px !important;
+    padding: 0.4rem 0.75rem !important;
+    font-size: 0.75rem !important;
+    gap: 0.3rem !important;
+  }
+}
+
+/* Surrender confirm modal — in-app reemplazo del native confirm.
+ * Disparado por Exit / Surrender / Browser back cuando match IN_PROGRESS. */
+.tcg-surrender-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.85);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 245;
+  animation: tcg-fade-in 0.22s ease-out;
+}
+.tcg-surrender-confirm-modal {
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.97), rgba(15, 23, 42, 0.97));
+  border: 2px solid rgba(239, 68, 68, 0.6);
+  border-radius: 1.15rem;
+  padding: 2rem 2.2rem 1.6rem;
+  max-width: 460px;
+  width: calc(100vw - 2rem);
+  text-align: center;
+  color: #f5f3ff;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(239, 68, 68, 0.3);
+  animation: tcg-modal-in 240ms cubic-bezier(0.2, 0.9, 0.3, 1.05);
+}
+.tcg-surrender-confirm-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 18px rgba(239, 68, 68, 0.7));
+  margin-bottom: 0.4rem;
+}
+.tcg-surrender-confirm-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.55rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.02em;
+}
+.tcg-surrender-confirm-sub {
+  margin: 0 0 1.2rem;
+  font-size: 0.9rem;
+  color: rgba(245, 243, 255, 0.78);
+  line-height: 1.45;
+}
+.tcg-surrender-confirm-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.tcg-surrender-confirm-btn {
+  padding: 0.7rem 1.25rem;
+  border-radius: 999px;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  transition: transform 0.15s, filter 0.15s, box-shadow 0.2s, background 0.2s;
+  flex: 1 1 140px;
+  max-width: 200px;
+}
+.tcg-surrender-confirm-btn.no {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #f5f3ff;
+}
+.tcg-surrender-confirm-btn.no:hover {
+  background: rgba(255, 255, 255, 0.14);
+  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.tcg-surrender-confirm-btn.yes {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border: 1.5px solid #ef4444;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.4);
+}
+.tcg-surrender-confirm-btn.yes:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  box-shadow: 0 10px 24px rgba(239, 68, 68, 0.6);
+}
+.tcg-surrender-confirm-btn:active { transform: scale(0.96); }
+@media (max-width: 640px) {
+  .tcg-surrender-confirm-modal { padding: 1.2rem 1.4rem 1rem !important; }
+  .tcg-surrender-confirm-icon { font-size: 2.2rem !important; margin-bottom: 0.25rem !important; }
+  .tcg-surrender-confirm-title { font-size: 1.2rem !important; }
+  .tcg-surrender-confirm-sub { font-size: 0.78rem !important; margin-bottom: 0.85rem !important; }
+  .tcg-surrender-confirm-btn { padding: 0.55rem 0.9rem !important; font-size: 0.75rem !important; }
 }
 
 .tcg-surrender {

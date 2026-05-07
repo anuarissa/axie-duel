@@ -353,9 +353,8 @@ export default function DashboardPage() {
       ) : null}
 
       {error ? (
-        <div className="card-section" style={{ background: 'rgba(255,118,118,0.08)' }}>
-          <strong style={{ color: '#ff7676' }}>Error: </strong>
-          {error}
+        <div className="dashboard-error-banner">
+          <strong>Error:</strong> {error}
         </div>
       ) : null}
 

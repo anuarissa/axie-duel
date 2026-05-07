@@ -11220,40 +11220,51 @@ pre {
     letter-spacing: 0.02em !important;
   }
 
-  /* PvE ladder: cards de Novato/Avanzado/Experto reducidas ~40%. */
+  /* PvE ladder: 3 cards side-by-side compactos (igual que desktop, no apilados). */
   .pve-ladder {
-    grid-template-columns: 1fr !important;
-    gap: 0.55rem !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.4rem !important;
     margin-bottom: 0.6rem !important;
   }
   .pve-tier {
-    padding: 0.65rem 0.75rem 0.6rem !important;
-    gap: 0.25rem !important;
-    border-radius: 0.65rem !important;
+    padding: 0.55rem 0.45rem !important;
+    gap: 0.2rem !important;
+    border-radius: 0.6rem !important;
+    text-decoration: none !important;
+  }
+  .pve-tier:hover {
+    text-decoration: none !important; /* override el a:hover global */
   }
   .pve-tier-badge {
-    font-size: 0.5rem !important;
-    padding: 0.1rem 0.35rem !important;
+    font-size: 0.45rem !important;
+    padding: 0.08rem 0.3rem !important;
   }
   .pve-tier-icon {
-    font-size: 1.6rem !important;
-    margin-top: 0.05rem !important;
+    font-size: 1.3rem !important;
+    margin-top: 0 !important;
   }
   .pve-tier-name {
-    font-size: 0.95rem !important;
+    font-size: 0.78rem !important;
   }
   .pve-tier-desc {
-    font-size: 0.65rem !important;
-    line-height: 1.3 !important;
+    font-size: 0.56rem !important;
+    line-height: 1.25 !important;
     min-height: 0 !important;
+    /* Limitar a 2 líneas para que los 3 cards mantengan altura uniforme. */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .pve-tier-rewards {
-    gap: 0.35rem !important;
-    margin-top: 0.25rem !important;
+    gap: 0.25rem !important;
+    margin-top: 0.2rem !important;
+    flex-wrap: wrap;
+    justify-content: center;
   }
   .pve-tier-rewards span {
-    font-size: 0.58rem !important;
-    padding: 0.15rem 0.4rem !important;
+    font-size: 0.5rem !important;
+    padding: 0.1rem 0.3rem !important;
   }
 
   /* Action buttons row (Find casual / View catalog / etc). */
@@ -11269,6 +11280,53 @@ pre {
     padding: 0.6rem 0.75rem !important;
     gap: 0.55rem !important;
   }
+}
+
+/* Extra-narrow phones (<420px): si los 3 PvE cards quedan muy apretados,
+ * ocultar la descripción para que entren bien con icon + name + rewards. */
+@media (max-width: 420px) {
+  .pve-tier-desc { display: none !important; }
+  .pve-tier-icon { font-size: 1.1rem !important; }
+  .pve-tier-name { font-size: 0.7rem !important; }
+  .pve-tier { padding: 0.45rem 0.3rem !important; }
+  .pve-tier-rewards span { font-size: 0.45rem !important; padding: 0.08rem 0.25rem !important; }
+}
+
+/* ── Dashboard error banner (FIX-7): clase dedicada (antes inline-styled .card-section).
+ * Discreto en desktop, muy compacto en mobile. */
+.dashboard-error-banner {
+  background: rgba(255, 118, 118, 0.08);
+  border: 1px solid rgba(255, 118, 118, 0.25);
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.85rem;
+  margin-bottom: 1rem;
+  font-size: 0.78rem;
+  color: rgba(255, 200, 200, 0.92);
+  line-height: 1.4;
+}
+.dashboard-error-banner strong {
+  color: #ff9999;
+  margin-right: 0.3rem;
+}
+@media (max-width: 768px) {
+  .dashboard-error-banner {
+    padding: 0.4rem 0.6rem !important;
+    font-size: 0.68rem !important;
+    margin-bottom: 0.5rem !important;
+    border-radius: 0.4rem !important;
+  }
+}
+
+/* (C) Defensivo: forzar gradients de las bars con !important para que no haya
+ * override fantasma en algún browser/extension que las pinte rojas. */
+.dashboard-hero-lvl-fill {
+  background: linear-gradient(90deg, var(--axie-cyan) 0%, var(--axie-yellow) 60%, #fb923c 100%) !important;
+}
+.quest-progress-fill {
+  background: linear-gradient(90deg, #6b8eff, #00d2ff) !important;
+}
+.quest-progress-fill.completed {
+  background: linear-gradient(90deg, #ffd966, #ff8a00) !important;
 }
 
 /* (B) Game Over modal mobile: REDUCCIÓN ~50% extra (mitad del previo).

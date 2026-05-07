@@ -28,6 +28,7 @@ router.get('/me', authRequired, async (req: Request, res: Response, next: NextFu
         lunacianCoins: true,
         starterPicked: true,
         starterArchetype: true,
+        tutorialCompleted: true,
         createdAt: true,
       },
     });
@@ -83,6 +84,24 @@ const ListCardsQuery = z.object({
     .union([z.literal('true'), z.literal('false')])
     .transform((v) => v === 'true')
     .optional(),
+});
+
+/**
+ * Marca el welcome tutorial como completado para el user actual.
+ * Idempotente: si ya está completed, no falla. Llamado desde el cliente al
+ * cerrar el TutorialWelcomeModal (slide 5 → "Got it!"). El replay manual
+ * desde /rules NO toca este endpoint.
+ */
+router.post('/me/tutorial-complete', authRequired, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await prisma.user.update({
+      where: { id: req.user!.userId },
+      data: { tutorialCompleted: true },
+    });
+    res.json({ ok: true });
+  } catch (err) {
+    next(err);
+  }
 });
 
 /**

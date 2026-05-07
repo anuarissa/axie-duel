@@ -57,6 +57,10 @@ model User {
   starterPicked Boolean       @default(false)
   /// 'plant' | 'bird' | 'beast' — archetype elegido al claim. Null si nunca eligió.
   starterArchetype String?
+  /// True una vez el usuario completó el welcome tutorial post-starter.
+  /// Trigger: aparece automático en dashboard si starterPicked=true && tutorialCompleted=false.
+  /// Replay manual desde /rules sin tocar este flag.
+  tutorialCompleted Boolean   @default(false)
   starterAxies  StarterAxie[]
   decks         Deck[]
   matches       Match[]       @relation("PlayerMatches")

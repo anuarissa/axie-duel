@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { apiFetch, clearJwt, getJwt, ApiError } from '../../lib/auth';
 import { SoundControls } from '../../components/SoundControls';
+import { TutorialWelcomeModal } from '../../components/TutorialWelcomeModal';
 import { sound } from '../../lib/sound';
 
 interface UserMe {
@@ -23,6 +24,7 @@ interface UserMe {
   lunacianCoins: string;
   starterPicked: boolean;
   starterArchetype: 'plant' | 'bird' | 'beast' | null;
+  tutorialCompleted: boolean;
 }
 
 interface DeckSummary {
@@ -65,6 +67,8 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null);
   const [claimToast, setClaimToast] = useState<{ kind: 'success' | 'info' | 'error'; text: string } | null>(null);
+  /** Trigger automático del welcome tutorial cuando user pickeó starter pero no completó tutorial. */
+  const [showTutorialWelcome, setShowTutorialWelcome] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const [levelUpPopup, setLevelUpPopup] = useState<{ oldLevel: number; newLevel: number } | null>(null);
@@ -141,6 +145,10 @@ export default function DashboardPage() {
         if (!meR.value.starterPicked) {
           router.replace('/starter');
           return;
+        }
+        // FORCE tutorial: si pickeó starter pero no completó tutorial → modal forzado.
+        if (meR.value.starterPicked && !meR.value.tutorialCompleted) {
+          setShowTutorialWelcome(true);
         }
       }
 
@@ -397,6 +405,9 @@ export default function DashboardPage() {
           <button className="btn-secondary dashboard-action-btn dashboard-pvp-btn" disabled title="Coming soon">
             ⚔️ Find casual match (PvP)
           </button>
+          <Link href="/rules" className="btn-secondary dashboard-action-btn dashboard-rules-btn">
+            📖 How to play
+          </Link>
           <Link href="/cards" className="btn-secondary dashboard-action-btn dashboard-catalog-btn">
             📚 View catalog
           </Link>
@@ -522,6 +533,17 @@ export default function DashboardPage() {
           </section>
         </div>
       </div>
+
+      {/* Tutorial welcome modal — forzado al primer login post-starter (no se cierra tap-fuera). */}
+      {showTutorialWelcome ? (
+        <TutorialWelcomeModal
+          onClose={() => {
+            setShowTutorialWelcome(false);
+            // Refrescar el me para tener tutorialCompleted: true en el state local.
+            setMe((curr) => curr ? { ...curr, tutorialCompleted: true } : curr);
+          }}
+        />
+      ) : null}
     </main>
   );
 }

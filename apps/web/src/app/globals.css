@@ -548,16 +548,82 @@ pre {
   .dashboard-ronin-btn { padding: 0.7rem 0.85rem; }
 }
 
-/* NFT button — variante del btn-secondary con tinte purple/Web3 */
+/* Action buttons del dashboard — todos con gradient temático + border colored.
+ * Patrón inspirado en .dashboard-nft-btn. Cada botón tiene su color por función. */
+.dashboard-action-btn {
+  font-weight: 700 !important;
+  padding: 0.85rem 1.2rem !important;
+  border-width: 1.5px !important;
+  letter-spacing: 0.01em !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.18s, box-shadow 0.2s, border-color 0.2s, background 0.25s !important;
+}
+.dashboard-action-btn:hover {
+  transform: translateY(-2px) !important;
+  filter: brightness(1.1);
+}
+.dashboard-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  filter: saturate(0.65);
+}
+
+/* PvP — cyan + pink (combat theme). */
+.dashboard-pvp-btn {
+  background: linear-gradient(135deg, rgba(20, 195, 244, 0.22), rgba(244, 114, 182, 0.18)) !important;
+  border-color: rgba(20, 195, 244, 0.55) !important;
+  color: #67e8f9 !important;
+  box-shadow: 0 4px 14px rgba(20, 195, 244, 0.18);
+}
+.dashboard-pvp-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(20, 195, 244, 0.35), rgba(244, 114, 182, 0.3)) !important;
+  border-color: var(--axie-cyan) !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(20, 195, 244, 0.4);
+}
+
+/* Catalog — blue + cyan (info theme). */
+.dashboard-catalog-btn {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.22), rgba(34, 211, 238, 0.18)) !important;
+  border-color: rgba(96, 165, 250, 0.5) !important;
+  color: #93c5fd !important;
+  box-shadow: 0 4px 14px rgba(96, 165, 250, 0.18);
+}
+.dashboard-catalog-btn:hover {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.35), rgba(34, 211, 238, 0.3)) !important;
+  border-color: #60a5fa !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(96, 165, 250, 0.4);
+}
+
+/* Builder — green + cyan (creative/forge theme). */
+.dashboard-builder-btn {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.22), rgba(20, 195, 244, 0.18)) !important;
+  border-color: rgba(52, 211, 153, 0.5) !important;
+  color: #6ee7b7 !important;
+  box-shadow: 0 4px 14px rgba(52, 211, 153, 0.18);
+}
+.dashboard-builder-btn:hover {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.35), rgba(20, 195, 244, 0.3)) !important;
+  border-color: #34d399 !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(52, 211, 153, 0.4);
+}
+
+/* NFT button — variante del btn-secondary con tinte purple/Web3 (existente). */
 .dashboard-nft-btn {
-  background: linear-gradient(135deg, rgba(192, 132, 252, 0.18), rgba(96, 165, 250, 0.18)) !important;
+  background: linear-gradient(135deg, rgba(192, 132, 252, 0.22), rgba(96, 165, 250, 0.18)) !important;
   border-color: rgba(192, 132, 252, 0.5) !important;
   color: #c084fc !important;
   font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(192, 132, 252, 0.18);
 }
 .dashboard-nft-btn:hover {
-  background: linear-gradient(135deg, rgba(192, 132, 252, 0.3), rgba(96, 165, 250, 0.3)) !important;
+  background: linear-gradient(135deg, rgba(192, 132, 252, 0.35), rgba(96, 165, 250, 0.3)) !important;
   color: #ffffff !important;
+  box-shadow: 0 8px 22px rgba(192, 132, 252, 0.4);
 }
 
 /* Web3 modal — variant del coming-soon-modal con tinte Ronin */
@@ -2971,9 +3037,13 @@ pre {
 .tcg-decor-axie[data-class="bug"]::before      { content: '🪲'; }
 
 /* Posicionado por nth-child + delays escalonados para evitar pulso uniforme. */
-.tcg-side-decor .tcg-decor-axie:nth-child(1) { top: 12%; left: 18%; animation-delay: 0s;     animation-duration: 18s; }
-.tcg-side-decor .tcg-decor-axie:nth-child(2) { top: 42%; left: 55%; animation-delay: -5s;    animation-duration: 21s; }
-.tcg-side-decor .tcg-decor-axie:nth-child(3) { top: 72%; left: 30%; animation-delay: -10s;   animation-duration: 16s; }
+/* Base: emojis centrados horizontalmente (left:50% + margin-left:-0.5em).
+ * NO usamos transform:translateX(-50%) porque el keyframe tcg-decor-float
+ * setea su propio transform cada frame y descentraría el emoji. */
+.tcg-side-decor .tcg-decor-axie { margin-left: -0.5em; }
+.tcg-side-decor .tcg-decor-axie:nth-child(1) { top: 18%; left: 50%; animation-delay: 0s;     animation-duration: 18s; }
+.tcg-side-decor .tcg-decor-axie:nth-child(2) { top: 50%; left: 50%; animation-delay: -5s;    animation-duration: 21s; }
+.tcg-side-decor .tcg-decor-axie:nth-child(3) { top: 82%; left: 50%; animation-delay: -10s;   animation-duration: 16s; }
 
 @keyframes tcg-decor-float {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -11088,24 +11158,26 @@ pre {
     filter: blur(0.3px) drop-shadow(0 2px 10px rgba(140, 93, 246, 0.5)) !important;
   }
 
-  /* Reposicionar verticalmente distribuidos en el strip interno. */
+  /* Centrados horizontalmente en el strip + distribuidos verticalmente.
+     OJO: usamos margin-left:-0.5em (NO transform: translateX) porque el keyframe
+     tcg-decor-float sobrescribe `transform` cada frame y descentra el emoji. */
+  .tcg-side-decor .tcg-decor-axie {
+    margin-left: -0.5em !important;
+  }
   .tcg-side-decor .tcg-decor-axie:nth-child(1) {
-    top: 8% !important;
-    left: 30% !important;
-    transform: none !important;
+    top: 18% !important;
+    left: 50% !important;
     animation-duration: 14s !important;
   }
   .tcg-side-decor .tcg-decor-axie:nth-child(2) {
-    top: 45% !important;
-    left: 60% !important;
-    transform: none !important;
+    top: 50% !important;
+    left: 50% !important;
     animation-duration: 18s !important;
     animation-delay: -5s !important;
   }
   .tcg-side-decor .tcg-decor-axie:nth-child(3) {
-    top: 78% !important;
-    left: 35% !important;
-    transform: none !important;
+    top: 82% !important;
+    left: 50% !important;
     animation-duration: 16s !important;
     animation-delay: -9s !important;
   }

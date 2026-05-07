@@ -395,18 +395,18 @@ export default function DashboardPage() {
           </Link>
         </div>
         <div className="action-buttons">
-          <button className="btn-primary" disabled title="Coming soon">
+          <button className="btn-secondary dashboard-action-btn dashboard-pvp-btn" disabled title="Coming soon">
             ⚔️ Find casual match (PvP)
           </button>
-          <Link href="/cards" className="btn-secondary">
+          <Link href="/cards" className="btn-secondary dashboard-action-btn dashboard-catalog-btn">
             📚 View catalog
           </Link>
-          <Link href="/decks/builder" className="btn-secondary">
+          <Link href="/decks/builder" className="btn-secondary dashboard-action-btn dashboard-builder-btn">
             🛠️ Build deck
           </Link>
           <button
             type="button"
-            className="btn-secondary dashboard-nft-btn"
+            className="btn-secondary dashboard-action-btn dashboard-nft-btn"
             onClick={() => setWeb3Modal({ kind: 'nft' })}
             title="Sync your NFT Axies + cards from Ronin"
           >

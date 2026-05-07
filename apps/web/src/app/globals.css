@@ -11775,8 +11775,17 @@ pre {
   color: #f5f3ff;
   font-family: var(--font-sans, system-ui);
 }
+/* Header con fondo oscuro tipo card — sobre el sky background del body
+ * los textos cyan/yellow se mezclaban (FIX-10). */
 .rules-header {
-  margin-bottom: 2rem;
+  background: linear-gradient(160deg, rgba(20, 15, 50, 0.78), rgba(15, 23, 42, 0.85));
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem 1.4rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 .rules-back {
   display: inline-block;
@@ -11784,14 +11793,17 @@ pre {
   font-size: 0.85rem;
   color: var(--axie-cyan);
   text-decoration: none;
-  border: 1px solid rgba(20, 195, 244, 0.4);
+  border: 1px solid rgba(20, 195, 244, 0.55);
+  background: rgba(2, 6, 23, 0.55);
   padding: 0.4rem 0.85rem;
   border-radius: 999px;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-weight: 700;
 }
 .rules-back:hover {
-  background: rgba(20, 195, 244, 0.15);
+  background: rgba(20, 195, 244, 0.25);
   border-color: var(--axie-cyan);
+  color: #ffffff;
   text-decoration: none;
 }
 .rules-title {
@@ -11803,11 +11815,13 @@ pre {
   background-clip: text;
   color: transparent;
   letter-spacing: -0.01em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 .rules-sub {
   margin: 0;
   font-size: 0.95rem;
-  color: rgba(245, 243, 255, 0.65);
+  color: rgba(245, 243, 255, 0.85);
   line-height: 1.5;
 }
 .rules-section {
@@ -11966,6 +11980,11 @@ pre {
 
 @media (max-width: 768px) {
   .rules-page { padding: 1rem 0.85rem 3rem !important; }
+  .rules-header {
+    padding: 0.85rem 1rem 1rem !important;
+    margin-bottom: 1rem !important;
+    border-radius: 0.75rem !important;
+  }
   .rules-title { font-size: 1.5rem !important; }
   .rules-sub { font-size: 0.78rem !important; }
   .rules-section {

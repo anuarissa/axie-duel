@@ -11329,6 +11329,37 @@ pre {
   background: linear-gradient(90deg, #ffd966, #ff8a00) !important;
 }
 
+/* (C v2) Mobile-specific override — defensivo contra rendering anómalo en
+ * algunos Android browsers donde las bars salen rojas. Usa hex DIRECTO sin CSS
+ * vars + background-color fallback + background-image gradient + sin box-shadow
+ * (que podría causar bleed visual con las bars 9px alto) + sin shimmer ::after. */
+@media (max-width: 900px) {
+  .dashboard-hero-lvl-fill {
+    background: #FFD23F !important;
+    background-image: linear-gradient(90deg, #14C3F4 0%, #FFD23F 60%, #fb923c 100%) !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+  .dashboard-hero-lvl-fill::after {
+    display: none !important;
+  }
+  .quest-progress-fill {
+    background: #00d2ff !important;
+    background-image: linear-gradient(90deg, #6b8eff, #00d2ff) !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+  .quest-progress-fill.completed {
+    background: #ff8a00 !important;
+    background-image: linear-gradient(90deg, #ffd966, #ff8a00) !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+  /* Si las bars siguen rojas con esto, el dispositivo tiene un color filter
+   * activo a nivel sistema (iOS Display Accommodations / Android color
+   * correction). En ese caso CSS no puede arreglarlo. */
+}
+
 /* (B) Game Over modal mobile: REDUCCIÓN ~50% extra (mitad del previo).
        Breakpoint subido a 768px para cubrir más celulares (algunos no matcheaban 640px). */
 @media (max-width: 768px) {

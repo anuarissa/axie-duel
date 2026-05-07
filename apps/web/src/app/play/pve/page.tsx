@@ -128,6 +128,7 @@ function PvePage() {
   const [state, setState] = useState<DuelStateSnapshot | null>(null);
   const [catalog, setCatalog] = useState<CardCatalog>({});
   const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
   const [mySessionId, setMySessionId] = useState<string>('');
   const [selectedHandCard, setSelectedHandCard] = useState<string | null>(null);
   const [selectedAttacker, setSelectedAttacker] = useState<string | null>(null);
@@ -665,6 +666,15 @@ function PvePage() {
             pushToast('error', '⏱ Time\'s up!', 'Your turn auto-ended at 0s.');
             log('system', '⏱ Turn auto-ended (timeout 60s).');
           }
+        });
+
+        joinedRoom.onMessage('PAUSED', () => {
+          setIsPaused(true);
+          log('system', '⏸ Match paused.');
+        });
+        joinedRoom.onMessage('RESUMED', () => {
+          setIsPaused(false);
+          log('system', '▶ Match resumed.');
         });
 
         // Reward summary push del server — sin polling, info instantánea al GAME_OVER.
@@ -1214,9 +1224,21 @@ function PvePage() {
       </div>
       {/* Toolbar slim */}
       <header className="tcg-toolbar">
-        <Link href="/dashboard" className="tcg-back">
+        <button
+          type="button"
+          className="tcg-back"
+          onClick={() => {
+            // Confirmación si la partida sigue en progreso — evita pérdidas accidentales.
+            if (state?.status === 'IN_PROGRESS' && !isGameOver) {
+              if (!confirm('¿Salir de la partida? La partida actual se abandonará sin recompensas (no cuenta como derrota).')) {
+                return;
+              }
+            }
+            router.push('/dashboard');
+          }}
+        >
           ← Exit
-        </Link>
+        </button>
         <div className="tcg-status">
           <span><strong>Mode</strong> {state?.mode ?? '—'}</span>
           {activeDeckName ? <span><strong>Deck</strong> {activeDeckName}</span> : null}
@@ -1227,7 +1249,7 @@ function PvePage() {
           </span>
           {secondsLeft !== null && !isGameOver ? (
             <span
-              className={`tcg-turn-timer ${secondsLeft <= 10 ? 'urgent' : ''} ${isMyTurn ? 'mine' : 'opp'}`}
+              className={`tcg-turn-timer ${secondsLeft <= 15 ? 'urgent' : ''} ${isMyTurn ? 'mine' : 'opp'}`}
               title={isMyTurn ? 'Time left this turn' : 'Opponent time'}
             >
               ⏱ <strong>{secondsLeft}s</strong>
@@ -1246,6 +1268,19 @@ function PvePage() {
           </button>
         </div>
         <SoundControls />
+        <button
+          type="button"
+          className={`tcg-pause-btn ${isPaused ? 'paused' : ''}`}
+          onClick={() => {
+            if (!room || isGameOver) return;
+            room.send(isPaused ? 'RESUME' : 'PAUSE');
+          }}
+          disabled={isGameOver}
+          title={isPaused ? 'Resume' : 'Pause'}
+          aria-label={isPaused ? 'Resume' : 'Pause'}
+        >
+          {isPaused ? '▶' : '⏸'}
+        </button>
         <button type="button" className="tcg-surrender" onClick={surrender} disabled={isGameOver}>
           Surrender
         </button>
@@ -1910,6 +1945,24 @@ function PvePage() {
             </button>
             <button type="button" className="tcg-btn-ghost" onClick={() => setPendingSummon(null)}>
               Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Pause overlay — bloquea interacción mientras la partida está pausada. */}
+      {isPaused && !isGameOver ? (
+        <div className="tcg-pause-overlay" role="dialog" aria-label="Match paused">
+          <div className="tcg-pause-modal">
+            <div className="tcg-pause-icon">⏸</div>
+            <h2 className="tcg-pause-title">Match Paused</h2>
+            <p className="tcg-pause-sub">El bot está esperando. Tu tiempo del turno está congelado.</p>
+            <button
+              type="button"
+              className="tcg-pause-resume-btn"
+              onClick={() => { if (room) room.send('RESUME'); }}
+            >
+              ▶ Resume
             </button>
           </div>
         </div>

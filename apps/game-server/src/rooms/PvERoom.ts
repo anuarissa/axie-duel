@@ -205,6 +205,10 @@ export class PvERoom extends Room {
   private humanUserId = '';
   /** Dificultad del bot — se persiste en el Match para que api aplique reward multiplier. */
   private botDifficulty: BotDifficulty = 'Easy';
+  /** Pausa del PvE: cuando true, el timer no expira y el bot no actúa. */
+  private isPaused = false;
+  /** Tiempo restante del turno guardado al pausar (para restaurar al resume). */
+  private pausedRemainingMs = 0;
 
   override onCreate(options: { difficulty?: BotDifficulty } = {}): void {
     const initial = new DuelStateSchema();
@@ -323,6 +327,35 @@ export class PvERoom extends Room {
     this.onMessage('SET_BOT_SPEED', (_client, raw) => {
       const speed = (raw as { speed?: 'normal' | 'fast' })?.speed;
       if (speed === 'normal' || speed === 'fast') this.setBotSpeed(speed);
+    });
+
+    /** Pausa la partida PvE: congela el timer + bloquea al bot.
+     * Idempotente — múltiples PAUSE seguidos no rompen nada. */
+    this.onMessage('PAUSE', () => {
+      if (this.isPaused) return;
+      if (this.state.status !== 'IN_PROGRESS') return;
+      this.isPaused = true;
+      // Guardar tiempo restante. Si deadline ya pasó, save 0 (resume reinicia con timer fresco).
+      const remaining = Math.max(0, (this.state.turnDeadlineMs ?? 0) - Date.now());
+      this.pausedRemainingMs = remaining;
+      // Mover el deadline muy lejos para que el cliente vea "no count down".
+      this.state.turnDeadlineMs = Date.now() + 9_999_999_999;
+      this.broadcast('PAUSED', { pausedAt: Date.now(), remainingMs: remaining });
+      this.log.info({ remaining }, 'PvE match paused');
+    });
+
+    /** Reanuda la partida — restaura el timer con el tiempo que quedaba. */
+    this.onMessage('RESUME', () => {
+      if (!this.isPaused) return;
+      this.isPaused = false;
+      // Restaurar deadline con el tiempo guardado. Si guardamos 0, dar 30s mínimo.
+      const remaining = this.pausedRemainingMs > 0 ? this.pausedRemainingMs : 30_000;
+      this.state.turnDeadlineMs = Date.now() + remaining;
+      this.pausedRemainingMs = 0;
+      this.broadcast('RESUMED', { remainingMs: remaining });
+      this.log.info({ remaining }, 'PvE match resumed');
+      // Si era el turno del bot, re-trigger.
+      this.maybeRunBot();
     });
 
     this.onMessage('TRAP_RESPONSE', (_client, raw) => {
@@ -519,6 +552,7 @@ export class PvERoom extends Room {
    */
   private checkTurnTimeout(): void {
     if (this.state.status !== 'IN_PROGRESS') return;
+    if (this.isPaused) return; // Pausa: no force-end
     if (!this.state.turnDeadlineMs || Date.now() < this.state.turnDeadlineMs) return;
     if (this.state.activePlayerId === 'BOT' || this.state.activePlayerId !== this.humanSessionId) return;
     // Si hay un trap prompt pendiente, no force-end — el user puede estar respondiendo.
@@ -682,7 +716,10 @@ export class PvERoom extends Room {
   private maybeRunBot(): void {
     if (this.state.activePlayerId !== 'BOT') return;
     if (this.state.status !== 'IN_PROGRESS') return;
+    if (this.isPaused) return; // Pausa: bot no actúa
     setTimeout(() => {
+      // Re-check al fire del timeout: si el user pausó durante el delay, abortar.
+      if (this.isPaused) return;
       this.bot.takeTurn()
         .catch((err) => { this.log.error({ err }, 'bot turn crashed'); })
         .finally(() => this.maybePersistOnGameOver());

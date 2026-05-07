@@ -3022,10 +3022,13 @@ pre {
 
 .tcg-decor-axie {
   position: absolute;
-  font-size: clamp(28px, 3vw, 44px);
-  opacity: 0.18;
+  /* Desktop base: emojis más grandes (matchea el spirit de mobile clamp 22-36).
+   * Mobile @media los hace clamp(22-36) más chicos. */
+  font-size: clamp(34px, 3.5vw, 50px);
+  opacity: 0.26;
   filter: blur(0.5px) drop-shadow(0 4px 14px rgba(140, 93, 246, 0.5));
-  animation: tcg-decor-float 16s ease-in-out infinite;
+  /* Animación más lenta para movimiento sutil (16→26s base). */
+  animation: tcg-decor-float 26s ease-in-out infinite;
   user-select: none;
   line-height: 1;
 }
@@ -3041,9 +3044,10 @@ pre {
  * NO usamos transform:translateX(-50%) porque el keyframe tcg-decor-float
  * setea su propio transform cada frame y descentraría el emoji. */
 .tcg-side-decor .tcg-decor-axie { margin-left: -0.5em; }
-.tcg-side-decor .tcg-decor-axie:nth-child(1) { top: 18%; left: 50%; animation-delay: 0s;     animation-duration: 18s; }
-.tcg-side-decor .tcg-decor-axie:nth-child(2) { top: 50%; left: 50%; animation-delay: -5s;    animation-duration: 21s; }
-.tcg-side-decor .tcg-decor-axie:nth-child(3) { top: 82%; left: 50%; animation-delay: -10s;   animation-duration: 16s; }
+/* Animaciones más lentas (24/28/30s) para que el movimiento sea más sutil. */
+.tcg-side-decor .tcg-decor-axie:nth-child(1) { top: 18%; left: 50%; animation-delay: 0s;     animation-duration: 26s; }
+.tcg-side-decor .tcg-decor-axie:nth-child(2) { top: 50%; left: 50%; animation-delay: -7s;    animation-duration: 30s; }
+.tcg-side-decor .tcg-decor-axie:nth-child(3) { top: 82%; left: 50%; animation-delay: -14s;   animation-duration: 24s; }
 
 @keyframes tcg-decor-float {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
@@ -3193,22 +3197,150 @@ pre {
 }
 .tcg-turn-timer strong { font-size: 0.85rem; font-weight: 800; }
 .tcg-turn-timer.urgent {
-  background: rgba(239, 68, 68, 0.22) !important;
+  background: rgba(239, 68, 68, 0.28) !important;
   color: #ff6b6b !important;
-  border-color: #ef4444 !important;
-  animation: tcg-turn-timer-blink 0.7s step-end infinite;
-  box-shadow: 0 0 18px rgba(239, 68, 68, 0.55);
+  border: 2px solid #ef4444 !important;
+  padding: 0.35rem 0.85rem !important;
+  font-size: 0.92rem !important;
+  letter-spacing: 0.06em !important;
+  animation: tcg-turn-timer-pulse 0.85s ease-in-out infinite;
+  box-shadow: 0 0 22px rgba(239, 68, 68, 0.7);
 }
-@keyframes tcg-turn-timer-blink {
-  0%, 50% {
+/* Cuando urgent: el número de segundos crece ~2x para que el user lo vea sí o sí. */
+.tcg-turn-timer.urgent strong {
+  font-size: 1.6rem !important;
+  font-weight: 900 !important;
+  text-shadow: 0 0 12px rgba(239, 68, 68, 0.85);
+  letter-spacing: -0.02em;
+}
+@keyframes tcg-turn-timer-pulse {
+  0%, 100% {
     opacity: 1;
     transform: scale(1);
+    box-shadow: 0 0 22px rgba(239, 68, 68, 0.7);
   }
-  50.01%, 100% {
-    opacity: 0.45;
-    transform: scale(0.96);
+  50% {
+    opacity: 0.95;
+    transform: scale(1.08);
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.95);
   }
 }
+/* Pause button — toolbar, similar al .tcg-surrender pero amarillo. */
+.tcg-pause-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 50%;
+  color: #fbbf24;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 800;
+  transition: background 0.15s, border-color 0.15s, transform 0.12s, color 0.15s;
+}
+.tcg-pause-btn:hover:not(:disabled) {
+  background: rgba(251, 191, 36, 0.22);
+  border-color: var(--axie-yellow);
+  transform: scale(1.06);
+}
+.tcg-pause-btn:active:not(:disabled) { transform: scale(0.94); }
+.tcg-pause-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.tcg-pause-btn.paused {
+  background: rgba(34, 197, 94, 0.18);
+  border-color: rgba(34, 197, 94, 0.6);
+  color: #22c55e;
+  animation: tcg-pause-btn-pulse 1.6s ease-in-out infinite;
+}
+@keyframes tcg-pause-btn-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(34, 197, 94, 0); }
+  50%      { box-shadow: 0 0 14px rgba(34, 197, 94, 0.6); }
+}
+
+/* Pause overlay — full-screen modal que bloquea interacción mientras paused. */
+.tcg-pause-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.78);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 240;
+  animation: tcg-fade-in 0.22s ease-out;
+}
+.tcg-pause-modal {
+  background: linear-gradient(160deg, rgba(30, 41, 59, 0.97), rgba(15, 23, 42, 0.97));
+  border: 2px solid rgba(251, 191, 36, 0.6);
+  border-radius: 1.15rem;
+  padding: 2rem 2.5rem;
+  max-width: 420px;
+  width: calc(100vw - 2rem);
+  text-align: center;
+  color: #f5f3ff;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.7),
+    0 0 30px rgba(251, 191, 36, 0.35);
+  animation: tcg-modal-in 240ms cubic-bezier(0.2, 0.9, 0.3, 1.05);
+}
+.tcg-pause-icon {
+  font-size: 3.4rem;
+  margin-bottom: 0.5rem;
+  filter: drop-shadow(0 4px 18px rgba(251, 191, 36, 0.7));
+}
+.tcg-pause-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.6rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, var(--axie-yellow), #f59e0b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: 0.02em;
+}
+.tcg-pause-sub {
+  margin: 0 0 1.2rem;
+  font-size: 0.85rem;
+  color: rgba(245, 243, 255, 0.78);
+  line-height: 1.4;
+}
+.tcg-pause-resume-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.6rem;
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: transform 0.15s, box-shadow 0.2s, filter 0.15s;
+  box-shadow: 0 6px 22px rgba(34, 197, 94, 0.45);
+}
+.tcg-pause-resume-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 10px 28px rgba(34, 197, 94, 0.65);
+}
+.tcg-pause-resume-btn:active { transform: scale(0.96); }
+
+@media (max-width: 640px) {
+  .tcg-pause-modal { padding: 1.2rem 1.4rem !important; }
+  .tcg-pause-icon { font-size: 2.4rem !important; }
+  .tcg-pause-title { font-size: 1.2rem !important; }
+  .tcg-pause-sub { font-size: 0.72rem !important; margin-bottom: 0.85rem !important; }
+  .tcg-pause-resume-btn { padding: 0.6rem 1.2rem !important; font-size: 0.85rem !important; }
+  .tcg-pause-btn { width: 32px !important; height: 32px !important; font-size: 0.85rem !important; }
+}
+
 .tcg-surrender {
   background: rgba(255, 107, 157, 0.08);
   border: 1px solid rgba(255, 107, 157, 0.3);
@@ -4210,10 +4342,11 @@ pre {
 /* Circular phase wheel — primary action button (replaces rectangular Advance Phase). */
 .tcg-phase-wheel {
   position: relative;
-  width: 72px;
-  height: 72px;
+  /* Desktop: 86px (+20% sobre 72). Mobile override 84px en @media abajo. */
+  width: 86px;
+  height: 86px;
   border-radius: 50%;
-  border: 3px solid rgba(20, 195, 244, 0.55);
+  border: 4px solid rgba(20, 195, 244, 0.55);
   background:
     radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.18), transparent 55%),
     linear-gradient(135deg, var(--axie-cyan), var(--axie-purple));
@@ -4232,7 +4365,7 @@ pre {
   flex: 0 0 auto;
 }
 .tcg-phase-wheel-icon {
-  font-size: 1.6rem;
+  font-size: 1.92rem;
   font-weight: 900;
   color: #fff;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);

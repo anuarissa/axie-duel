@@ -175,10 +175,17 @@ export default function LoginPage() {
           </div>
         </section>
 
-        {/* Footer */}
+        {/* Footer with IP disclaimer + Builders Program link */}
         <footer className="login-v2-footer">
-          <span>© 2026 Axie Duel · Independent fan project</span>
-          <span>Not affiliated with Sky Mavis</span>
+          <div className="login-v2-disclaimer">
+            <strong>Fan-made project</strong> leveraging Axie Infinity's public APIs.
+            <em>Not officially affiliated with Sky Mavis.</em> All Axie Infinity branding & NFTs belong to Sky Mavis Pte. Ltd.
+          </div>
+          <div className="login-v2-footer-meta">
+            <span>© 2026 · Working title · Built with ❤️ for the Lunacian community</span>
+            <a href="https://github.com/anuarissa/axie-duel" target="_blank" rel="noopener noreferrer">GitHub</a>
+            <a href="/rules">Rules</a>
+          </div>
         </footer>
       </div>
     </main>

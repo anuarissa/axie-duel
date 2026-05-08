@@ -24,6 +24,34 @@ export default function RulesPage() {
         <p className="rules-sub">Complete rules and mechanics. Bookmark this page for reference.</p>
       </header>
 
+      <section className="rules-section rules-disclaimer-section">
+        <h2>ℹ️ About this project</h2>
+        <p>
+          <strong>Axie Duel</strong> (working title) is an independent <strong>fan-made project</strong> leveraging
+          Axie Infinity&apos;s public APIs to render NFT data as playable cards. <em>Not officially affiliated with
+          Sky Mavis.</em> All Axie Infinity branding, art, and NFTs are property of Sky Mavis Pte. Ltd.
+        </p>
+        <p>
+          Built as a candidate for the <a href="https://blog.axieinfinity.com/p/builders" target="_blank" rel="noopener noreferrer" className="rules-link">Sky Mavis Builders Program</a>.
+          Open source on <a href="https://github.com/anuarissa/axie-duel" target="_blank" rel="noopener noreferrer" className="rules-link">GitHub</a>.
+          Working title — open to renaming on partnership terms.
+        </p>
+      </section>
+
+      <section className="rules-section">
+        <h2>🌐 Web 2.5 design</h2>
+        <p>
+          Axie Duel is built for two audiences simultaneously:
+        </p>
+        <ul>
+          <li><strong>Web2 players:</strong> Sign in with Google in 5 seconds. Get a competitive starter deck. No wallet required to play, win, climb the ladder.</li>
+          <li><strong>Web3 players:</strong> Connect your Ronin Wallet. Your Axie NFTs become unique playable cards via a deterministic <em>parts → stats</em> algorithm. Unlock Ranked Premium tier + Tournaments with AXS/SLP entry (90% prize pool, 10% burn).</li>
+        </ul>
+        <p>
+          <strong>Free-to-play promise:</strong> starter cards are <em>side-grade competitive</em> with NFT cards. Top ladder is reachable F2P with skill. NFT advantage is <strong>flavor + collectibility</strong>, not raw power.
+        </p>
+      </section>
+
       <section className="rules-section">
         <h2>1. Overview</h2>
         <p>

@@ -63,7 +63,7 @@ Cheers,
 
 Anuar Issa
 anuarissa117@gmail.com
-GitHub: anuarissa  ·  Discord: anuarissa  ·  Twitter: [TODO]
+GitHub: anuarissa  ·  Discord: anuarissa  ·  Twitter: @issayarur
 ```
 
 ---

@@ -1,0 +1,16 @@
+{
+  "name": "axie-duel-scripts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "One-shot scripts for pitch package generation (NOT part of the workspace).",
+  "scripts": {
+    "record": "node record-teaser.mjs",
+    "export-docs": "node export-docs.mjs"
+  },
+  "dependencies": {
+    "md-to-pdf": "^5.2.5",
+    "puppeteer": "^23.0.0",
+    "puppeteer-screen-recorder": "^3.0.6"
+  }
+}

@@ -37,4 +37,4 @@ If a fact appears in two places (deck + email + tweets), the deck wins. Update t
 - Email: `anuarissa117@gmail.com`
 - GitHub: `anuarissa`
 - Discord: `anuarissa`
-- Twitter: **[TODO — fill in before sending]**
+- Twitter: `@issayarur`

@@ -329,7 +329,7 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 > ---
 >
 > **Live now**: https://axie-duel.vercel.app · **Repo**: github.com/anuarissa/axie-duel
-> **Email**: anuarissa117@gmail.com · **Discord**: anuarissa · **Twitter**: [TODO]
+> **Email**: anuarissa117@gmail.com · **Discord**: anuarissa · **Twitter**: @issayarur
 
 **Speaker notes**
 - "We're not asking for the moon. $10k AXS, technical guidance, an API tier. We deliver the next major TCG home for Axie holders."

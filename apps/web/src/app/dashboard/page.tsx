@@ -414,14 +414,14 @@ export default function DashboardPage() {
           <Link href="/decks/builder" className="btn-secondary dashboard-action-btn dashboard-builder-btn">
             🛠️ Build deck
           </Link>
-          <button
-            type="button"
-            className="btn-secondary dashboard-action-btn dashboard-nft-btn"
-            onClick={() => setWeb3Modal({ kind: 'nft' })}
-            title="Sync your NFT Axies + cards from Ronin"
+          <Link
+            href="/my-axies"
+            className="btn-secondary dashboard-action-btn dashboard-nft-btn dashboard-web3-cta"
+            title="See your Axies (or demo Axies) rendered as unique playable cards"
           >
-            🔮 My NFT Axies & Cards
-          </button>
+            🌐 My Axies → Cards
+            <span className="dashboard-web3-badge">Web3</span>
+          </Link>
           <Link href="/store" className="btn-store">
             <span className="btn-store-emoji">✨</span>
             <span className="btn-store-label">

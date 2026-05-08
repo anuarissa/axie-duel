@@ -626,6 +626,26 @@ pre {
   box-shadow: 0 8px 22px rgba(192, 132, 252, 0.4);
 }
 
+/* Web3 CTA on dashboard — small badge inside the button to signal it's the killer demo. */
+.dashboard-web3-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.dashboard-web3-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #c084fc, #60a5fa);
+  color: #0a0a14;
+  box-shadow: 0 2px 8px rgba(192, 132, 252, 0.45);
+}
+
 /* Web3 modal — variant del coming-soon-modal con tinte Ronin */
 .coming-soon-modal.web3-modal {
   border-color: rgba(96, 165, 250, 0.6);
@@ -8636,16 +8656,416 @@ pre {
   line-height: 1.4;
 }
 
-/* Footer */
+/* Footer with IP disclaimer + Builders Program meta. */
 .login-v2-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(96, 165, 250, 0.18);
+  font-size: 0.72rem;
+  color: rgba(245, 243, 255, 0.55);
+  line-height: 1.55;
+}
+.login-v2-disclaimer {
+  background: rgba(20, 195, 244, 0.06);
+  border-left: 3px solid rgba(20, 195, 244, 0.4);
+  padding: 0.6rem 0.85rem;
+  border-radius: 0 0.4rem 0.4rem 0;
+  font-size: 0.72rem;
+}
+.login-v2-disclaimer strong {
+  color: var(--axie-cyan);
+  font-weight: 700;
+}
+.login-v2-disclaimer em {
+  font-style: italic;
+  color: rgba(245, 243, 255, 0.78);
+}
+.login-v2-footer-meta {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
+  gap: 0.6rem 1rem;
+  font-size: 0.68rem;
+  color: rgba(245, 243, 255, 0.4);
+}
+.login-v2-footer-meta a {
+  color: var(--axie-cyan);
+  text-decoration: none;
+  font-weight: 600;
+}
+.login-v2-footer-meta a:hover { color: var(--axie-yellow); text-decoration: underline; }
+
+/* Disclaimer section in /rules — accent border + tinted background. */
+.rules-disclaimer-section {
+  background: linear-gradient(160deg, rgba(20, 195, 244, 0.1), rgba(15, 23, 42, 0.55)) !important;
+  border-left: 4px solid var(--axie-cyan) !important;
+  border-radius: 0.7rem 1rem 1rem 0.7rem !important;
+}
+.rules-disclaimer-section h2 {
+  color: var(--axie-cyan) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   /my-axies page — THE WEB3 DEMO (Sky Mavis pitch killer demo)
+   ═══════════════════════════════════════════════════════════════════════ */
+.my-axies-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  color: #f5f3ff;
+  font-family: var(--font-sans, system-ui);
+}
+.my-axies-header {
+  background: linear-gradient(160deg, rgba(20, 15, 50, 0.85), rgba(15, 23, 42, 0.92));
+  border: 1.5px solid rgba(192, 132, 252, 0.3);
+  border-radius: 1.2rem;
+  padding: 1.5rem 1.8rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 0 30px rgba(192, 132, 252, 0.15);
+}
+.my-axies-back {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--axie-cyan);
+  text-decoration: none;
+  border: 1px solid rgba(20, 195, 244, 0.55);
+  background: rgba(2, 6, 23, 0.55);
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+.my-axies-back:hover { background: rgba(20, 195, 244, 0.18); }
+.my-axies-title {
+  margin: 0 0 0.5rem;
+  font-size: 2.2rem;
+  font-weight: 900;
+  background: linear-gradient(90deg, var(--axie-cyan), var(--axie-purple), var(--axie-yellow));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+.my-axies-sub {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: rgba(245, 243, 255, 0.85);
+}
+.my-axies-sub strong {
+  color: var(--axie-yellow);
+  font-weight: 700;
+}
+.my-axies-spec-link {
+  font-size: 0.82rem;
+  color: rgba(245, 243, 255, 0.65);
+}
+.my-axies-link {
+  color: var(--axie-cyan);
+  text-decoration: underline;
+  font-weight: 600;
+}
+.my-axies-link:hover { color: var(--axie-yellow); }
+
+/* Mode selector cards (Demo vs Live) */
+.my-axies-mode-section { margin-bottom: 2rem; }
+.my-axies-section-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0 0 1rem;
+  color: var(--axie-cyan);
+  letter-spacing: 0.02em;
+}
+.my-axies-count {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(245, 243, 255, 0.6);
+  margin-left: 0.5rem;
+}
+.my-axies-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.2rem;
+}
+.my-axies-mode-card {
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(96, 165, 250, 0.12);
+  padding: 1.5rem 1.5rem 1.4rem;
+  background: linear-gradient(160deg, rgba(20, 15, 50, 0.65), rgba(15, 23, 42, 0.85));
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  color: #f5f3ff;
+  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+}
+.my-axies-mode-demo:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: var(--axie-yellow);
+  box-shadow: 0 12px 32px rgba(251, 191, 36, 0.35);
+}
+.my-axies-mode-live { cursor: default; }
+.my-axies-mode-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.2rem;
+  filter: drop-shadow(0 4px 12px rgba(192, 132, 252, 0.5));
+}
+.my-axies-mode-card h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1.15rem;
+  color: var(--axie-cyan);
+  font-weight: 800;
+}
+.my-axies-mode-card p {
+  margin: 0 0 0.7rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(245, 243, 255, 0.78);
+}
+.my-axies-mode-cta {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, var(--axie-yellow), #f59e0b);
+  border-radius: 999px;
+  color: #0a0a18;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+.my-axies-wallet-input {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  background: rgba(2, 6, 23, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.5rem;
+  color: #f5f3ff;
+  font-family: 'Cascadia Mono', ui-monospace, monospace;
+  font-size: 0.78rem;
+  width: 100%;
+}
+.my-axies-wallet-input:focus {
+  outline: none;
+  border-color: var(--axie-cyan);
+  box-shadow: 0 0 0 2px rgba(20, 195, 244, 0.25);
+}
+.my-axies-load-btn {
+  margin-top: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  background: linear-gradient(135deg, var(--axie-cyan), var(--axie-purple));
+  border: none;
+  border-radius: 999px;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.15s, filter 0.15s;
+  align-self: flex-start;
+}
+.my-axies-load-btn:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.15); }
+.my-axies-load-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.my-axies-error {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 0.5rem;
+  color: #fca5a5;
+  font-size: 0.85rem;
+}
+
+/* Cards grid — the actual visualization. */
+.my-axies-cards-section { margin-bottom: 2.5rem; }
+.my-axies-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.2rem;
+}
+.my-axies-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem 1rem 0.85rem;
+  border-radius: 1rem;
+  color: #fff;
+  min-height: 320px;
+  transition: transform 0.18s ease, box-shadow 0.2s;
+  overflow: hidden;
+}
+.my-axies-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  pointer-events: none;
+}
+.my-axies-card > * { position: relative; z-index: 1; }
+.my-axies-card:hover {
+  transform: translateY(-4px);
+}
+.my-axies-card-rarity {
+  font-size: 0.6rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-align: right;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.my-axies-card-emoji {
+  font-size: 3.2rem;
+  text-align: center;
+  margin: 0.3rem 0 0.2rem;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6));
+  line-height: 1;
+}
+.my-axies-card-name {
+  text-align: center;
+  font-size: 0.92rem;
+  font-weight: 800;
+  margin-bottom: 0.2rem;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+.my-axies-card-class-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 0.7rem;
-  color: rgba(245, 243, 255, 0.45);
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.my-axies-card-class {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+}
+.my-axies-card-level {
+  background: rgba(251, 191, 36, 0.85);
+  color: #0a0a18;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  font-weight: 900;
+}
+.my-axies-card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0.55rem;
+  border-radius: 0.5rem;
+}
+.my-axies-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+.my-axies-stat-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  opacity: 0.75;
+  text-transform: uppercase;
+}
+.my-axies-stat strong {
+  font-size: 1rem;
+  font-weight: 900;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+.my-axies-card-effect {
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.45rem;
+  margin-bottom: 0.3rem;
+  border-left: 2px solid var(--axie-yellow);
+}
+.my-axies-card-effect-none {
+  border-left-color: rgba(255, 255, 255, 0.25);
+}
+.my-axies-effect-label {
+  display: block;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--axie-yellow);
+  margin-bottom: 0.18rem;
+  text-transform: uppercase;
+}
+.my-axies-card-effect p {
+  margin: 0;
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+.my-axies-card-effect-none em {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+.my-axies-card-token {
+  margin-top: auto;
+  font-size: 0.55rem;
+  font-family: 'Cascadia Mono', ui-monospace, monospace;
+  text-align: center;
+  opacity: 0.65;
+  letter-spacing: 0.04em;
+}
+
+/* Info section: explainer + F2P link. */
+.my-axies-info-section {
+  background: linear-gradient(160deg, rgba(20, 15, 50, 0.55), rgba(15, 23, 42, 0.7));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  padding: 1.4rem 1.6rem;
+}
+.my-axies-info-steps {
+  margin: 0 0 1rem;
+  padding-left: 1.4rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: rgba(245, 243, 255, 0.85);
+}
+.my-axies-info-steps li { margin-bottom: 0.4rem; }
+.my-axies-info-steps strong { color: var(--axie-cyan); }
+.my-axies-info-note {
+  margin: 0;
+  font-size: 0.85rem;
+  padding: 0.7rem 0.9rem;
+  background: rgba(52, 211, 153, 0.08);
+  border-left: 3px solid rgba(52, 211, 153, 0.5);
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: rgba(245, 243, 255, 0.85);
+  line-height: 1.5;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .my-axies-page { padding: 1rem 0.85rem 3rem !important; }
+  .my-axies-header { padding: 1rem 1.1rem !important; margin-bottom: 1.2rem !important; }
+  .my-axies-title { font-size: 1.45rem !important; }
+  .my-axies-sub { font-size: 0.78rem !important; }
+  .my-axies-section-title { font-size: 1.05rem !important; }
+  .my-axies-mode-card { padding: 1rem 1.1rem !important; }
+  .my-axies-mode-card h3 { font-size: 1rem !important; }
+  .my-axies-mode-card p { font-size: 0.72rem !important; }
+  .my-axies-cards-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important; gap: 0.7rem !important; }
+  .my-axies-card { min-height: 280px; padding: 0.7rem !important; }
+  .my-axies-card-emoji { font-size: 2.5rem; }
+  .my-axies-card-name { font-size: 0.78rem; }
+  .my-axies-stat strong { font-size: 0.85rem; }
+  .my-axies-card-effect p { font-size: 0.6rem !important; }
+  .my-axies-info-section { padding: 1rem 1.1rem !important; }
+  .my-axies-info-steps { font-size: 0.78rem !important; padding-left: 1.1rem !important; }
+  .my-axies-info-note { font-size: 0.72rem !important; }
 }
 
 /* ── Dashboard: PvE difficulty ladder (3 tiers) ─────────────────────── */

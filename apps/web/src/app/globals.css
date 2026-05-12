@@ -646,6 +646,40 @@ pre {
   box-shadow: 0 2px 8px rgba(192, 132, 252, 0.45);
 }
 
+/* Tournaments button — Phase 2 coming-soon, gold theme. Same pattern as
+   dashboard-pvp-btn / dashboard-nft-btn (disabled + colored). */
+.dashboard-tournaments-btn {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(217, 119, 6, 0.14)) !important;
+  border-color: rgba(251, 191, 36, 0.45) !important;
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+.dashboard-tournaments-btn[disabled] {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+.dashboard-tournaments-btn:hover:not([disabled]) {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.32), rgba(217, 119, 6, 0.28)) !important;
+  color: #fef3c7 !important;
+  box-shadow: 0 8px 22px rgba(251, 191, 36, 0.4);
+}
+.dashboard-phase-tag {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  color: #0a0a14;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.45);
+}
+
 /* Web3 modal — variant del coming-soon-modal con tinte Ronin */
 .coming-soon-modal.web3-modal {
   border-color: rgba(96, 165, 250, 0.6);
@@ -8913,6 +8947,47 @@ pre {
 .my-axies-card:hover {
   transform: translateY(-4px);
 }
+
+/* NFT visual identity: animated gold ring + glow. Overrides the inline boxShadow
+   that carries the rarity-color hint, because for /my-axies cards we want NFT
+   ownership to be the dominant visual cue. Rarity is still indicated by the
+   text tag inside the card. */
+.my-axies-card-nft {
+  box-shadow:
+    0 0 0 3px rgba(251, 191, 36, 0.92),
+    0 0 28px rgba(251, 191, 36, 0.45),
+    0 8px 28px rgba(0, 0, 0, 0.35) !important;
+  animation: nftGoldPulse 3.5s ease-in-out infinite;
+}
+@keyframes nftGoldPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.55));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px rgba(253, 224, 71, 0.95));
+  }
+}
+.my-axies-card-nft:hover {
+  transform: translateY(-4px);
+  animation-duration: 1.8s;
+}
+.my-axies-card-nft-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  color: #0a0a14;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 0 rgba(254, 243, 199, 0.5);
+}
+
 .my-axies-card-rarity {
   font-size: 0.6rem;
   font-weight: 900;

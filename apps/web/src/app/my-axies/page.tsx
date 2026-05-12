@@ -154,12 +154,13 @@ export default function MyAxiesPage() {
               return (
                 <article
                   key={card.cardId}
-                  className={`my-axies-card my-axies-card-rarity-${card.rarity.toLowerCase()}`}
+                  className={`my-axies-card my-axies-card-nft my-axies-card-rarity-${card.rarity.toLowerCase()}`}
                   style={{
                     background: CLASS_GRADIENT[card.classType],
                     boxShadow: `0 6px 24px hsla(${hue}, 65%, 50%, 0.4), 0 0 0 1px ${RARITY_COLOR[card.rarity]}`,
                   }}
                 >
+                  <div className="my-axies-card-nft-badge" title="This card is derived from your Axie NFT">NFT</div>
                   <div className="my-axies-card-rarity" style={{ color: RARITY_COLOR[card.rarity] }}>
                     {card.rarity.toUpperCase()}
                   </div>

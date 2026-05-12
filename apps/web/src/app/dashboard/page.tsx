@@ -371,30 +371,30 @@ export default function DashboardPage() {
         <h2>Play vs Bot — choose your challenge</h2>
         <div className="pve-ladder">
           <Link href="/play/pve?diff=novato" className="pve-tier pve-tier-novato">
-            <div className="pve-tier-badge">NV. 1</div>
+            <div className="pve-tier-badge">TIER 1</div>
             <div className="pve-tier-icon">🤖</div>
-            <div className="pve-tier-name">Novato</div>
-            <div className="pve-tier-desc">Aprende los fundamentos. El bot juega casi al azar.</div>
+            <div className="pve-tier-name">Rookie</div>
+            <div className="pve-tier-desc">Learn the fundamentals. Bot plays near-random.</div>
             <div className="pve-tier-rewards">
               <span>+50 XP</span>
               <span>+10 Dust</span>
             </div>
           </Link>
           <Link href="/play/pve?diff=avanzado" className="pve-tier pve-tier-avanzado">
-            <div className="pve-tier-badge">NV. 2</div>
+            <div className="pve-tier-badge">TIER 2</div>
             <div className="pve-tier-icon">⚔</div>
-            <div className="pve-tier-name">Avanzado</div>
-            <div className="pve-tier-desc">El bot evalúa el tablero y prioriza targets con ventaja de clase.</div>
+            <div className="pve-tier-name">Veteran</div>
+            <div className="pve-tier-desc">Bot evaluates board state and prioritizes class-advantage targets.</div>
             <div className="pve-tier-rewards">
               <span>+150 XP</span>
               <span>+50 Dust</span>
             </div>
           </Link>
           <Link href="/play/pve?diff=experto" className="pve-tier pve-tier-experto">
-            <div className="pve-tier-badge">NV. 3</div>
+            <div className="pve-tier-badge">TIER 3</div>
             <div className="pve-tier-icon">👑</div>
-            <div className="pve-tier-name">Experto</div>
-            <div className="pve-tier-desc">Mazo meta. Estrategia: defensive fodder + tributo para high-level.</div>
+            <div className="pve-tier-name">Master</div>
+            <div className="pve-tier-desc">Meta deck. Strategy: defensive fodder + tributes for high-level summons.</div>
             <div className="pve-tier-rewards">
               <span>+500 XP</span>
               <span>+200 Dust</span>
@@ -404,6 +404,15 @@ export default function DashboardPage() {
         <div className="action-buttons">
           <button className="btn-secondary dashboard-action-btn dashboard-pvp-btn" disabled title="Coming soon">
             ⚔️ Find casual match (PvP)
+          </button>
+          <button
+            type="button"
+            className="btn-secondary dashboard-action-btn dashboard-tournaments-btn"
+            disabled
+            title="Coming in Phase 2 — when PvP ladder ships"
+          >
+            🏆 Tournaments
+            <span className="dashboard-phase-tag">Phase 2</span>
           </button>
           <Link href="/rules" className="btn-secondary dashboard-action-btn dashboard-rules-btn">
             📖 How to play

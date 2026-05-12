@@ -37,8 +37,10 @@ Why we think this fits the Builders Program rationale:
   1. Direct Axie utility — every NFT (3M+ in circulation) deterministically
      becomes a unique, audit-friendly playable card. Live demo at /my-axies.
 
-  2. AXS demand sink — tournament entries (AXS or SLP) split 90 % to prize
-     pool / 10 % permanent burn. Direct deflationary pressure.
+  2. AXS demand sink — tournament entries (AXS or SLP) split 90 % to players
+     / 5 % permanent burn / 5 % to a transparent multisig game treasury that
+     funds content + audits. Direct deflationary pressure plus sustainable
+     project runway.
 
   3. F2P balance manifesto — starter decks competitive on top ladder. NFT
      cards are side-grades, not upgrades. Counters the 2021 pay-to-win
@@ -80,8 +82,9 @@ builders@, but framed for the partnerships angle.
 
 Axie Duel is a tactical card game live in production at
 https://axie-duel.vercel.app . It uses Axie NFTs as playable cards via a
-deterministic algorithm and runs a tournament economy with a 90/10
-prize-pool / burn split (AXS or SLP entry).
+deterministic algorithm and runs a tournament economy with a 90 / 5 / 5
+split — 90 % to players, 5 % permanent burn, 5 % to a transparent
+multisig game treasury (AXS or SLP entry).
 
 What I think is BD-relevant:
 

@@ -94,10 +94,10 @@ This is a **fan-made project leveraging Axie Infinity's public APIs**. **Not off
 
 1. **Sign in** with Google/MS/Facebook (no wallet required)
 2. **Pick a starter** (Plant / Bird / Beast — full competitive deck)
-3. **Battle a bot** (Novato / Avanzado / Experto difficulties)
+3. **Battle a bot** (Rookie / Veteran / Master difficulties)
 4. **Build your deck** (40-60 cards, max 3 copies)
 5. **Optional Web3**: connect Ronin Wallet → unlock your Axie NFTs as unique cards via deterministic parts algorithm
-6. **Compete** in tournaments (AXS/SLP entry, 10% burn, 90% prize pool)
+6. **Compete** in tournaments (AXS/SLP entry, **90 % players · 5 % burn · 5 % game treasury**)
 
 See [`docs/RULES.md`](docs/RULES.md) for full mechanics.
 

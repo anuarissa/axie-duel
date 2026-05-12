@@ -45,7 +45,7 @@ export default function RulesPage() {
         </p>
         <ul>
           <li><strong>Web2 players:</strong> Sign in with Google in 5 seconds. Get a competitive starter deck. No wallet required to play, win, climb the ladder.</li>
-          <li><strong>Web3 players:</strong> Connect your Ronin Wallet. Your Axie NFTs become unique playable cards via a deterministic <em>parts → stats</em> algorithm. Unlock Ranked Premium tier + Tournaments with AXS/SLP entry (90% prize pool, 10% burn).</li>
+          <li><strong>Web3 players:</strong> Connect your Ronin Wallet. Your Axie NFTs become unique playable cards via a deterministic <em>parts → stats</em> algorithm. Unlock Ranked Premium tier + Tournaments with AXS/SLP entry (<strong>90 % players · 5 % burn · 5 % game treasury</strong>).</li>
         </ul>
         <p>
           <strong>Free-to-play promise:</strong> starter cards are <em>side-grade competitive</em> with NFT cards. Top ladder is reachable F2P with skill. NFT advantage is <strong>flavor + collectibility</strong>, not raw power.

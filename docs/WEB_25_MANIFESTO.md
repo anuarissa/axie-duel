@@ -26,7 +26,7 @@ Web3 games today fall into one of two extremes, and both lose players:
 | **First match** | Pick a competitive starter deck → play vs bot | Same path — wallet linking is optional, post-onboarding |
 | **Progression** | Earn Dust (off-chain currency) → buy packs → build collection | Earn Dust + connect Ronin → unlock Axie NFTs as unique cards |
 | **Competitive** | Climb ladder with starter + earned cards | Climb ladder + access Ranked Premium tier (NFT-gated for matchmaking quality, NOT power) |
-| **Tournaments** | Free entry events (small prize pools) | AXS/SLP entry events (90% prize, 10% burn) — open to F2P with earned AXS |
+| **Tournaments** | Free entry events (small prize pools) | AXS/SLP entry events (90 % players, 5 % burn, 5 % game treasury) — open to F2P with earned AXS |
 | **Identity** | Username + avatar | Username + avatar + on-chain proof (wallet badge) |
 
 **Both paths win.** Web2 players never feel locked out. Web3 players have real, mechanically meaningful utility for their NFTs.
@@ -60,7 +60,7 @@ Web3 games today fall into one of two extremes, and both lose players:
 2. Sees in dashboard: *"Connect Ronin Wallet to see your Axies as unique cards"*
 3. Clicks → Waypoint OAuth (no seed phrase, MPC-based)
 4. **Now a Web3 player.** Their Axies appear at `/my-axies` as cards with parts-derived stats and effects.
-5. Optional: enters a tournament with their AXS to play for prizes (90% pot / 10% burn).
+5. Optional: enters a tournament with their AXS to play for prizes (90 % players / 5 % burn / 5 % game treasury).
 
 ### Web3 → power user / collector (one month later)
 1. Buys 2-3 Axies on Mavis Marketplace specifically for their parts (rarer parts → distinctive card effects)
@@ -80,7 +80,7 @@ Web3 games today fall into one of two extremes, and both lose players:
 - Demand for *specific parts* (not just "any Axie") creates Marketplace differentiation.
 
 ### Token sinks (deflationary pressure)
-- Tournament entries burn 10% of AXS/SLP per cycle.
+- Tournament entries split 5 % to permanent burn + 5 % to a transparent game treasury (10 % combined) per cycle.
 - Pack openings burn 25% of AXS spent.
 - Cosmetic permanent unlocks burn 100% of AXS.
 

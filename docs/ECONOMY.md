@@ -11,28 +11,28 @@ Tournaments are the heart of the competitive economy and the largest deflationar
 ### Flow
 
 ```
-                ┌─────────────────────────────────┐
-                │  Players enter with AXS or SLP  │
-                │  (e.g., 100 players × 10 AXS)   │
-                │  Total pot: 1000 AXS            │
-                └──────────────┬──────────────────┘
-                               │
-                  ┌────────────┴────────────┐
-                  ▼                         ▼
-        ┌───────────────────┐    ┌───────────────────┐
-        │  90% PRIZE POOL   │    │  10% BURN          │
-        │  900 AXS          │    │  100 AXS           │
-        │  → Top 3 winners  │    │  → Permanently     │
-        │     (60/25/15%)   │    │    removed from    │
-        │                   │    │    circulation     │
-        └───────────────────┘    └───────────────────┘
-                                          │
-                                          ▼
-                          ┌────────────────────────────┐
-                          │ On-chain proof of burn     │
-                          │ → Auditable on Ronin       │
-                          │ explorer                   │
-                          └────────────────────────────┘
+            ┌─────────────────────────────────┐
+            │  Players enter with AXS or SLP  │
+            │  (e.g., 100 players × 10 AXS)   │
+            │  Total pot: 1000 AXS            │
+            └──────────────┬──────────────────┘
+                           │
+            ┌──────────────┼──────────────┐
+            ▼              ▼              ▼
+   ┌─────────────────┐ ┌─────────┐ ┌──────────────────┐
+   │ 90% PRIZE POOL  │ │ 5% BURN │ │ 5% GAME TREASURY │
+   │ 900 AXS         │ │ 50 AXS  │ │ 50 AXS           │
+   │ → Top 3 winners │ │ → Burn  │ │ → Funds content, │
+   │   (60/25/15%)   │ │   addr  │ │   audits, prize  │
+   │                 │ │         │ │   seeding        │
+   └─────────────────┘ └─────────┘ └──────────────────┘
+                           │              │
+                           ▼              ▼
+              ┌────────────────────────────┐
+              │ Both flows are on-chain    │
+              │ auditable on Ronin         │
+              │ explorer                   │
+              └────────────────────────────┘
 ```
 
 ### Numbers (per tournament)
@@ -42,15 +42,36 @@ Tournaments are the heart of the competitive economy and the largest deflationar
 | Min entry fee | 1 AXS or 100 SLP |
 | Max entry fee | 100 AXS or 10,000 SLP (sponsored events) |
 | Players (typical) | 64-256 |
-| **Burn rate** | **10%** (fixed) |
+| **Players share** | **90%** (fixed) |
+| **Burn rate** | **5%** (fixed, permanent removal) |
+| **Game treasury** | **5%** (fixed, multisig — funds content, audits, prize seeding) |
 | **Prize distribution** | **60% / 25% / 15%** (top 3) |
 | Tournament cadence | Daily small + Weekly large |
 
-### Why 10% burn?
+### Why 90 / 5 / 5 (not 90 / 10)?
 
-- **Sustainable**: high enough to matter ($M scale at maturity), low enough that players still get strong ROI on prizes.
-- **Below typical Web3 game taxes**: most are 15-30% — we're player-friendly while still deflationary.
-- **Alignment with Sky Mavis priorities**: Sky Mavis has been actively burning AXS as part of tokenomics — we accelerate that.
+The original v1 design was 90 % to players / 10 % burn. We refined to **90 / 5 / 5** because pure burn is great for token economics but leaves the game itself underfunded long-term. Splitting the non-prize half in two solves both problems:
+
+- **5 % permanent burn** — direct deflationary pressure on AXS/SLP. Aligns with Sky Mavis pillar #1.
+- **5 % to a game treasury multisig** — funds the day-to-day that keeps the game alive: new content drops, security audits, contract upgrades, seeding free tournaments for F2P players, sponsoring esports events. Without this, the game runway is hostage to fundraises.
+
+**Why not "send 5 % to Sky Mavis directly"?** Because that would conflate the **player-side game economy** with the **Builders Program revenue split** (which is a separate column — see below). The 5 % treasury is the *project's* operating fund; the Builders Program % is *Sky Mavis's* share of project revenue.
+
+### Game treasury — what it funds (transparent priorities)
+
+| Bucket | Approx % of treasury | What |
+|---|---|---|
+| Content drops | 40 % | New cards, balance patches, art commissions |
+| Security audits | 20 % | Quarterly contract + game-server audits |
+| Free-tournament prize seeding | 25 % | Seeds F2P-friendly events with no entry fee |
+| Marketing + community | 10 % | Sponsored streams, creator grants |
+| Reserve | 5 % | Multisig emergency runway |
+
+### Why both AXS AND SLP?
+
+- **AXS** is the governance token; deflationary pressure here directly benefits all holders.
+- **SLP** is the legacy token Sky Mavis explicitly wants to absorb/burn (its supply was inflated during 2021 P2E era).
+- Accepting both gives players flexibility AND helps Sky Mavis solve the SLP overhang.
 
 ### Why both AXS AND SLP?
 
@@ -79,7 +100,7 @@ Tournaments are the heart of the competitive economy and the largest deflationar
 | $50k - $200k | 25% | 75% |
 | $200k+ | 25-30% | 70-75% (negotiable) |
 
-**This is on top of the 10% tournament burn** which is *not* Sky Mavis revenue — it's pure deflationary value to all AXS holders.
+**This is on top of the 5 % tournament burn + 5 % game treasury** which are *not* Sky Mavis revenue — the burn is pure deflationary value to all AXS holders, and the treasury funds project operations transparently.
 
 ## F2P player ROI vs NFT holder ROI (validation of balance)
 
@@ -117,7 +138,7 @@ All audited code-ready in `packages/contracts/`. Deployment pending Sky Mavis co
 
 | Game | Burn rate | Tournament tax | F2P viability |
 |---|---|---|---|
-| **Axie Duel** | **10% tournament + 25% pack** | 10% | **High** (top 10% ladder F2P) |
+| **Axie Duel** | **5 % burn + 5 % treasury (10 % combined) + 25 % pack** | 10 % combined | **High** (top 10 % ladder F2P) |
 | Axie Origins | Variable AXS sinks | Variable | Limited (NFT-gated) |
 | Pixels | Token taxes on actions | High platform fees | Limited |
 | Heroes of Mavia | NFT-locked progression | N/A | Low |

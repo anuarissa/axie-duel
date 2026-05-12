@@ -85,8 +85,12 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 >
 > **Same Axie always → same card.** No randomness. Audit-friendly. **3M+ Axies = 3M+ unique playable cards** with no manual art needed.
 >
+> NFT-derived cards carry a **shimmering gold animated frame** plus an "NFT" badge in the corner — instantly distinguishable from Web2 starter / pack cards. Collectibility cue, not power cue.
+>
 > ## Web 2.5 — the differentiating thesis
-> Web2 players never see a wallet. Web3 players unlock a deeper, NFT-native layer. **Both compete on equal ground** thanks to our F2P balance manifesto: NFT cards are *side-grades*, not upgrades.
+> **Web2 players** sign in with Google, get a free starter deck, and can reach the top of the ladder — without spending, without a wallet. It just takes more effort and skill.
+> **Web3 players** connect their Ronin wallet and unlock the NFT-as-card layer.
+> **Both compete on the same ladder.** NFT cards are *side-grades*, not upgrades. F2P balance manifesto is non-negotiable and published in the repo.
 
 **Speaker notes**
 - "This is the slide that matters. Three things: deterministic NFT-to-card algorithm, Web 2.5 onboarding, F2P parity. If a Sky Mavis evaluator only remembers one slide, make it this one."
@@ -130,23 +134,23 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 
 **Visual**
 - 2x2 screenshot grid (high-res):
-  1. Dashboard mobile (3 PvE difficulty cards visible)
+  1. Dashboard mobile (3 PvE difficulty cards visible — Rookie/Veteran/Master)
   2. Battle screen mid-combat (axies on field + phase wheel)
   3. Deck builder with magnifier (lupa) preview
-  4. `/my-axies` — Axie NFTs rendered as unique cards (THE HOOK)
+  4. `/my-axies` — Axie NFTs rendered as unique cards with **animated gold frame** (THE HOOK)
 
 **Body**
 > # What's live today (playable beta)
 >
 > - ✅ **Onboarding**: Google sign-in → starter pick (Plant / Bird / Beast) → forced 5-slide tutorial
-> - ✅ **PvE ladder**: 3 difficulties (Novato / Avanzado / Experto) — bot AI uses class advantage logic
+> - ✅ **PvE ladder**: 3 difficulties (Rookie / Veteran / Master) — bot AI uses class advantage logic
 > - ✅ **Deck builder**: 31 cards, 40–60 validation, max 3 copies, mobile lupa preview
-> - ✅ **Tournaments**: single-elimination brackets · byes · prize distribution · refunds
 > - ✅ **Daily quests**: WIN_PVE / PLAY_GAMES with atomic claim
-> - ✅ **Wallet linking**: Waypoint MPC + manual SIWE flow (NFT validation gates Ranked Premium)
+> - ✅ **Wallet linking (auth scaffolding)**: Waypoint MPC + manual SIWE flow coded — Phase 2 to enable
 > - ✅ **Mobile-first UX**: tested on Samsung Internet, Safari iOS, Chrome Android
 > - ✅ **Match persistence**: deterministic replay log (cap 10k entries) for audit & analytics
-> - ✅ **`/my-axies` page**: live Ronin address → real Axies as cards · or **Demo mode** with 5 preset Axies (no wallet required)
+> - ✅ **`/my-axies` page**: live Ronin address → real Axies as cards · or **Demo mode** with 5 preset Axies (no wallet required). NFT cards rendered with shimmering gold frame + NFT badge.
+> - 🟡 **Tournaments**: bracket + prize distribution code shipped; **disabled button visible on dashboard** as Phase 2 marker — opens when PvP ladder ships
 >
 > 🎬 **5-min walkthrough video**: [YouTube unlisted link]
 
@@ -169,7 +173,7 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 > | Sky Mavis Pillar | How Axie Duel delivers |
 > |---|---|
 > | **Ronin-first** | viem 2.x · Saigon chainId 2021 · 3 contracts ready to deploy |
-> | **AXS demand sinks** | Pack opening · deck slots · **tournament entry: 90 % prize pool / 10 % BURN** |
+> | **AXS demand sinks** | Pack opening · deck slots · **tournament entry: 90 % players / 5 % BURN / 5 % game treasury** |
 > | **Increase Axie utility** | Deterministic parts → unique card algorithm: 3M+ Axies → 3M+ playable cards. Rare parts → distinctive effects → marketplace pricing premium justified by **gameplay diversity**, not pay-to-win |
 > | **Web2-first onboarding** | Google / MS / Facebook day 1 · Waypoint MPC for wallet linking later |
 > | **Community-driven** | Open-source repo · Swagger docs public · daily quests · public leaderboard |
@@ -182,7 +186,7 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 > - ERC-721 contract mints **game cards** (Spells / Traps), NOT representations of Axie NFTs. Axies are read-only inputs.
 
 **Speaker notes**
-- "Every pillar in your public Builders Program rationale, we hit. The 90/10 burn is the headline: every tournament entry burns AXS or SLP forever. Direct deflationary pressure."
+- "Every pillar in your public Builders Program rationale, we hit. The 90 / 5 / 5 split is the headline: every tournament entry routes 90 % to players, 5 % to permanent burn, 5 % to a transparent game treasury that funds content and audits. Direct deflationary pressure plus sustainable runway."
 - "On IP: we're transparent, we use only public APIs, no copied art, name is open to change."
 
 ---
@@ -227,22 +231,29 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 ## Slide 8 — Tournament economy & deflationary design
 
 **Visual**
-- Flow diagram (ASCII or SVG): User pays AXS/SLP entry → 90 % goes to prize pool → 10 % goes to BURN address → public on-chain ledger
+- 3-way flow diagram (ASCII or SVG): User pays AXS/SLP entry → splits into **90 % players** (top 3 prize tiers) / **5 % BURN** (perma to `0x…dEaD`) / **5 % GAME TREASURY** (multisig — funds content + audits + F2P prize seeding). Public on-chain ledger annotation underneath.
 
 **Body**
 > # Tournament-first deflationary economy
 >
 > ## Tournaments — the core AXS/SLP demand sink
 > - **Entry fee**: paid in **AXS** (preferred) or **SLP** (legacy token Sky Mavis wants reduced from circulation)
-> - **90 % of pot → prize pool**
-> - **10 % → permanent BURN** (sent to `0x000…dEaD`)
-> - **Result**: every tournament = real, auditable deflationary pressure on AXS + SLP supply
+> - **90 % of pot → players** (top 3, 60 / 25 / 15)
+> - **5 % → permanent BURN** (sent to `0x000…dEaD`)
+> - **5 % → game treasury** (multisig — funds content drops, audits, F2P-tournament prize seeding)
+> - **Result**: every tournament = real, auditable deflationary pressure on AXS + SLP supply AND a transparent operating fund
+>
+> ## Why split the non-prize half (not pure 10 % burn)?
+> - Pure burn looks great on tokenomics but leaves the project underfunded
+> - The 5 % treasury keeps the game alive: content cadence, security audits, F2P tournament seeding, esports sponsorship
+> - Treasury is a transparent multisig — auditable on Ronin, not a black box
+> - Burn share stays meaningful: at scale this is **tens of thousands of AXS burned per month**
 >
 > ## Why this matters to Sky Mavis
 > - Direct alignment with the **#1 stated pillar: Increase AXS demand sinks**
 > - **Burns SLP** — explicitly addresses the legacy-token oversupply problem
 > - **Skill-rewarded payouts** (NOT NFT-rewarded) → counters pay-to-win narrative
-> - **Public on-chain burn ledger** = transparency by default
+> - **Public on-chain ledger for both burn and treasury** = transparency by default
 >
 > ## Other revenue streams + sinks
 > 1. **Pack sales** in AXS — 25 % of pack revenue burned
@@ -258,8 +269,9 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 
 **Speaker notes**
 - "This is the answer to: 'how does this benefit the broader Axie ecosystem?'"
-- "We don't just create demand — we destroy supply. Every match leaves the AXS supply marginally smaller. At scale, that's hundreds of thousands of AXS burned per year."
+- "We don't just create demand — we destroy supply *and* fund our own runway transparently. Every match marginally shrinks AXS supply and adds to a multisig treasury our community can audit."
 - "Battle Pass is cosmetic only. F2P never feels gated."
+- "The 5 % game treasury is what makes this sustainable beyond an initial grant — it's our long-term operating budget."
 
 ---
 
@@ -340,7 +352,7 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 ## Appendix — Anticipated FAQ (back-pocket)
 
 > **Q: How will you monetize?**
-> Tournament entries (AXS/SLP, 10 % burn), pack sales, cosmetic Battle Pass, deck-slot expansions, marketplace royalties on Axie-NFT-cards. F2P retention model proven by Hearthstone (~30 % of F2P become paying within 90 days).
+> Tournament entries (AXS/SLP, 5 % burn + 5 % game treasury), pack sales, cosmetic Battle Pass, deck-slot expansions, marketplace royalties on Axie-NFT-cards. F2P retention model proven by Hearthstone (~30 % of F2P become paying within 90 days).
 >
 > **Q: When mainnet?**
 > Q2 of the post-acceptance roadmap. Three contracts are written and audited internally; we want Sky Mavis review before deployment.

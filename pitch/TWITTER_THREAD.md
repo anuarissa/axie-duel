@@ -59,8 +59,8 @@ The Web 2.5 thesis:
   deck (Plant / Bird / Beast). Play matches. Climb the ladder.
 
 · Web3 players connect Ronin Wallet. Their Axies become cards.
-  Play in tournaments with AXS / SLP entry → 90 % prize pool, 10 %
-  permanent burn.
+  Play in tournaments with AXS / SLP entry → 90 % to players,
+  5 % permanent burn, 5 % to a transparent game treasury.
 
 Both compete on equal ground.
 ```
@@ -92,10 +92,13 @@ The deflationary tournament loop:
 
 Entry fee → AXS or SLP
 
-  · 90 % to prize pool  (skill-rewarded payouts)
-  · 10 % permanent BURN  (sent to 0x...dEaD)
+  · 90 % to players (skill-rewarded, top 3: 60 / 25 / 15)
+  · 5 % permanent BURN (sent to 0x...dEaD)
+  · 5 % to a transparent game treasury (multisig — funds
+    content, audits, F2P prize seeding)
 
-Every tournament = real, on-chain, public deflationary pressure.
+Every tournament = real, on-chain, public deflationary pressure
++ a sustainable operating fund the community can audit.
 
 Yes, including SLP. The legacy token gets a real utility sink.
 ```

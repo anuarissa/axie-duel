@@ -152,7 +152,7 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 > - ✅ **`/my-axies` page**: live Ronin address → real Axies as cards · or **Demo mode** with 5 preset Axies (no wallet required). NFT cards rendered with shimmering gold frame + NFT badge.
 > - 🟡 **Tournaments**: bracket + prize distribution code shipped; **disabled button visible on dashboard** as Phase 2 marker — opens when PvP ladder ships
 >
-> 🎬 **5-min walkthrough video**: [YouTube unlisted link]
+> 🎬 **5-min walkthrough video**: https://youtu.be/4z2y129paOY
 
 **Speaker notes**
 - "Right now, no signup needed: visit `/my-axies` and click Demo Mode — you see five Axies rendered as unique cards in two seconds."

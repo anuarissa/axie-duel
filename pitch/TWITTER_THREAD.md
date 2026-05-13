@@ -193,6 +193,8 @@ next.
 Thanks for reading. RT if you'd play this 🎴
 
   https://axie-duel.vercel.app
+
+5-min walkthrough → https://youtu.be/4z2y129paOY
 ```
 
 ---

@@ -58,7 +58,8 @@ I'd love to:
   3. Get guidance on the right channel for Saigon contract deployment +
      internal API tier upgrades.
 
-Attached: pitch deck (PDF). 5-min YouTube walkthrough available on request.
+Attached: pitch deck (PDF).
+5-min YouTube walkthrough: https://youtu.be/4z2y129paOY (unlisted)
 Happy to set up a 30-min call any timezone.
 
 Cheers,

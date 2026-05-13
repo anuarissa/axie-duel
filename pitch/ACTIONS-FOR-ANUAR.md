@@ -12,33 +12,33 @@
 - [x] Video walkthrough subido a YouTube como **No listado**: https://youtu.be/4z2y129paOY
 - [x] Trailer 30 s generado para Twitter/Discord: `pitch/assets/trailer-30s-v4.mp4`
 - [x] Pitch deck PDF con link YouTube embebido: `pitch/exports/pitch-PITCH_DECK.pdf` (~400 KB)
-- [x] Email template + Discord posts + Twitter thread con link YouTube embebido
-- [x] **Gmail draft creado y listo** — ID `19e21cca3c8c0e9f` (asunto: "Builders Program submission — Axie Duel...")
+- [x] Cheat-sheet con respuestas pre-llenadas para el form de Greenlight: `pitch/GREENLIGHT-FORM-ANSWERS.md`
 
 ---
 
-## 🟢 DAY 1 — EMAIL (5 min, 8 clicks)
+## ⚠️ CAMBIO DE PLAN (2026-05-13 noche)
 
-> **Cuándo**: hoy o mañana a la mañana (martes-miércoles ideal — Sky Mavis mira emails al inicio de su día UTC+8)
+El email original `builders@skymavis.com` **NO existe** (bounce confirmado por Gmail Mail Delivery Subsystem). Sky Mavis reemplazó el canal de email con un **Google Form oficial** para submissions del programa.
 
-- [ ] **1.** Abrí Gmail logueado con `anuarissa117@gmail.com`
-- [ ] **2.** Click en **"Borradores"** / **"Drafts"** en el menú izquierdo
-- [ ] **3.** Buscá el draft con asunto: `Builders Program submission — Axie Duel...` (ya está creado, te aparece arriba)
-- [ ] **4.** Click sobre el draft → se abre la ventana de composición
-- [ ] **5.** Verificá:
-  - Para: `builders@skymavis.com`
-  - CC: `partnerships@skymavis.com`
-  - Asunto + cuerpo ya están completos
-  - Link de YouTube `https://youtu.be/4z2y129paOY` visible en el cuerpo
-- [ ] **6.** Click en el **clip 📎** (Adjuntar archivo) → seleccioná:
-  ```
-  C:\dev\axie-duel\pitch\exports\pitch-PITCH_DECK.pdf
-  ```
-- [ ] **7.** Esperá ~5 segundos a que cargue el adjunto (400 KB, ultra rápido)
-- [ ] **8.** Click **"Enviar"** → ✅ submission entregada
-- [ ] **9.** Apuntá fecha y hora: `_______ / _______`
+**Confirmado oficialmente** en el [blog de Axie Infinity introduciendo Mavis Hub: Greenlight](https://blog.axieinfinity.com/p/introducing-mavis-hub-greenlight).
 
-> **No abandonés** el email después de enviarlo. Esperá ~30-60 min antes de pasar a Discord (anti-spam).
+→ El email queda OBSOLETO. **No reintentes mandar el email**. Borrá el draft de Gmail (Borradores → encontrar el draft → tachito de basura).
+
+---
+
+## 🟢 DAY 1 — MAVIS HUB GREENLIGHT FORM (15-20 min)
+
+> **Canal oficial vigente** — reemplaza el email viejo
+
+- [ ] **1.** Abrí el form: **https://forms.gle/TFJUzmUK8TJQo4n76**
+  - Requiere que estés logueado en Google (ya estás con `anuarissa117@gmail.com`)
+- [ ] **2.** Abrí en otra pestaña: `C:\dev\axie-duel\pitch\GREENLIGHT-FORM-ANSWERS.md` (cheat-sheet con todas las respuestas listas para copy/paste)
+- [ ] **3.** Llená el form a medida que aparecen los campos, copiando de la cheat-sheet
+- [ ] **4.** Si el form permite adjuntos: subí `C:\dev\axie-duel\pitch\exports\pitch-PITCH_DECK.pdf` (395 KB)
+- [ ] **5.** Releé todo antes de Submit
+- [ ] **6.** Click **Submit**
+- [ ] **7.** Hacé screenshot de la confirmación (algunos forms te mandan email automático, otros no)
+- [ ] **8.** Apuntá fecha y hora: `_______ / _______`
 
 ---
 

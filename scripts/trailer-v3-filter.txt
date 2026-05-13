@@ -1,0 +1,14 @@
+[0:v]trim=0:7.5,setpts=PTS-STARTPTS[v0];
+[0:a]atrim=0:7.5,asetpts=PTS-STARTPTS[a0];
+[0:v]trim=233:247,setpts=PTS-STARTPTS[v1];
+[0:a]atrim=233:247,asetpts=PTS-STARTPTS[a1];
+[0:v]trim=320:328,setpts=PTS-STARTPTS[v2];
+[0:a]atrim=320:328,asetpts=PTS-STARTPTS[a2];
+[1:v]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='axie-duel':fontsize=200:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2-40[v3a];
+[v3a]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='vercel.app':fontsize=56:fontcolor=0xfbbf24:x=(w-text_w)/2:y=(h-text_h)/2+90[v3];
+[v0][v1]xfade=transition=fade:duration=0.5:offset=7[vx1];
+[vx1][v2]xfade=transition=fade:duration=0.5:offset=20.5[vx2];
+[vx2][v3]xfade=transition=fade:duration=0.5:offset=28[outv];
+[a0][a1]acrossfade=d=0.5:c1=tri:c2=tri[ax1];
+[ax1][a2]acrossfade=d=0.5:c1=tri:c2=tri[ax2];
+[ax2]afade=t=out:st=27:d=1.5,apad=whole_dur=30[outa]

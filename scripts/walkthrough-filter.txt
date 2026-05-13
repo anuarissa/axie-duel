@@ -1,0 +1,8 @@
+[1:v]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='AXIE DUEL':fontsize=200:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2-50[intro_a];
+[intro_a]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='A Web 2.5 tactical card game':fontsize=58:fontcolor=0xfbbf24:x=(w-text_w)/2:y=(h-text_h)/2+90[intro_b];
+[intro_b]fade=t=in:st=0:d=0.5[intro];
+[0:v]trim=start=3,setpts=PTS-STARTPTS[v_main];
+[0:a]atrim=start=3,asetpts=PTS-STARTPTS[a_main];
+[intro][v_main]xfade=transition=fade:duration=0.5:offset=2[outv];
+anullsrc=channel_layout=stereo:sample_rate=48000:duration=2.5[silence];
+[silence][a_main]acrossfade=d=0.5:c1=tri:c2=tri[outa]

@@ -1,0 +1,20 @@
+[1:v]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='AXIE DUEL':fontsize=200:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2-50[intro_a];
+[intro_a]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='A Web 2.5 tactical card game':fontsize=58:fontcolor=0xfbbf24:x=(w-text_w)/2:y=(h-text_h)/2+90[intro_b];
+[intro_b]fade=t=in:st=0:d=0.5[intro];
+[0:v]trim=3:8,setpts=PTS-STARTPTS[v0];
+[0:a]atrim=3:8,asetpts=PTS-STARTPTS[a0];
+[0:v]trim=233:246,setpts=PTS-STARTPTS[v1];
+[0:a]atrim=233:246,asetpts=PTS-STARTPTS[a1];
+[0:v]trim=320:329.5,setpts=PTS-STARTPTS[v2];
+[0:a]atrim=320:329.5,asetpts=PTS-STARTPTS[a2];
+[2:v]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='axie-duel':fontsize=200:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2-40[end_a];
+[end_a]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='vercel.app':fontsize=56:fontcolor=0xfbbf24:x=(w-text_w)/2:y=(h-text_h)/2+90[end];
+[intro][v0]xfade=transition=fade:duration=0.5:offset=2[vx1];
+[vx1][v1]xfade=transition=fade:duration=0.5:offset=6.5[vx2];
+[vx2][v2]xfade=transition=fade:duration=0.5:offset=19[vx3];
+[vx3][end]xfade=transition=fade:duration=0.5:offset=28[outv];
+anullsrc=channel_layout=stereo:sample_rate=48000:duration=2.5[silence];
+[silence][a0]acrossfade=d=0.5:c1=tri:c2=tri[ax0];
+[ax0][a1]acrossfade=d=0.5:c1=tri:c2=tri[ax1];
+[ax1][a2]acrossfade=d=0.5:c1=tri:c2=tri[ax2];
+[ax2]afade=t=out:st=27:d=1.5,apad=whole_dur=30[outa]

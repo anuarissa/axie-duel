@@ -1,0 +1,18 @@
+[0:v]trim=2:8,setpts=PTS-STARTPTS[v0];
+[0:a]atrim=2:8,asetpts=PTS-STARTPTS[a0];
+[0:v]trim=130:138.5,setpts=PTS-STARTPTS[v1];
+[0:a]atrim=130:138.5,asetpts=PTS-STARTPTS[a1];
+[0:v]trim=139:148,setpts=PTS-STARTPTS[v2];
+[0:a]atrim=139:148,asetpts=PTS-STARTPTS[a2];
+[0:v]trim=235:241.5,setpts=PTS-STARTPTS[v3];
+[0:a]atrim=235:241.5,asetpts=PTS-STARTPTS[a3];
+[1:v]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='AXIE DUEL':fontsize=180:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2-80[v4a];
+[v4a]drawtext=fontfile='C\:/Windows/Fonts/impact.ttf':text='axie-duel.vercel.app':fontsize=48:fontcolor=0xfbbf24:x=(w-text_w)/2:y=(h-text_h)/2+80[v4];
+[v0][v1]xfade=transition=fade:duration=0.5:offset=5.5[vx1];
+[vx1][v2]xfade=transition=fade:duration=0.5:offset=13.5[vx2];
+[vx2][v3]xfade=transition=fade:duration=0.5:offset=22[vx3];
+[vx3][v4]xfade=transition=fade:duration=0.5:offset=28[outv];
+[a0][a1]acrossfade=d=0.5:c1=tri:c2=tri[ax1];
+[ax1][a2]acrossfade=d=0.5:c1=tri:c2=tri[ax2];
+[ax2][a3]acrossfade=d=0.5:c1=tri:c2=tri[ax3];
+[ax3]afade=t=out:st=27:d=1.5,apad=whole_dur=30[outa]

@@ -53,3 +53,7 @@ apps/api/prisma/migrations/dev.db*
 # Local-only video recordings (too big for repo)
 /Video Axi Duel.mp4
 /trailer-30s.mp4
+
+# Local-only: GitHub-downloaded zips (recursive copy of repo, not for commit)
+/axie-duel-main.zip
+*.zip

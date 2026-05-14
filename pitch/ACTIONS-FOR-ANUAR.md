@@ -120,3 +120,39 @@ Cuando quieras hacerlo, avisame y te guío en vivo igual que con Discord.
 **Si querés hacer Twitter alguna mañana** entre hoy y el día 21, avisame y arrancamos. Pero no es obligatorio.
 
 **El producto está hecho. La submission está hecha. Ahora es paciencia.**
+
+---
+
+## 🆕 UPDATE 2026-05-14 12:45 — RESPUESTA DE SKY MAVIS RECIBIDA
+
+Sky Mavis Support (Emi, Axie DAO Support Specialist) respondió a ticket #453646 con triage info:
+
+- ✅ Confirmó `partnerships@skymavis.com` como canal correcto (nuestro email ya está en su inbox)
+- 🆕 Reveló nuevo canal: **`marketing@axieinfinity.com`** para Axie business specifically
+- "Either team should get back to you if they are interested in your proposal"
+
+### 📩 2 drafts ESTÁN EN TU GMAIL listos — solo Send
+
+**Draft 1**: Reply a Emi (cortés + bridge)
+- **To**: support@axieinfinity.com
+- Subject: `Re: [Request received] — Partnership inquiry routing acknowledged (Ticket #453646)`
+- Body: breve thanks + menciona que vamos a marketing@ también
+- **Tu acción**: Borradores → click el draft → click Enviar (NO adjuntar nada). 10 seg.
+
+**Draft 2**: Nuevo email a marketing@axieinfinity.com
+- **To**: marketing@axieinfinity.com
+- Subject: `Axie marketing inquiry — Axie Duel (Web 2.5 TCG turning Axie NFTs into playable cards, 3M+ holder utility unlock)`
+- Body: pitch adaptado al ángulo Axie marketing (re-engage 3M+ holders, marketplace boost, F2P TAM, co-marketing)
+- **Tu acción**: Borradores → click el draft → adjuntar `C:\dev\axie-duel\pitch\exports\pitch-PITCH_DECK.pdf` → click Enviar. 1 min.
+
+Total: ~1.5 min para los 2 emails. Después cerrás laptop y volvés al monitoring routine.
+
+### Canales activos para tracking
+
+```
+Ticket #453646         (partnerships@skymavis.com)  → status: en review BD team
+Reply a Emi            (support@axieinfinity.com)   → ENVIAR HOY
+Marketing inquiry       (marketing@axieinfinity.com) → ENVIAR HOY
+```
+
+Después de los 2 sends de hoy: **3 canales activos** simultáneos esperando response.

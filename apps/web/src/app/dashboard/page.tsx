@@ -55,6 +55,16 @@ interface Notification {
   createdAt: string;
 }
 
+/** ¿El error es de red (API inalcanzable / timeout / offline) vs un fallo lógico (401/500)?
+ *  fetch() lanza TypeError("Failed to fetch") cuando no puede contactar al server.
+ *  ApiError (clase nuestra) sólo se construye en respuestas !ok con status — eso NO es de red. */
+function isNetworkFailure(err: unknown): boolean {
+  if (err instanceof ApiError) return false; // ya hubo respuesta HTTP, no es red caída
+  if (err instanceof TypeError) return true;
+  if (err instanceof Error && /failed to fetch|networkerror|load failed|aborted|timeout/i.test(err.message)) return true;
+  return false;
+}
+
 export default function DashboardPage() {
   const router = useRouter();
   const [me, setMe] = useState<UserMe | null>(null);
@@ -74,6 +84,9 @@ export default function DashboardPage() {
   const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   const [levelUpPopup, setLevelUpPopup] = useState<{ oldLevel: number; newLevel: number } | null>(null);
   const [web3Modal, setWeb3Modal] = useState<{ kind: 'wallet' | 'nft' } | null>(null);
+  /** API caído: cuando los 4 endpoints fallan con error de red (no 401/500), mostramos card de mantenimiento + auto-retry. */
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [retryCountdown, setRetryCountdown] = useState(0);
 
   useEffect(() => {
     if (!getJwt()) {
@@ -163,10 +176,40 @@ export default function DashboardPage() {
       else errors.push(`/notifications: ${notifsR.reason instanceof Error ? notifsR.reason.message : String(notifsR.reason)}`);
 
       if (errors.length > 0) setError(errors.join('\n'));
+      else setError(null);
+
+      // Detectar API caído: TODOS los endpoints rechazados con error de red (TypeError "Failed to fetch")
+      // = API inalcanzable, mostramos modo mantenimiento (auto-retry, mensaje amable) en vez del log técnico.
+      const settled = [meR, decksR, questsR, notifsR];
+      const rejected = settled.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
+      const allFailedNetwork =
+        rejected.length === settled.length &&
+        rejected.every((r) => isNetworkFailure(r.reason));
+      setMaintenanceMode(allFailedNetwork);
     } finally {
       setLoading(false);
     }
   }
+
+  /** Auto-retry mientras estemos en maintenanceMode: cuenta regresiva 30s y vuelve a llamar loadAll(). */
+  useEffect(() => {
+    if (!maintenanceMode) {
+      setRetryCountdown(0);
+      return;
+    }
+    setRetryCountdown(30);
+    const id = window.setInterval(() => {
+      setRetryCountdown((prev) => {
+        if (prev <= 1) {
+          void loadAll();
+          return 30;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maintenanceMode]);
 
   function logout() {
     clearJwt();
@@ -206,10 +249,56 @@ export default function DashboardPage() {
   }
 
   if (!me) {
+    // Caso A: API totalmente caído / sin conexión → modo mantenimiento (auto-retry, mensaje amable).
+    if (maintenanceMode) {
+      const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+      return (
+        <main className="dashboard">
+          <div className="dashboard-maintenance" role="status" aria-live="polite">
+            <div className="dashboard-maintenance-icon" aria-hidden="true">🔧</div>
+            <h1 className="dashboard-maintenance-title">
+              {offline ? 'Sin conexión a Internet' : 'Servicio en mantenimiento temporal'}
+            </h1>
+            <p className="dashboard-maintenance-body">
+              {offline
+                ? 'Verificá tu conexión Wi-Fi o datos móviles. Vamos a reintentar automáticamente cuando vuelvas online.'
+                : 'Estamos restaurando la conexión con nuestros servidores. Volvemos en unos minutos — tu progreso está a salvo.'}
+            </p>
+            <div className="dashboard-maintenance-countdown">
+              Reintentando automáticamente en <strong>{retryCountdown}s</strong>
+            </div>
+            <div className="dashboard-maintenance-actions">
+              <button className="btn-primary" onClick={() => loadAll()}>
+                Reintentar ahora
+              </button>
+              <a
+                className="btn-secondary"
+                href="https://status.railway.com"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Ver estado del servicio ↗
+              </a>
+              <button className="btn-secondary" onClick={logout}>
+                Cerrar sesión
+              </button>
+            </div>
+            {error ? (
+              <details className="dashboard-maintenance-details">
+                <summary>Detalles técnicos (debug)</summary>
+                <pre>{error}</pre>
+              </details>
+            ) : null}
+          </div>
+        </main>
+      );
+    }
+
+    // Caso B: error no-mantenimiento (ej. fallo individual de /users/me con 500 raro) → card técnica original.
     return (
       <main className="dashboard">
         <div className="card-section" style={{ background: 'rgba(255,118,118,0.08)' }}>
-          <strong style={{ color: '#ff7676' }}>Could not load your profile.</strong>
+          <strong style={{ color: '#ff7676' }}>No pudimos cargar tu perfil.</strong>
           {error ? (
             <pre style={{ marginTop: '0.75rem', whiteSpace: 'pre-wrap', fontSize: '0.8rem', opacity: 0.85 }}>
               {error}
@@ -217,10 +306,10 @@ export default function DashboardPage() {
           ) : null}
           <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem' }}>
             <button className="btn-primary" onClick={() => loadAll()}>
-              Retry
+              Reintentar
             </button>
             <button className="btn-secondary" onClick={logout}>
-              Logout and back to login
+              Cerrar sesión
             </button>
           </div>
         </div>

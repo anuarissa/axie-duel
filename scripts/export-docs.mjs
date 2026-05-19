@@ -35,6 +35,7 @@ const INPUTS = [
   'docs/ECONOMY.md',
   'docs/F2P_BALANCE_MANIFESTO.md',
   'docs/WEB_25_MANIFESTO.md',
+  'docs/PROGRESSION.md',
   'pitch/PITCH_DECK.md',
   'pitch/EMAIL_TEMPLATE.md',
   'pitch/DISCORD_INTRO.md',

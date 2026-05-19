@@ -214,6 +214,7 @@ This deck is the script + content blueprint for the PDF submitted to Sky Mavis. 
 > ## Q3 (Month 7–9) — Content + esports
 > - 100+ new cards (Mech / Dawn / Dusk class expansions)
 > - Ranked seasons with leaderboards
+> - Progression v2 — horizontal, F2P-safe (identity / access / collection, never combat power). Full design: `docs/PROGRESSION.md`
 > - First sanctioned Sky Mavis tournament (collab branding)
 >
 > ## Q4 (Month 10–12) — Scale

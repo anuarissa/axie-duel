@@ -82,6 +82,7 @@ Web3 games today fall into one of two extremes, and both lose players:
 ### Player identity & progression
 - Customizable hero avatar (9 class-themed presets, generated SVG, no external assets) + level-tier frames that grow more striking as you level up (Initiate → Ranger → Vanguard → Ascendant → Mythic). Bigger framed portrait + level badge shown live during battle.
 - **Phase 2 (with Axie API access)**: a hero preset can be a real Axie from the wallet (sprite + parts), and an NFT-backed gold frame tier — turning the player portrait itself into Axie NFT utility.
+- Full progression design (what leveling unlocks beyond cosmetics, and the hard contract of what it *never* unlocks — horizontal, never combat power): [`docs/PROGRESSION.md`](./PROGRESSION.md).
 
 ### Token sinks (deflationary pressure)
 - Tournament entries split 5 % to permanent burn + 5 % to a transparent game treasury (10 % combined) per cycle.

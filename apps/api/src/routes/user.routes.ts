@@ -43,7 +43,7 @@ router.get('/me', authRequired, async (req: Request, res: Response, next: NextFu
   }
 });
 
-const UpdateProfileBody = z.object({
+export const UpdateProfileBody = z.object({
   username: z
     .string()
     .min(3)
@@ -51,7 +51,17 @@ const UpdateProfileBody = z.object({
     .regex(/^[a-z0-9_]+$/i, 'username: solo letras, números, _')
     .optional(),
   displayName: z.string().min(1).max(40).optional(),
-  avatarUrl: z.string().url().max(500).optional(),
+  // Acepta una URL http(s) normal O el esquema centinela `hero:<presetId>`
+  // de los avatares-héroe generados client-side (ver apps/web/src/lib/heroAvatar.ts).
+  // No requiere cambio de schema DB: se guarda en la misma columna avatarUrl.
+  avatarUrl: z
+    .string()
+    .max(500)
+    .refine(
+      (v) => /^https?:\/\//i.test(v) || /^hero:[a-z0-9-]+$/.test(v),
+      { message: 'avatarUrl: debe ser una URL http(s) o un preset hero:<id>' },
+    )
+    .optional(),
 });
 
 router.patch('/me', authRequired, async (req: Request, res: Response, next: NextFunction) => {

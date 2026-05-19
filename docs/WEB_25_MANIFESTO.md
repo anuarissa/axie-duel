@@ -79,6 +79,10 @@ Web3 games today fall into one of two extremes, and both lose players:
 - 3M+ Axies in circulation = 3M+ unique cards, no manual art needed.
 - Demand for *specific parts* (not just "any Axie") creates Marketplace differentiation.
 
+### Player identity & progression
+- Customizable hero avatar (9 class-themed presets, generated SVG, no external assets) + level-tier frames that grow more striking as you level up (Initiate → Ranger → Vanguard → Ascendant → Mythic). Bigger framed portrait + level badge shown live during battle.
+- **Phase 2 (with Axie API access)**: a hero preset can be a real Axie from the wallet (sprite + parts), and an NFT-backed gold frame tier — turning the player portrait itself into Axie NFT utility.
+
 ### Token sinks (deflationary pressure)
 - Tournament entries split 5 % to permanent burn + 5 % to a transparent game treasury (10 % combined) per cycle.
 - Pack openings burn 25% of AXS spent.

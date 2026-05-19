@@ -12509,3 +12509,197 @@ pre {
   .rules-replay-btn { padding: 0.7rem 1.2rem !important; font-size: 0.8rem !important; }
   .rules-back { font-size: 0.72rem !important; padding: 0.3rem 0.7rem !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   HERO AVATAR + LEVEL-TIER FRAMES
+   El marco sube de tier solo según el nivel (earned). Reusa el lenguaje
+   visual del marco dorado NFT (.my-axies-card-nft / nftGoldPulse).
+   PHASE 2: con Axie API, un preset podrá ser un Axie real + tier NFT-backed.
+   ════════════════════════════════════════════════════════════════════════ */
+
+.hero-frame {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  line-height: 0;
+  flex-shrink: 0;
+}
+/* El avatar/fallback adentro mantiene su forma circular y llena el frame. */
+.hero-frame .dashboard-avatar,
+.hero-frame .dashboard-avatar-fallback,
+.hero-frame .tcg-hud-avatar,
+.hero-frame .tcg-hud-avatar-fallback {
+  display: block;
+  margin: 0;
+}
+/* Badge de nivel: esquina inferior-derecha. Mismo lenguaje que el badge NFT. */
+.hero-frame-lvl {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  z-index: 3;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 1;
+  color: #0a0a14;
+  background: linear-gradient(135deg, #fde68a, #f59e0b);
+  border: 1.5px solid rgba(0, 0, 0, 0.45);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Tier 1 · Initiate (L1-2): borde fino slate, sin glow ─────────────── */
+.hero-frame-t1 { box-shadow: 0 0 0 2px #64748b; }
+/* ── Tier 2 · Ranger (L3-4): cyan + glow suave ───────────────────────── */
+.hero-frame-t2 {
+  box-shadow: 0 0 0 2px var(--axie-cyan), 0 0 10px rgba(20, 195, 244, 0.45);
+}
+/* ── Tier 3 · Vanguard (L5-7): purple + pulse medio ──────────────────── */
+.hero-frame-t3 {
+  box-shadow: 0 0 0 3px var(--axie-purple), 0 0 14px rgba(140, 93, 246, 0.5);
+  animation: heroPulseVanguard 3.2s ease-in-out infinite;
+}
+@keyframes heroPulseVanguard {
+  0%, 100% { filter: drop-shadow(0 0 3px rgba(140, 93, 246, 0.45)); }
+  50%      { filter: drop-shadow(0 0 12px rgba(167, 139, 250, 0.9)); }
+}
+/* ── Tier 4 · Ascendant (L8-11): dorado + pulse fuerte (lenguaje NFT) ── */
+.hero-frame-t4 {
+  box-shadow:
+    0 0 0 3px rgba(251, 191, 36, 0.95),
+    0 0 22px rgba(251, 191, 36, 0.5);
+  animation: heroPulseAscendant 3.5s ease-in-out infinite;
+}
+@keyframes heroPulseAscendant {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.55)); }
+  50%      { filter: drop-shadow(0 0 16px rgba(253, 224, 71, 0.95)); }
+}
+/* ── Tier 5 · Mythic (L12+): borde gradiente cónico animado + glow ───── */
+.hero-frame-t5 {
+  box-shadow: 0 0 22px rgba(192, 132, 252, 0.55), 0 0 10px rgba(20, 195, 244, 0.45);
+}
+.hero-frame-t5::before {
+  content: '';
+  position: absolute;
+  inset: -5px;
+  z-index: -1;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    var(--axie-cyan), var(--axie-purple), var(--axie-pink),
+    #fbbf24, var(--axie-green), var(--axie-cyan)
+  );
+  animation: heroFrameMythic 4s linear infinite;
+}
+@keyframes heroFrameMythic {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Batalla: portrait grande + tier + badge ─────────────────────────── */
+.tcg-hud-hero { margin-right: 0.15rem; }
+.tcg-hud-hero .tcg-hud-avatar,
+.tcg-hud-hero .tcg-hud-avatar-fallback {
+  width: 64px;
+  height: 64px;
+  font-size: 1.7rem;
+  border: none; /* el frame provee el borde */
+  box-shadow: none;
+}
+.tcg-hud-name { gap: 0.55rem; }
+.tcg-hud-name-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+.tcg-hud-tier {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.95;
+}
+.tcg-hud-tier.hero-frame-t1 { color: #94a3b8; box-shadow: none; }
+.tcg-hud-tier.hero-frame-t2 { color: var(--axie-cyan); box-shadow: none; animation: none; }
+.tcg-hud-tier.hero-frame-t3 { color: #a78bfa; box-shadow: none; animation: none; }
+.tcg-hud-tier.hero-frame-t4 { color: #fbbf24; box-shadow: none; animation: none; }
+.tcg-hud-tier.hero-frame-t5 {
+  box-shadow: none;
+  background: linear-gradient(90deg, var(--axie-cyan), var(--axie-purple), #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.tcg-hud-tier.hero-frame-t5::before { display: none; }
+
+/* Mobile / landscape battle: portrait algo más chico para no romper el HUD. */
+@media (max-width: 900px) {
+  .tcg-hud-hero .tcg-hud-avatar,
+  .tcg-hud-hero .tcg-hud-avatar-fallback {
+    width: 46px;
+    height: 46px;
+    font-size: 1.25rem;
+  }
+  .hero-frame-lvl { min-width: 16px; height: 16px; font-size: 0.56rem; }
+  .tcg-hud-tier { font-size: 0.56rem; }
+}
+
+/* ── ProfileEditModal: grid de 9 presets ─────────────────────────────── */
+.profile-edit-preview-tier {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #fbbf24;
+  margin-top: 2px;
+}
+.hero-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+.hero-preset-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.3rem;
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.hero-preset-btn img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+}
+.hero-preset-btn span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #cbd5e1;
+}
+.hero-preset-btn:hover {
+  transform: translateY(-2px);
+  border-color: rgba(192, 132, 252, 0.5);
+  background: rgba(192, 132, 252, 0.1);
+}
+.hero-preset-btn.is-selected {
+  border-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.14);
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.5), 0 0 14px rgba(251, 191, 36, 0.35);
+}
+.hero-preset-btn.is-selected span { color: #fde68a; }

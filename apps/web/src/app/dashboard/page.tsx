@@ -7,6 +7,7 @@ import { apiFetch, clearJwt, getJwt, ApiError } from '../../lib/auth';
 import { SoundControls } from '../../components/SoundControls';
 import { TutorialWelcomeModal } from '../../components/TutorialWelcomeModal';
 import { sound } from '../../lib/sound';
+import { HERO_PRESETS, resolveAvatar, levelTier } from '../../lib/heroAvatar';
 
 interface UserMe {
   id: string;
@@ -276,18 +277,30 @@ export default function DashboardPage() {
           title="Click to edit your profile"
           aria-label="Edit profile"
         >
-          {me.avatarUrl && !avatarLoadFailed ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={me.avatarUrl}
-              alt=""
-              className="dashboard-avatar"
-              referrerPolicy="no-referrer"
-              onError={() => setAvatarLoadFailed(true)}
-            />
-          ) : (
-            <div className="dashboard-avatar-fallback">{me.username[0]?.toUpperCase()}</div>
-          )}
+          {(() => {
+            const heroSrc = resolveAvatar(me.avatarUrl);
+            const tier = levelTier(me.level);
+            return (
+              <div
+                className={`hero-frame ${tier.frameClass}`}
+                title={`Level ${me.level} · ${tier.name}`}
+              >
+                {heroSrc && !avatarLoadFailed ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={heroSrc}
+                    alt=""
+                    className="dashboard-avatar"
+                    referrerPolicy="no-referrer"
+                    onError={() => setAvatarLoadFailed(true)}
+                  />
+                ) : (
+                  <div className="dashboard-avatar-fallback">{me.username[0]?.toUpperCase()}</div>
+                )}
+                <span className="hero-frame-lvl">{me.level}</span>
+              </div>
+            );
+          })()}
           <div className="dashboard-userinfo">
             <strong>{me.displayName ?? me.username}<span className="dashboard-edit-hint">✎</span></strong>
             <span>
@@ -591,8 +604,8 @@ function ProfileEditModal({ user, onClose, onSaved }: {
       setError('Avatar URL too long (max 500).');
       return;
     }
-    if (avatarUrl && !/^https?:\/\//i.test(avatarUrl)) {
-      setError('Avatar URL must start with http:// or https://');
+    if (avatarUrl && !/^https?:\/\//i.test(avatarUrl) && !/^hero:[a-z0-9-]+$/.test(avatarUrl)) {
+      setError('Avatar must be an http(s) URL or a chosen hero preset.');
       return;
     }
     setSaving(true);
@@ -626,22 +639,57 @@ function ProfileEditModal({ user, onClose, onSaved }: {
         <p className="profile-edit-sub">Customize how you appear to other duelists.</p>
 
         <div className="profile-edit-preview">
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt=""
-              className="dashboard-avatar"
-              referrerPolicy="no-referrer"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            />
-          ) : (
-            <div className="dashboard-avatar-fallback">{(displayName || username)[0]?.toUpperCase()}</div>
-          )}
+          {(() => {
+            const previewSrc = resolveAvatar(avatarUrl);
+            const tier = levelTier(user.level);
+            return (
+              <div className={`hero-frame ${tier.frameClass}`} title={`Level ${user.level} · ${tier.name}`}>
+                {previewSrc ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={previewSrc}
+                    alt=""
+                    className="dashboard-avatar"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
+                ) : (
+                  <div className="dashboard-avatar-fallback">{(displayName || username)[0]?.toUpperCase()}</div>
+                )}
+                <span className="hero-frame-lvl">{user.level}</span>
+              </div>
+            );
+          })()}
           <div>
             <strong>{displayName || username}</strong>
             <span className="profile-edit-preview-handle">@{username}</span>
+            <span className="profile-edit-preview-tier">{levelTier(user.level).name} · Lv {user.level}</span>
           </div>
+        </div>
+
+        <div className="profile-edit-field">
+          <span>Choose your hero</span>
+          <div className="hero-preset-grid">
+            {HERO_PRESETS.map((p) => {
+              const val = `hero:${p.id}`;
+              const selected = avatarUrl === val;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`hero-preset-btn ${selected ? 'is-selected' : ''}`}
+                  onClick={() => setAvatarUrl(val)}
+                  title={p.label}
+                  aria-pressed={selected}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={resolveAvatar(val)!} alt={p.label} />
+                  <span>{p.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <small>9 class-themed heroes · your frame upgrades automatically as you level up</small>
         </div>
 
         <label className="profile-edit-field">

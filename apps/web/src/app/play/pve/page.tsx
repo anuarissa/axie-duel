@@ -28,6 +28,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Client, type Room } from 'colyseus.js';
 import { getJwt, getJwtUserId, apiFetch } from '../../../lib/auth';
 import { placeholderSvgFor as svgForCard, resolveCardImage } from '../../../lib/cardArt';
+import { resolveAvatar, levelTier, tierForDifficulty, type LevelTier } from '../../../lib/heroAvatar';
 import { SoundControls } from '../../../components/SoundControls';
 import { RockPaperScissorsIntro } from '../../../components/RockPaperScissorsIntro';
 import { CardPreviewOverlay } from '../../../components/CardPreviewOverlay';
@@ -195,8 +196,8 @@ function PvePage() {
     selectedTributes: string[];
   } | null>(null);
   const [lunacianCoins, setLunacianCoins] = useState<string>('—');
-  const [meProfile, setMeProfile] = useState<{ username: string; displayName: string | null; avatarUrl: string | null }>({
-    username: 'You', displayName: null, avatarUrl: null,
+  const [meProfile, setMeProfile] = useState<{ username: string; displayName: string | null; avatarUrl: string | null; level: number }>({
+    username: 'You', displayName: null, avatarUrl: null, level: 1,
   });
   const [firstPlayerChoice, setFirstPlayerChoice] = useState<'me' | 'opponent' | null>(null);
   /** Modal forzado de discard cuando hand > 6 al fin del turno. count = cuántas debés descartar. */
@@ -302,6 +303,7 @@ function PvePage() {
           username: meData.username ?? 'You',
           displayName: meData.displayName ?? null,
           avatarUrl: meData.avatarUrl ?? null,
+          level: meData.level ?? 1,
         });
         const activeDeck = decksData.decks.find((d) => d.isActive);
 
@@ -1319,6 +1321,7 @@ function PvePage() {
             player={opponent}
             variant="opponent"
             catalog={catalog}
+            tierOverride={tierForDifficulty(difficulty)}
             onOpenVoid={() => setVoidViewer({ ownerId: opponent.id, ownerName: opponent.username })}
           />
         </aside>
@@ -1344,7 +1347,7 @@ function PvePage() {
         {/* Lado oponente */}
         {opponent ? (
           <section className="tcg-side opponent">
-            <PlayerHud player={opponent} variant="opponent" catalog={catalog} onOpenVoid={() => setVoidViewer({ ownerId: opponent.id, ownerName: opponent.username })} />
+            <PlayerHud player={opponent} variant="opponent" catalog={catalog} tierOverride={tierForDifficulty(difficulty)} onOpenVoid={() => setVoidViewer({ ownerId: opponent.id, ownerName: opponent.username })} />
             <div className="tcg-zones">
               <div className="tcg-zone-row">
                 {opponent.spellTrapZones.map((c, i) => (
@@ -2156,7 +2159,10 @@ function AnimatedNumber({ to, duration = 900 }: { to: number; duration?: number 
   return <>{value.toLocaleString()}</>;
 }
 
-function PlayerHud({ player, variant, catalog, profile, onHelp, onOpenVoid }: { player: PlayerSnapshot; variant: 'you' | 'opponent'; catalog?: CardCatalog; profile?: { displayName: string | null; avatarUrl: string | null; username: string }; onHelp?: () => void; onOpenVoid?: () => void }) {
+function PlayerHud({ player, variant, catalog, profile, tierOverride, onHelp, onOpenVoid }: { player: PlayerSnapshot; variant: 'you' | 'opponent'; catalog?: CardCatalog; profile?: { displayName: string | null; avatarUrl: string | null; username: string; level: number }; tierOverride?: LevelTier; onHelp?: () => void; onOpenVoid?: () => void }) {
+  // Marco por nivel: jugador → su nivel · oponente → derivado de la dificultad.
+  const tier = variant === 'you' ? levelTier(profile?.level) : (tierOverride ?? levelTier(1));
+  const heroSrc = variant === 'you' ? resolveAvatar(profile?.avatarUrl) : null;
   const lpPct = Math.max(0, Math.min(100, (player.lifePoints / 8000) * 100));
   const low = player.lifePoints < 2000;
   const stackDepth = Math.min(4, Math.max(1, Math.ceil(player.deckSize / 10)));
@@ -2168,30 +2174,42 @@ function PlayerHud({ player, variant, catalog, profile, onHelp, onOpenVoid }: { 
     <div className={`tcg-hud-wrap ${variant}`}>
       <div className={`tcg-hud ${variant}`}>
         <div className="tcg-hud-name">
-          {variant === 'you' && profile?.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={profile.avatarUrl}
-              alt=""
-              className="tcg-hud-avatar"
-              referrerPolicy="no-referrer"
-              onError={(e) => {
-                // Google bloquea hotlinks cross-origin con 403 — ocultar img.
-                // El fallback sibling no se mostrará, pero al menos no se ve un broken icon.
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          ) : variant === 'you' ? (
-            <span className="tcg-hud-avatar-fallback">
-              {(profile?.displayName ?? profile?.username ?? player.username)[0]?.toUpperCase() ?? '?'}
+          <div
+            className={`hero-frame tcg-hud-hero ${tier.frameClass}`}
+            title={variant === 'you' ? `Level ${profile?.level ?? 1} · ${tier.name}` : tier.name}
+          >
+            {variant === 'you' && heroSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={heroSrc}
+                alt=""
+                className="tcg-hud-avatar"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  // Google bloquea hotlinks cross-origin con 403 — ocultar img.
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            ) : variant === 'you' ? (
+              <span className="tcg-hud-avatar-fallback">
+                {(profile?.displayName ?? profile?.username ?? player.username)[0]?.toUpperCase() ?? '?'}
+              </span>
+            ) : (
+              <span className="tcg-hud-avatar-fallback opp">🤖</span>
+            )}
+            <span className="hero-frame-lvl">
+              {variant === 'you' ? (profile?.level ?? 1) : tier.tier}
             </span>
-          ) : (
-            <span className="tcg-hud-avatar-fallback opp">🤖</span>
-          )}
-          <span className="tcg-hud-name-text">
-            {variant === 'you'
-              ? (profile?.displayName ?? profile?.username ?? player.username)
-              : player.username}
+          </div>
+          <span className="tcg-hud-name-col">
+            <span className="tcg-hud-name-text">
+              {variant === 'you'
+                ? (profile?.displayName ?? profile?.username ?? player.username)
+                : player.username}
+            </span>
+            <span className={`tcg-hud-tier ${tier.frameClass}`}>
+              {variant === 'you' ? `Lv ${profile?.level ?? 1} · ${tier.name}` : tier.name}
+            </span>
           </span>
         </div>
         <div className={`tcg-hud-lp ${low ? 'low' : ''}`}>

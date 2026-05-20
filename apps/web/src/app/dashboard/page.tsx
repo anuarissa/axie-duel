@@ -55,11 +55,14 @@ interface Notification {
   createdAt: string;
 }
 
-/** ¿El error es de red (API inalcanzable / timeout / offline) vs un fallo lógico (401/500)?
- *  fetch() lanza TypeError("Failed to fetch") cuando no puede contactar al server.
- *  ApiError (clase nuestra) sólo se construye en respuestas !ok con status — eso NO es de red. */
-function isNetworkFailure(err: unknown): boolean {
-  if (err instanceof ApiError) return false; // ya hubo respuesta HTTP, no es red caída
+/** ¿El error indica "backend no puede responder normalmente" (mostrar maintenance UI)?
+ *  Cubre 2 casos:
+ *    1. Red caída / timeout: fetch() lanza TypeError("Failed to fetch").
+ *    2. Backend vivo pero rota: HTTP 5xx (ej. Prisma con pool de conexiones stale
+ *       post-outage, Postgres reiniciándose, Redis caído, etc.).
+ *  401/403 NO entran acá (auth issues — flujo distinto). */
+function isBackendDown(err: unknown): boolean {
+  if (err instanceof ApiError) return err.status >= 500 && err.status <= 599;
   if (err instanceof TypeError) return true;
   if (err instanceof Error && /failed to fetch|networkerror|load failed|aborted|timeout/i.test(err.message)) return true;
   return false;
@@ -178,14 +181,15 @@ export default function DashboardPage() {
       if (errors.length > 0) setError(errors.join('\n'));
       else setError(null);
 
-      // Detectar API caído: TODOS los endpoints rechazados con error de red (TypeError "Failed to fetch")
-      // = API inalcanzable, mostramos modo mantenimiento (auto-retry, mensaje amable) en vez del log técnico.
+      // Detectar backend "no puede responder": TODOS los endpoints rechazados con
+      // error de red (timeout/offline) o HTTP 5xx (DB caída, Prisma stale, etc.)
+      // → modo mantenimiento (auto-retry, mensaje amable) en vez del log técnico.
       const settled = [meR, decksR, questsR, notifsR];
       const rejected = settled.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
-      const allFailedNetwork =
+      const allBackendDown =
         rejected.length === settled.length &&
-        rejected.every((r) => isNetworkFailure(r.reason));
-      setMaintenanceMode(allFailedNetwork);
+        rejected.every((r) => isBackendDown(r.reason));
+      setMaintenanceMode(allBackendDown);
     } finally {
       setLoading(false);
     }
